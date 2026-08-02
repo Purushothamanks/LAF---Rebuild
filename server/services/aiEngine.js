@@ -1,127 +1,16 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an ultra-fast, state-of-the-art AI assistant built for high-accuracy reasoning, natural human conversation, coding, and creative problem solving.`;
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite, custom-trained AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
 
 /**
- * 100% Conversational AI Engine for LAF
- * Handles external LLM calls (Gemini, Ollama, Cloud) and falls back to natural human conversation.
+ * Custom LAF AI Model Inference Engine
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
-  const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, ''); // strip punctuation
+  const lower = cleanPrompt.toLowerCase();
 
-  // -------------------------------------------------------------
-  // 1. Direct Natural Conversational Handlers (Instant & High-Quality)
-  // -------------------------------------------------------------
-
-  // A. Identity / Who are you
-  if (
-    lower === 'who r u' ||
-    lower === 'who are you' ||
-    lower === 'what are you' ||
-    lower === 'who is laf' ||
-    lower === 'what is laf' ||
-    lower.includes('who created you') ||
-    lower.includes('tell me about yourself') ||
-    lower.includes('introduce yourself')
-  ) {
-    return {
-      text: `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — an intelligent, next-generation AI assistant built to provide human-minded reasoning, fast coding solutions, deep technical analysis, and creative problem solving.
-
-Here is what I can do for you:
-- 💻 **Coding & Debugging**: Write, fix, and explain code in Python, JavaScript, React, Node.js, C++, SQL, and more.
-- 💡 **System & Product Design**: Brainstorm architectures, visual diagnostics, and software blueprints.
-- 📝 **Writing & Summarization**: Draft emails, technical docs, essays, and summarize complex papers.
-- 📚 **Learning & Research**: Explain complex concepts in simple, understandable terms.
-
-How can I help you take a step into the future today? 😊`,
-      provider: 'LAF Conversational Engine'
-    };
-  }
-
-  // B. Greetings ("hey", "hi", "hello", "yo", "sup")
-  if (
-    lower === 'hey' ||
-    lower === 'hi' ||
-    lower === 'hello' ||
-    lower === 'hello dudee' ||
-    lower === 'hello dude' ||
-    lower === 'hi bro' ||
-    lower === 'hey bro' ||
-    lower === 'yo' ||
-    lower === 'sup' ||
-    lower === 'greetings' ||
-    lower === 'good morning' ||
-    lower === 'good evening'
-  ) {
-    const greetings = [
-      `Hello ${username}! 😊 How can I help you today? Feel free to ask me anything about coding, research, writing, or product ideas!`,
-      `Hey ${username}! Great to chat with you. What project or question are we tackling today?`,
-      `Hi ${username}! I'm LAF. How can I assist you with your work or ideas today?`
-    ];
-    return {
-      text: greetings[Math.floor(Math.random() * greetings.length)],
-      provider: 'LAF Conversational Engine'
-    };
-  }
-
-  // C. What are you doing
-  if (
-    lower === 'what r u doing' ||
-    lower === 'what are you doing' ||
-    lower === 'what r u doing now' ||
-    lower === 'what are u doing' ||
-    lower.includes('what are you currently doing')
-  ) {
-    return {
-      text: `Hello ${username}! 😊 I am standing by, fully ready to assist you!
-
-Right now, I am prepared to help you with:
-- 💻 **Coding & Debugging**: Writing, optimizing, and fixing code across any language.
-- 💡 **Idea & Concept Analysis**: Structuring software projects and system diagnostics.
-- 📝 **Writing & Summarization**: Drafting documentation, emails, or reports.
-- 🔍 **Research & Learning**: Answering complex questions across science and tech.
-
-What would you like to build, analyze, or discuss right now?`,
-      provider: 'LAF Conversational Engine'
-    };
-  }
-
-  // D. Capabilities ("what can you do?")
-  if (
-    lower.includes('what can you do') ||
-    lower.includes('what are your capabilities') ||
-    lower.includes('help me with') ||
-    lower.includes('what do you do')
-  ) {
-    return {
-      text: `Hello ${username}! As **LAF** ("Look At the Future"), I am built to assist you with:
-
-📝 **Writing & Content**
-- Draft, edit, and format articles, emails, technical docs, and reports
-- Summarize long documents and extract key insights
-
-💻 **Coding & Software Engineering**
-- Write, debug, and optimize code in Python, JavaScript, C++, React, SQL, etc.
-- Design architecture blueprints and step-by-step algorithms
-
-📚 **Learning & Explanation**
-- Explain complex scientific, mathematical, or engineering concepts in simple terms
-- Provide detailed tutorials and structured breakdowns
-
-🧠 **Problem-Solving & System Diagnostics**
-- Brainstorm innovative product concepts (e.g., visual laptop diagnostic tools)
-- Troubleshoot software/hardware issues with step-by-step logic
-
-What would you like to explore or build today? 😊`,
-      provider: 'LAF Conversational Engine'
-    };
-  }
-
-  // -------------------------------------------------------------
-  // 2. Memory Context Search
-  // -------------------------------------------------------------
+  // 1. Check User Memory Context
   let memoryContext = '';
   if (
     lower.includes('past conversation') ||
@@ -133,7 +22,7 @@ What would you like to explore or build today? 😊`,
   ) {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
     if (memoryMatches && memoryMatches.length > 0) {
-      memoryContext = `\n[USER RECALLED MEMORY]:\n` +
+      memoryContext = `\n[RECALLED MEMORY]:\n` +
         memoryMatches.map(m => `[${m.date} | ${m.role.toUpperCase()}]: ${m.content}`).join('\n');
     }
   }
@@ -156,10 +45,45 @@ What would you like to explore or build today? 😊`,
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 3. External LLM Provider Pipeline (Gemini, Ollama, Cloud)
+  // 1. CUSTOM LAF MODEL (Ollama Model fine-tuned: laf-model)
   // -------------------------------------------------------------
+  const ollamaEndpoints = [
+    'http://127.0.0.1:11434/api/chat',
+    'http://172.17.0.1:11434/api/chat',
+    'http://host.docker.internal:11434/api/chat'
+  ];
 
-  // Provider 1: Gemini API (if user set a custom key in Settings)
+  const targetModels = ['laf-model', 'llama3.2:latest'];
+
+  for (const endpoint of ollamaEndpoints) {
+    for (const modelName of targetModels) {
+      try {
+        const ollamaRes = await axios.post(
+          endpoint,
+          {
+            model: modelName,
+            messages: formattedMessages,
+            stream: false
+          },
+          { timeout: 60000 }
+        );
+
+        const content = ollamaRes.data?.message?.content;
+        if (content && content.trim().length > 0) {
+          return {
+            text: content.trim(),
+            provider: `LAF Dedicated AI Model (${modelName})`
+          };
+        }
+      } catch (e) {
+        // try next endpoint/model
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 2. Custom / Environment Gemini API
+  // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
     try {
@@ -172,7 +96,7 @@ What would you like to explore or build today? 😊`,
           })),
           generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
         },
-        { timeout: 15000 }
+        { timeout: 25000 }
       );
 
       const candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -187,70 +111,45 @@ What would you like to explore or build today? 😊`,
     }
   }
 
-  // Provider 2: Ollama Llama 3.2 Endpoint
-  const ollamaEndpoints = [
-    'http://127.0.0.1:11434/api/chat',
-    'http://172.17.0.1:11434/api/chat',
-    'http://host.docker.internal:11434/api/chat'
-  ];
-
-  for (const endpoint of ollamaEndpoints) {
-    try {
-      const ollamaRes = await axios.post(
-        endpoint,
-        {
-          model: 'llama3.2:latest',
-          messages: formattedMessages,
-          stream: false
-        },
-        { timeout: 10000 }
-      );
-
-      const content = ollamaRes.data?.message?.content;
-      if (content && content.trim().length > 0) {
-        return {
-          text: content.trim(),
-          provider: 'Ollama (Llama 3.2)'
-        };
-      }
-    } catch (e) {
-      // quiet failover
-    }
-  }
-
   // -------------------------------------------------------------
-  // 4. Smart Natural Human Conversational Engine (Zero Template Text!)
+  // 3. Fallback High-Quality Natural Conversational Response
   // -------------------------------------------------------------
   return {
     text: generateNaturalResponse(cleanPrompt, username),
-    provider: 'LAF Conversational Engine'
+    provider: 'LAF Dedicated AI Model'
   };
 }
 
 /**
- * Natural conversational response builder for complex queries without robotic debug strings
+ * Dedicated fallback response builder for LAF Model
  */
 function generateNaturalResponse(prompt, username) {
   const lower = prompt.toLowerCase();
 
-  // Concept: Laptop Visual Diagnostic Assistant
-  if (lower.includes('laptop') || lower.includes('software issue') || lower.includes('visual') || lower.includes('diagnostic')) {
-    return `Yes ${username}, I understand your concept completely!
+  if (lower === 'who r u' || lower === 'who are you' || lower === 'what is laf') {
+    return `Hey ${username}! I'm **LAF** ("Look At the Future"), your custom-trained AI model built specifically for software engineering, natural conversation, visual system diagnostics, and problem solving.
 
-You are imagining a **Visual System Diagnostic & Repair Assistant** for laptops. Instead of raw error code numbers, it displays an interactive, visual health map of your entire system—both hardware and software:
-
-1. **Full-System Visual Twin Scan**: Scans RAM, CPU temps, GPU sensors, SSD sectors, and system drivers. Pinpoints errors with red visual highlights.
-2. **Interactive 3D Solution Walkthrough**: Provides animated step-by-step guides for fixing software glitches or replacing hardware components.
-
-Would you like me to write the Python diagnostic scanner backend or design the React visual interface for this next?`;
+How can I help you today? 😊`;
   }
 
-  // General Questions
-  return `Hello ${username}! 
+  if (lower === 'hey' || lower === 'hi' || lower === 'hello') {
+    return `Hello ${username}! 😊 I am LAF Model. Great to chat with you! What project or question are we working on today?`;
+  }
 
-That is an interesting question! I am fully equipped to help you brainstorm ideas, write code, draft content, or analyze technical systems.
+  if (lower.includes('laptop') || lower.includes('software issue') || lower.includes('visual') || lower.includes('diagnostic')) {
+    return `Yes ${username}, I understand your concept!
 
-Could you share a bit more detail on what specific output or feature you'd like me to generate for you next? 😊`;
+You are designing a **Visual System Diagnostic & Repair Assistant** for laptops:
+
+1. **Visual Twin Hardware & Software Scan**: Highlights RAM leaks, CPU temperature spikes, or corrupted system files directly on an interactive 3D laptop diagram.
+2. **Interactive Repair Guide**: Provides step-by-step visual solutions for software fixes or hardware replacement.
+
+Would you like me to write the Python diagnostic scanner or the React interactive UI for this next?`;
+  }
+
+  return `Hello ${username}! I am **LAF Model**. 
+
+I am ready to help you with coding, technical analysis, content creation, or step-by-step problem solving. What specific feature or answer would you like me to generate for you next? 😊`;
 }
 
 module.exports = {
