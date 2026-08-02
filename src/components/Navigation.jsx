@@ -1,11 +1,9 @@
 import React from 'react';
-import { MessageSquare, Sparkles, Globe, Database, Shield, Plus, User, Settings, LogOut, PanelLeftClose } from 'lucide-react';
+import { Plus, User, Settings, LogOut, PanelLeftClose } from 'lucide-react';
 
 export default function Navigation({
   sidebarOpen,
   setSidebarOpen,
-  activeTab,
-  setActiveTab,
   user,
   onLogout,
   onOpenSettings,
@@ -14,14 +12,6 @@ export default function Navigation({
   loadConversation,
   startNewChat
 }) {
-  const navItems = [
-    { id: 'chat', label: 'LAF Chat', icon: MessageSquare },
-    { id: 'media', label: 'Multimodal Studio', icon: Sparkles },
-    { id: 'trends', label: 'Global World Trends', icon: Globe },
-    { id: 'memory', label: 'Memory Vault (DB)', icon: Database },
-    { id: 'security', label: 'Security & E2EE', icon: Shield }
-  ];
-
   return (
     <aside className={`floating-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       
@@ -31,9 +21,9 @@ export default function Navigation({
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
             alt="LAF Logo"
-            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
+            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--ds-blue)' }}
           />
-          <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#fff', letterSpacing: '0.3px' }}>
+          <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#fff', letterSpacing: '0.3px', fontFamily: 'var(--font-title)' }}>
             LAF
           </span>
         </div>
@@ -52,51 +42,16 @@ export default function Navigation({
         className="ds-new-chat-btn"
         style={{ marginTop: '12px' }}
         onClick={() => {
-          setActiveTab('chat');
           startNewChat();
           setSidebarOpen(false);
         }}
       >
-        <Plus style={{ width: '18px', color: 'var(--ds-text-primary)' }} />
+        <Plus style={{ width: '18px', color: 'var(--ds-blue)' }} />
         <span>New chat</span>
       </button>
 
-      {/* Workspace Switcher Items */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '12px 0 16px 0' }}>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                setSidebarOpen(false);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                background: isActive ? 'var(--ds-bg-card)' : 'transparent',
-                color: isActive ? 'var(--ds-text-primary)' : 'var(--ds-text-secondary)',
-                fontWeight: isActive ? '600' : '400',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
-            >
-              <Icon style={{ width: '16px', color: isActive ? 'var(--ds-blue)' : 'var(--ds-text-muted)' }} />
-              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Recent Chats List */}
-      <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid var(--ds-border)', paddingTop: '12px' }}>
+      {/* Recent Chats History Section */}
+      <div style={{ flex: 1, overflowY: 'auto', margin: '16px 0', borderTop: '1px solid var(--ds-border)', paddingTop: '12px' }}>
         <div style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--ds-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 6px 8px 6px' }}>
           Recent Chats
         </div>
@@ -106,17 +61,17 @@ export default function Navigation({
             <div
               key={c.id}
               onClick={() => {
-                setActiveTab('chat');
                 loadConversation(c.id);
                 setSidebarOpen(false);
               }}
               style={{
-                padding: '8px 10px',
+                padding: '9px 12px',
                 borderRadius: 'var(--radius-sm)',
-                marginBottom: '2px',
+                marginBottom: '4px',
                 background: activeConvId === c.id ? 'var(--ds-bg-card-hover)' : 'transparent',
+                border: activeConvId === c.id ? '1px solid var(--ds-border)' : '1px solid transparent',
                 cursor: 'pointer',
-                fontSize: '0.83rem',
+                fontSize: '0.84rem',
                 color: activeConvId === c.id ? '#fff' : 'var(--ds-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
@@ -135,7 +90,7 @@ export default function Navigation({
         )}
       </div>
 
-      {/* User Name & Profile at Bottom (Requirement) */}
+      {/* User Name & Profile at Bottom (Required) */}
       <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -143,7 +98,7 @@ export default function Navigation({
           </div>
           <div>
             <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff' }}>{user?.username}</div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--accent-green)' }}>● Isolated DB Mounted</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--ds-text-muted)' }}>@{user?.username?.toLowerCase()}</div>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { PanelLeft, PanelLeftClose, Plus } from 'lucide-react';
+import { PanelLeft, PanelLeftClose } from 'lucide-react';
 
-export default function Header({ sidebarOpen, setSidebarOpen, startNewChat, setActiveTab }) {
+export default function Header({ sidebarOpen, setSidebarOpen }) {
   return (
     <div className="floating-top-bar">
       {/* Circle LAF Logo */}
@@ -13,11 +13,12 @@ export default function Header({ sidebarOpen, setSidebarOpen, startNewChat, setA
           height: '30px',
           borderRadius: '50%',
           objectFit: 'cover',
-          border: '2px solid var(--ds-blue)'
+          border: '2px solid var(--ds-blue)',
+          boxShadow: '0 0 10px rgba(79, 117, 255, 0.4)'
         }}
       />
 
-      {/* Sidebar Toggle Button (Click to open or close) */}
+      {/* Sidebar Toggle Button (Click to open or close sidebar) */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         style={{
@@ -36,30 +37,6 @@ export default function Header({ sidebarOpen, setSidebarOpen, startNewChat, setA
         ) : (
           <PanelLeft style={{ width: '20px', color: 'var(--ds-text-primary)' }} />
         )}
-      </button>
-
-      {/* Floating New Chat Option */}
-      <button
-        onClick={() => {
-          setActiveTab('chat');
-          startNewChat();
-        }}
-        style={{
-          background: 'rgba(255, 255, 255, 0.06)',
-          border: '1px solid var(--ds-border)',
-          color: '#fff',
-          borderRadius: 'var(--radius-full)',
-          padding: '4px 12px',
-          fontSize: '0.8rem',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}
-      >
-        <Plus style={{ width: '14px', color: 'var(--ds-blue)' }} />
-        <span>New chat</span>
       </button>
     </div>
   );

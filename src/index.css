@@ -1,29 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --ds-bg-main: #0d1117;
-  --ds-bg-sidebar: #161b22;
-  --ds-bg-card: #21262d;
-  --ds-bg-card-hover: #2d333b;
-  --ds-bg-input: #1c212a;
+  /* 1:1 DeepSeek & LAF High-Contrast Glowing Palette */
+  --ds-bg-main: #0b0e14;
+  --ds-bg-sidebar: #141822;
+  --ds-bg-card: #1c212d;
+  --ds-bg-card-hover: #262c3a;
+  --ds-bg-input: #171c26;
   
-  --ds-border: #30363d;
-  --ds-border-light: rgba(255, 255, 255, 0.08);
+  --ds-border: rgba(79, 117, 255, 0.35);
+  --ds-border-glow: 0 0 16px rgba(79, 117, 255, 0.25);
+  --ds-border-light: rgba(255, 255, 255, 0.1);
 
   --ds-blue: #4f75ff;
   --ds-blue-hover: #3b62ff;
-  --ds-blue-bg: rgba(79, 117, 255, 0.12);
+  --ds-blue-bg: rgba(79, 117, 255, 0.15);
 
-  --ds-text-primary: #f0f6fc;
-  --ds-text-secondary: #8b949e;
-  --ds-text-muted: #6e7681;
+  --ds-text-primary: #f8fafc;
+  --ds-text-secondary: #94a3b8;
+  --ds-text-muted: #64748b;
 
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-title: 'Outfit', sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
 }
 
@@ -42,7 +44,7 @@ body {
   min-height: 100vh;
 }
 
-/* Floating Sidebar Container */
+/* Floating Sidebar Container with Glowing Border */
 .floating-sidebar {
   position: fixed;
   top: 0;
@@ -51,12 +53,12 @@ body {
   width: 260px;
   background-color: var(--ds-bg-sidebar);
   border-right: 1px solid var(--ds-border);
+  box-shadow: var(--ds-border-glow);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   padding: 16px;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .floating-sidebar.closed {
@@ -67,7 +69,7 @@ body {
   transform: translateX(0);
 }
 
-/* Floating Top-Left Bar */
+/* Floating Top-Left Bar with Glowing Border */
 .floating-top-bar {
   position: fixed;
   top: 16px;
@@ -76,47 +78,61 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(22, 27, 34, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(20, 24, 34, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-border-glow);
   padding: 6px 12px;
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Circle LAF Logo */
-.laf-circle-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--ds-blue);
-  box-shadow: 0 0 10px rgba(79, 117, 255, 0.4);
-}
-
-/* Floating Centered Input Container */
+/* Floating Centered Input Container with Glowing Border */
 .floating-input-card {
   width: 100%;
   max-width: 760px;
   background: var(--ds-bg-input);
   border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-border-glow);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
-  transition: border-color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .floating-input-card:focus-within {
-  border-color: var(--ds-blue);
+  border-color: #6386ff;
+  box-shadow: 0 0 24px rgba(99, 134, 255, 0.4);
 }
 
-/* DeepSeek Thought Accordion Box */
+/* DeepSeek "+ New chat" Button with Glowing Accent */
+.ds-new-chat-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--ds-bg-card);
+  border: 1px solid var(--ds-border);
+  color: var(--ds-text-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.ds-new-chat-btn:hover {
+  background: var(--ds-bg-card-hover);
+  border-color: var(--ds-blue);
+  box-shadow: 0 0 12px rgba(79, 117, 255, 0.3);
+}
+
+/* Thought Accordion Box */
 .ds-thought-container {
-  background: rgba(79, 117, 255, 0.05);
+  background: rgba(79, 117, 255, 0.06);
   border-left: 3px solid var(--ds-blue);
   border-radius: 4px;
   padding: 10px 14px;
@@ -135,6 +151,25 @@ body {
   user-select: none;
 }
 
+/* Settings Modal Tabs */
+.settings-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--ds-text-secondary);
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.settings-tab-btn.active {
+  color: var(--ds-blue);
+  border-bottom-color: var(--ds-blue);
+  font-weight: 600;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
@@ -144,7 +179,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: rgba(79, 117, 255, 0.3);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
