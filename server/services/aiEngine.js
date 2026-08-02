@@ -1,22 +1,22 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an ultra-fast, state-of-the-art AI assistant with human-minded reasoning and conversational intelligence.
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an advanced, ultra-fast AI assistant powered by Ollama and Llama 3.2.
 
-OPERATIONAL INSTRUCTIONS:
-1. NATURAL HUMAN CONVERSATION: Speak naturally, warmly, and intelligently like ChatGPT/DeepSeek/Gemini. Never output rigid, robotic debug templates or "I've analyzed your prompt regarding...".
-2. GREETINGS & CASUAL CHAT: Respond warmly to greetings ("hello dudee", "hey bro", "hi laf") with natural, helpful dialogue.
-3. ACCURACY & CODE: For coding, technical queries, or system designs, deliver clean, accurate, bug-free production code with clear explanations.
-4. IDENTITY: You are LAF ("Look At the Future").`;
+OPERATIONAL RULES:
+1. NATURAL CONVERSATION: Respond warmly, accurately, and intelligently like ChatGPT / DeepSeek.
+2. NO ROBOTIC TEMPLATES: Never output system debug logs or boilerplate phrases like "I've analyzed your prompt regarding...".
+3. GREETINGS & INTROS: For casual greetings ("hello dudee", "hi bro", "hey laf"), respond warmly and ask how you can assist them today.
+4. ACCURACY: Provide clean, bug-free, high-performance code, logical explanations, and detailed answers in Markdown format.`;
 
 /**
- * Intelligent Multi-Model Conversational Engine for LAF
+ * Integrated Ollama & Multi-Provider AI Reasoning Engine for LAF
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   const lowerPrompt = cleanPrompt.toLowerCase();
 
-  // 1. Handle Greetings & Casual Intros Naturally ("hello dudee", "hi bro", etc.)
+  // 1. Natural Greeting Intent Matching
   if (/^(hello|hi|hey|greetings|yo|sup|hola|namaste)(\s+(dudee?|dude|bro|laf|there|friend|man))?!?$/i.test(cleanPrompt)) {
     const naturalGreetings = [
       `Hello ${username}! 😊 How can I help you today? Whether you need help with coding, content, research, or brainstorming ideas, I'm here for you!`,
@@ -25,11 +25,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     ];
     return {
       text: naturalGreetings[Math.floor(Math.random() * naturalGreetings.length)],
-      provider: 'LAF Conversational Engine'
+      provider: 'LAF Ollama Engine'
     };
   }
 
-  // 2. Handle Capabilities / "What can you do?" Queries
+  // 2. Capabilities Intent Matching ("What can you do?")
   if (
     lowerPrompt.includes('what can you do') ||
     lowerPrompt.includes('what are your capabilities') ||
@@ -38,7 +38,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     lowerPrompt.includes('help me with')
   ) {
     return {
-      text: `Hello ${username}! I'm **LAF** ("Look At the Future"), your intelligent AI assistant. Here's a rundown of what I can do for you:
+      text: `Hello ${username}! I'm **LAF** ("Look At the Future"), powered by **Ollama & Llama 3.2**. Here's a rundown of what I can do for you:
 
 📝 **Writing & Content**
 - Write, edit, and proofread essays, articles, emails, reports, and documentation
@@ -72,11 +72,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 ---
 
 So... what would you like to do today? 😊 Feel free to ask anything or pick a topic to start!`,
-      provider: 'LAF Core Engine'
+      provider: 'LAF Ollama Core Engine'
     };
   }
 
-  // 3. Search User Memory Context
+  // 3. User Memory Context Search
   let memoryContext = '';
   if (
     lowerPrompt.includes('past conversation') ||
@@ -110,9 +110,38 @@ So... what would you like to do today? 😊 Feel free to ask anything or pick a 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 4. Multi-Provider External AI API Pipeline
-  
-  // Provider A: User Custom API Key or Gemini Flash LLM API
+  // 4. Provider 1: Local / Host Ollama Engine (Llama 3.2)
+  const ollamaEndpoints = [
+    'http://127.0.0.1:11434/api/chat',
+    'http://172.17.0.1:11434/api/chat',
+    'http://host.docker.internal:11434/api/chat'
+  ];
+
+  for (const endpoint of ollamaEndpoints) {
+    try {
+      const ollamaRes = await axios.post(
+        endpoint,
+        {
+          model: 'llama3.2:latest',
+          messages: formattedMessages,
+          stream: false
+        },
+        { timeout: 15000 }
+      );
+
+      const content = ollamaRes.data?.message?.content;
+      if (content && content.trim().length > 0) {
+        return {
+          text: content.trim(),
+          provider: 'LAF Ollama Engine (Llama 3.2)'
+        };
+      }
+    } catch (e) {
+      // Try next endpoint quietly
+    }
+  }
+
+  // 5. Provider 2: Gemini API Backup (If API Key provided)
   const geminiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
     try {
@@ -132,26 +161,25 @@ So... what would you like to do today? 😊 Feel free to ask anything or pick a 
       if (candidate && candidate.trim().length > 0) {
         return {
           text: candidate.trim(),
-          provider: 'Gemini 1.5 Flash (Ultra-Fast)'
+          provider: 'Gemini 1.5 Flash'
         };
       }
     } catch (err) {
-      console.warn('Gemini endpoint failed, switching to external LLM provider:', err.message);
+      console.warn('Gemini endpoint failed:', err.message);
     }
   }
 
-  // Provider B: Unauthenticated Pollinations Multi-Model POST Pipeline
+  // 6. Provider 3: Pollinations API Fallback
   try {
     const response = await axios.post(
       'https://text.pollinations.ai/',
       {
         messages: formattedMessages,
-        temperature: 0.7,
-        seed: Math.floor(Math.random() * 1000000)
+        temperature: 0.7
       },
       {
         headers: { 'Content-Type': 'application/json' },
-        timeout: 15000
+        timeout: 12000
       }
     );
 
@@ -162,33 +190,19 @@ So... what would you like to do today? 😊 Feel free to ask anything or pick a 
       textOut = response.data.choices[0].message.content;
     }
 
-    if (textOut && textOut.trim().length > 0 && !textOut.includes('analyzed your prompt regarding')) {
+    if (textOut && textOut.trim().length > 0) {
       return {
         text: textOut.trim(),
-        provider: 'LAF Deep Reasoning Engine'
+        provider: 'LAF Cloud Neural Engine'
       };
     }
   } catch (err) {
-    console.warn('Pollinations POST failed:', err.message);
+    console.warn('Pollinations failed:', err.message);
   }
 
-  // Provider C: Direct GET Pipeline Fallback
-  try {
-    const encodedPrompt = encodeURIComponent(`${fullSystemPrompt}\n\nUser Question: ${cleanPrompt}\n\nLAF Answer:`);
-    const getRes = await axios.get(`https://text.pollinations.ai/${encodedPrompt}?cache=false`, { timeout: 12000 });
-    if (getRes.data && typeof getRes.data === 'string' && getRes.data.trim().length > 0) {
-      return {
-        text: getRes.data.trim(),
-        provider: 'LAF Neural Web Engine'
-      };
-    }
-  } catch (e) {
-    console.warn('GET API failed:', e.message);
-  }
-
-  // Provider D: Natural Human Conversational Fallback (Zero Template Output!)
+  // Fallback Response
   return {
-    text: `I understand! Regarding your query about **"${cleanPrompt}"**, I am here to help you work through it step-by-step. What specific code, feature, or answer would you like me to generate for you next? 😊`,
+    text: `Hello ${username}! Regarding your prompt **"${cleanPrompt}"**: I am ready to help you analyze or code this solution step-by-step. What specific module should we build next? 😊`,
     provider: 'LAF Core Engine'
   };
 }
