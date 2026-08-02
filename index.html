@@ -2,34 +2,35 @@
 <html lang="en" class="notranslate" translate="no">
 <head>
   <meta charset="UTF-8" />
-  <title>LAF - Look At Future</title>
+  <title>LAF - Into the Future</title>
   <meta name="viewport" content="initial-scale=1.0,maximum-scale=1,minimum-scale=1.0,user-scalable=no,width=device-width,viewport-fit=cover" />
-  <meta name="commit-id" content="laf-v2.5-prod" />
-  <meta name="description" content="Chat with LAF AI – your intelligent assistant for fast reasoning, multimodal image, audio, and video creation, end-to-end encrypted isolated memory databases, and global world trends. | Look At Future." />
-  <meta name="keywords" content="LAF,LAF AI,LAF Chat,Look At Future,AI assistant,coding assistant,fast reasoning LLM,multimodal AI,E2EE AI,isolated database AI,AI chatbot,AI image generation,AI audio synthesis,AI video motion" />
+  <meta name="commit-id" content="a08e50a" />
+  <meta name="description" content="Chat with LAF AI – your intelligent assistant for fast reasoning, coding, content creation, multimodal image, audio, and video creation, end-to-end encrypted isolated memory databases, and global world trends. | LAF (Look At Future)." />
+  <meta name="keywords" content="LAF,LAF AI,LAF Chat,Look At Future,AI assistant,coding assistant,long-context LLM,Open Source LLM,natural language processing,AI chatbot,AI content creation,multimodal AI,E2EE AI,isolated database AI" />
   
-  <!-- OpenGraph Metadata -->
+  <!-- Open Graph -->
   <meta property="og:url" content="https://98.89.32.42.nip.io" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="LAF - Look At Future" />
+  <meta property="og:title" content="LAF" />
   <meta property="og:description" content="Chat with LAF AI - Look At Future." />
   <meta property="og:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
   
-  <!-- Twitter Metadata -->
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta property="twitter:domain" content="98.89.32.42.nip.io" />
   <meta property="twitter:url" content="https://98.89.32.42.nip.io" />
-  <meta name="twitter:title" content="LAF - Look At Future" />
+  <meta name="twitter:title" content="LAF" />
   <meta name="twitter:description" content="Chat with LAF AI - Look At Future." />
   <meta name="twitter:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
   
   <meta name="google" content="notranslate" />
+  <meta name="region" content="IN" />
 
   <!-- Icons -->
   <link rel="apple-touch-icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
   <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
 
-  <!-- Fallback Error Overlay Styling (DeepSeek Spec adapted for LAF) -->
+  <!-- DeepSeek Style Header Overlay and KaTeX Styles -->
   <style>
     ._sri-logo {
       position: absolute;
@@ -37,8 +38,9 @@
       top: 21px;
       user-select: none;
       z-index: 1;
-      height: 28px;
-      width: auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
     }
     div._sri-ck {
       margin: 0;
@@ -58,8 +60,8 @@
       color: #f0f6fc;
     }
     ._sri-ck .img {
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       margin-bottom: 24px;
       border: 2px solid #4f75ff;
@@ -75,11 +77,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: 38px;
+      height: 36px;
       min-width: 80px;
-      padding: 12px 18px;
+      padding: 12px 16px;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       color: #fff;
       background: #4f75ff;
       border: none;
@@ -87,35 +89,53 @@
       cursor: pointer;
       font-family: inherit;
       box-sizing: border-box;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     ._sri-ck .btn:hover {
       background: #3b62ff;
-      box-shadow: 0 0 15px rgba(79, 117, 255, 0.5);
+    }
+
+    body.change-theme * {
+      transition: none !important;
+    }
+    body.change-theme *::before {
+      transition: none !important;
+    }
+    body.change-theme *::after {
+      transition: none !important;
     }
   </style>
 
-  <!-- Script Error Handler (Adapted from DeepSeek) -->
+  <!-- KaTeX Math Equation Styling -->
+  <link data-rspack="@deepseek/chat:chunk-52059" rel="stylesheet" href="https://fe-static.deepseek.com/chat/static/katex.effce08cb3.css" />
+
+  <!-- Script Error Handler (DeepSeek Spec adapted for LAF) -->
   <script>
     (() => {
       "use strict";
-      const translations = {
-        en: { d: "Unable to load LAF AI resources. Please refresh and try again.", b: "Reload", logo: "LAF AI" },
-        zh: { d: "LAF AI 页面资源加载异常，请刷新重试", b: "重新加载", logo: "LAF AI" }
-      };
+      let e = null,
+        t = { disable_sdk_monitor: true, enable_ab_test: false, auto_exposure_expriment: false, enable_stay_duration: true, enable_debug: false },
+        a = function() { return typeof window.collectEvent !== "function" ? () => 0 : window.collectEvent.apply(window, arguments); },
+        o = {
+          en: { d: "Unable to load LAF AI page resources. Please refresh and try again.", b: "Reload", logo: "LAF" },
+          zh: { d: "LAF AI 页面资源加载异常，请刷新重试", b: "重新加载", logo: "LAF" }
+        };
       window._sriCk = function() {
-        let langList = navigator.languages || [navigator.language || ""];
-        let userLang = "en";
-        for (let i = 0; i < langList.length; i++) {
-          let code = langList[i].toLowerCase().split("-")[0];
-          if (translations[code]) { userLang = code; break; }
-        }
-        let t = translations[userLang] || translations.en;
-        let html = '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="' + t.logo + '" class="_sri-logo">';
-        html += '<div class="_sri-ck"><img class="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="LAF"><p class="desc">' + t.d + '</p><button class="btn" onclick="location.reload()">' + t.b + '</button></div>';
-        let container = document.createElement("div");
-        document.body.replaceChildren(container);
-        container.innerHTML = html;
+        let r, n, i, s, d, c,
+          l = (function(e) {
+            let t = navigator.languages || [navigator.language || ""];
+            for (let a = 0; a < t.length; a++) {
+              let o = t[a].toLowerCase().split("-")[0];
+              if (e.includes(o)) return o;
+            }
+            return null;
+          })(Object.keys(o)),
+          g = l ? o[l] : o.en,
+          m = '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="' + g.logo + '" class="_sri-logo">';
+        m += '<div class="_sri-ck"><img class="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="LAF"><p class="desc">' + g.d + '</p><button class="btn" onclick="location.reload()">' + g.b + '</button></div>';
+        i = (n = document).createElement("div");
+        n.body.replaceChildren(i);
+        i.innerHTML = m;
       };
     })();
   </script>
