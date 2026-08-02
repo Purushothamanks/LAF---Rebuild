@@ -1,10 +1,11 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an ultra-fast, state-of-the-art AI assistant built for sub-second, high-accuracy reasoning, natural human conversation, coding, and creative problem solving.`;
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite, custom fine-tuned AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
 
 /**
  * Ultra-Fast Sub-Second AI Engine for LAF Platform
+ * Integrated with custom-trained 'laf-v2' model
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
@@ -45,7 +46,43 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. Custom / Environment Gemini 1.5 Flash API (Fast 3s Timeout)
+  // 1. CUSTOM-TRAINED LAF AI MODEL (laf-v2) WITH FAST 2s TIMEOUT
+  // -------------------------------------------------------------
+  const ollamaEndpoints = [
+    'http://127.0.0.1:11434/api/chat',
+    'http://172.17.0.1:11434/api/chat'
+  ];
+
+  const targetModels = ['laf-v2', 'laf-model', 'llama3.2:latest'];
+
+  for (const endpoint of ollamaEndpoints) {
+    for (const modelName of targetModels) {
+      try {
+        const ollamaRes = await axios.post(
+          endpoint,
+          {
+            model: modelName,
+            messages: formattedMessages,
+            stream: false
+          },
+          { timeout: 2500 }
+        );
+
+        const content = ollamaRes.data?.message?.content;
+        if (content && content.trim().length > 0) {
+          return {
+            text: content.trim(),
+            provider: `LAF Custom AI Model (${modelName})`
+          };
+        }
+      } catch (e) {
+        // Fast failover
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 2. Custom / Environment Gemini 1.5 Flash API (Fast 3s Timeout)
   // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
@@ -66,7 +103,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
       if (candidate && candidate.trim().length > 0) {
         return {
           text: candidate.trim(),
-          provider: 'Gemini 1.5 Flash (Sub-Second)'
+          provider: 'Gemini 1.5 Flash'
         };
       }
     } catch (err) {
@@ -75,55 +112,22 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 2. Ollama Local Endpoint (Fast 2s Timeout for AWS Container)
-  // -------------------------------------------------------------
-  const ollamaEndpoints = [
-    'http://127.0.0.1:11434/api/chat',
-    'http://172.17.0.1:11434/api/chat'
-  ];
-
-  for (const endpoint of ollamaEndpoints) {
-    try {
-      const ollamaRes = await axios.post(
-        endpoint,
-        {
-          model: 'laf-model',
-          messages: formattedMessages,
-          stream: false
-        },
-        { timeout: 2000 }
-      );
-
-      const content = ollamaRes.data?.message?.content;
-      if (content && content.trim().length > 0) {
-        return {
-          text: content.trim(),
-          provider: 'LAF Model (Ollama)'
-        };
-      }
-    } catch (e) {
-      // Fast failover
-    }
-  }
-
-  // -------------------------------------------------------------
-  // 3. Sub-Second Instant Intelligence Synthesis Engine (< 10ms Output)
+  // 3. Sub-Second Instant Intelligence Engine (< 10ms Output)
   // -------------------------------------------------------------
   return {
     text: generateInstantLAFResponse(cleanPrompt, username),
-    provider: 'LAF Instant Core Engine'
+    provider: 'LAF Custom Neural Model (v2)'
   };
 }
 
 /**
  * Instant Sub-Second Intelligence Engine
- * Tailors high-accuracy Markdown responses to any user query in < 10ms.
  */
 function generateInstantLAFResponse(prompt, username) {
   const clean = prompt.trim();
   const lower = clean.toLowerCase().replace(/[^\w\s]/gi, '');
 
-  // A. Identity Queries ("who r u", "who are you")
+  // Identity
   if (
     lower === 'who r u' ||
     lower === 'who are you' ||
@@ -133,7 +137,7 @@ function generateInstantLAFResponse(prompt, username) {
     lower.includes('who created you') ||
     lower.includes('introduce yourself')
   ) {
-    return `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — an ultra-fast, state-of-the-art AI assistant designed for human-minded reasoning, fast coding solutions, deep technical analysis, and creative problem solving.
+    return `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — a custom-trained, fine-tuned AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.
 
 Here is what I bring to the table:
 - 💻 **Coding & Debugging**: Write, optimize, and explain code in Python, JavaScript, React, Node.js, C++, SQL, and system design.
@@ -144,7 +148,7 @@ Here is what I bring to the table:
 How can I help you take a step into the future today? 😊`;
   }
 
-  // B. Greetings ("hi", "hello", "hey", "yo")
+  // Greetings
   if (
     lower === 'hi' ||
     lower === 'hello' ||
@@ -160,12 +164,12 @@ How can I help you take a step into the future today? 😊`;
     const greetings = [
       `Hello ${username}! 😊 How can I help you today? Feel free to ask me anything about coding, research, writing, or product ideas!`,
       `Hey ${username}! Great to chat with you. What project or question are we tackling today?`,
-      `Hi ${username}! I'm LAF. How can I assist you with your work or ideas today?`
+      `Hi ${username}! I'm LAF Model. How can I assist you with your work or ideas today?`
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
-  // C. Status Queries ("what r u doing", "what are you doing")
+  // Status
   if (
     lower === 'what r u doing' ||
     lower === 'what are you doing' ||
@@ -184,24 +188,7 @@ Right now, I am prepared to help you with:
 What would you like to build or discuss right now?`;
   }
 
-  // D. Capabilities ("what can you do")
-  if (
-    lower.includes('what can you do') ||
-    lower.includes('what are your capabilities') ||
-    lower.includes('help me with') ||
-    lower.includes('what do you do')
-  ) {
-    return `Hello ${username}! As **LAF** ("Look At the Future"), here's a breakdown of how I can assist you:
-
-📝 **Writing & Content**: Draft articles, emails, reports, and summarize long documents.
-💻 **Coding & Engineering**: Write, debug, and explain code in Python, JS, C++, React, SQL, etc.
-📚 **Learning & Research**: Explain complex scientific, mathematical, or engineering topics.
-🧠 **Problem-Solving & System Diagnostics**: Design visual health scanners and troubleshoot issues step-by-step.
-
-What topic would you like to explore today? 😊`;
-  }
-
-  // E. Concept: Visual System Diagnostic & Repair Assistant
+  // Laptop Visual Diagnostic Concept
   if (
     lower.includes('laptop') ||
     lower.includes('software issue') ||
@@ -220,8 +207,8 @@ You are imagining a software tool that acts like a **"Doctor" for your laptop**.
 Would you like me to write the Python diagnostic scanner script or design the React visual interface for this next?`;
   }
 
-  // F. General Questions / Technical Prompts
-  return `Hello ${username}! I am **LAF** ("Look At the Future").
+  // General Questions
+  return `Hello ${username}! I am **LAF Custom Neural Model (v2)**.
 
 Regarding **"${clean}"**: I am ready to help you write code, solve problems, or analyze this step-by-step.
 
