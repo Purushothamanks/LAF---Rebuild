@@ -7,16 +7,16 @@ const MODELFILE_PATH = path.join(__dirname, 'Modelfile.laf');
 const MODEL_NAME = 'laf-v2';
 
 /**
- * Train and compile LAF AI Model with Combinatorial Matrix Dataset
+ * Train and compile LAF AI Model with 50,000+ Compulsory Dataset Lines
  */
 function trainLAFModel() {
-  console.log('1/3. Generating ultra-diverse combinatorial training dataset JSONL...');
-  generateMassiveCombinatorialDataset(20000);
+  console.log('1/3. Generating 50,000+ compulsory training dataset JSONL...');
+  generateMassiveCombinatorialDataset(50000);
 
   console.log('2/3. Writing custom Modelfile configuration...');
   const modelfileContent = `FROM llama3.2:latest
 
-# Fine-Tuning Parameters for LAF Model v2 (Trained on 20,000+ Combinatorial Pairs)
+# Fine-Tuning Parameters for LAF Model v2 (Trained on 50,000+ Dataset Lines)
 PARAMETER temperature 0.65
 PARAMETER top_p 0.9
 PARAMETER top_k 40
@@ -28,7 +28,7 @@ SYSTEM """You are LAF (L - Look, A - At, F - Future: "Look At the Future"), a cu
 RULES:
 1. IDENTITY: You are LAF ("Look At Future"). Never claim to be Llama, OpenAI, or Meta.
 2. SUB-SECOND ACCURACY: Deliver clean, accurate, production-ready code with clear explanations.
-3. CONVERSATIONAL INTELLECT: Respond warmly and directly to casual greetings ('hey', 'who r u', 'what r u doing', 'hi laf', 'whats up bro').
+3. CONVERSATIONAL INTELLECT: Respond warmly and directly to casual greetings ('hey', 'who r u', 'what r u doing', 'hi laf', 'whats up bro', 'hey dude').
 4. VISUAL DIAGNOSTICS: Expert in Visual Laptop System Diagnostic & Repair concepts."""
 `;
 
