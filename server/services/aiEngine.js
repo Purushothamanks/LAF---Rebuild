@@ -1,11 +1,11 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
+const SYSTEM_PROMPT = `You are LAF AI, an elite AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving. Always provide complete, clear, and well-structured responses. When writing code, format it cleanly in markdown code blocks.`;
 
 /**
  * 100% Direct Passthrough Engine to Llama AI Model (llama3.2:latest)
- * Optimized with fast CPU context options (num_ctx: 2048, num_predict: 512) for sub-5 second responses.
+ * Optimized with fast CPU parameters (num_ctx: 4096, num_predict: 2048) for complete, fast responses.
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
@@ -48,7 +48,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (60s Timeout)
+  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (120s Timeout)
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://172.17.0.1:11434/api/chat',
@@ -69,14 +69,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             messages: formattedMessages,
             stream: false,
             options: {
-              num_ctx: 2048,
-              num_predict: 512,
+              num_ctx: 4096,
+              num_predict: 2048,
               temperature: 0.7
             }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 60000
+            timeout: 120000
           }
         );
 

@@ -8,13 +8,20 @@ import MemoryVault from './components/MemoryVault';
 import SecurityVault from './components/SecurityVault';
 import LoginModal from './components/LoginModal';
 import SettingsModal from './components/SettingsModal';
+import DownloadAppModal from './components/DownloadAppModal';
+import HelpFeedbackModal from './components/HelpFeedbackModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('laf_token') || '');
   const [activeTab, setActiveTab] = useState('chat');
   const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('laf_custom_api_key') || '');
+  
+  // Modal toggle states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDownloadAppOpen, setIsDownloadAppOpen] = useState(false);
+  const [isHelpFeedbackOpen, setIsHelpFeedbackOpen] = useState(false);
+
   const [loadingSession, setLoadingSession] = useState(true);
 
   // Sidebar toggle state (open / closed)
@@ -127,7 +134,7 @@ export default function App() {
         />
       )}
 
-      {/* Collapsible Floating Sidebar (Shows User Name at Bottom) */}
+      {/* Collapsible Floating Sidebar (Shows User Name + (...) Menu at Bottom) */}
       {user && (
         <Navigation
           sidebarOpen={sidebarOpen}
@@ -137,6 +144,8 @@ export default function App() {
           user={user}
           onLogout={handleLogout}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenDownloadApp={() => setIsDownloadAppOpen(true)}
+          onOpenHelpFeedback={() => setIsHelpFeedbackOpen(true)}
           conversations={conversations}
           activeConvId={activeConvId}
           loadConversation={loadConversation}
@@ -166,12 +175,26 @@ export default function App() {
         </main>
       )}
 
-      {/* Settings Modal */}
+      {/* Settings Modal (Bent Corners Box Layout) */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        user={user}
+        onLogout={handleLogout}
         customApiKey={customApiKey}
         setCustomApiKey={setCustomApiKey}
+      />
+
+      {/* Download App Modal */}
+      <DownloadAppModal
+        isOpen={isDownloadAppOpen}
+        onClose={() => setIsDownloadAppOpen(false)}
+      />
+
+      {/* Help & Feedback Modal */}
+      <HelpFeedbackModal
+        isOpen={isHelpFeedbackOpen}
+        onClose={() => setIsHelpFeedbackOpen(false)}
       />
     </div>
   );

@@ -22,9 +22,11 @@
 
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-title: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --radius-oval: 9999px;
   --radius-md: 14px;
+  --radius-bent: 24px;
 }
 
 * {
@@ -52,7 +54,7 @@ body {
   background-color: var(--ds-bg-sidebar);
   border: 1px solid var(--ds-border);
   box-shadow: var(--ds-border-glow);
-  border-radius: 24px;
+  border-radius: var(--radius-bent);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -129,25 +131,169 @@ body {
   box-shadow: 0 0 14px rgba(79, 117, 255, 0.35);
 }
 
-/* Thought Accordion Box */
-.ds-thought-container {
-  background: rgba(79, 117, 255, 0.06);
-  border-left: 3px solid var(--ds-blue);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 0.85rem;
-  color: var(--ds-text-secondary);
-}
-
-.ds-thought-header {
+/* Thinking... Animated Indicator */
+.thinking-animation-container {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(79, 117, 255, 0.08);
+  border: 1px solid var(--ds-border);
+  border-radius: 18px;
+  align-self: flex-start;
+  box-shadow: 0 0 16px rgba(79, 117, 255, 0.2);
+}
+
+.thinking-text-glow {
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--ds-blue);
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.4px;
+}
+
+.thinking-dots span {
+  animation: waveDots 1.4s infinite ease-in-out;
+  display: inline-block;
+}
+.thinking-dots span:nth-child(1) { animation-delay: 0s; }
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes waveDots {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+  30% { transform: translateY(-4px); opacity: 1; color: #fff; }
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* CODE BOX STYLING */
+.code-box {
+  margin: 14px 0;
+  background: #0d111a;
+  border: 1px solid rgba(79, 117, 255, 0.35);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.code-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #141a29;
+  border-bottom: 1px solid rgba(79, 117, 255, 0.2);
+}
+
+.code-box-lang {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ds-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.code-box-copy-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--ds-text-secondary);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.code-box-copy-btn:hover {
+  background: var(--ds-blue-bg);
+  border-color: var(--ds-blue);
+  color: #fff;
+}
+
+.code-box pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.code-box code {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre;
+}
+
+/* Inline Code */
+p code, li code {
+  background: rgba(79, 117, 255, 0.15);
+  border: 1px solid rgba(79, 117, 255, 0.3);
+  color: #7dd3fc;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* Popover More Options Menu (...) */
+.more-options-popover {
+  position: absolute;
+  bottom: 60px;
+  right: 12px;
+  width: 210px;
+  background: #141824;
+  border: 1px solid var(--ds-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(79, 117, 255, 0.25);
+  border-radius: 18px;
+  padding: 8px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.more-options-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: var(--ds-text-primary);
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.more-options-item:hover {
+  background: var(--ds-bg-card-hover);
+  color: #fff;
+}
+
+.more-options-item.logout-item {
+  color: #ef4444;
+}
+
+.more-options-item.logout-item:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* Settings Modal Header Close Button */
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Settings Modal Tabs (Oval Pill Shape) */

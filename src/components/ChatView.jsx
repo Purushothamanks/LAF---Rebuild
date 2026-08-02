@@ -3,6 +3,26 @@ import { Send, Volume2, Copy, Check, RefreshCw } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
+// Custom Marked renderer to format code blocks into sleek box layout
+const renderer = new marked.Renderer();
+renderer.code = function ({ text, lang }) {
+  const language = (lang || 'code').trim();
+  const escapedCode = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const encodedText = encodeURIComponent(text);
+
+  return `<div class="code-box">
+    <div class="code-box-header">
+      <span class="code-box-lang">${language}</span>
+      <button class="code-box-copy-btn" onclick="navigator.clipboard.writeText(decodeURIComponent('${encodedText}')); this.innerText = 'Copied!'; setTimeout(() => this.innerText = 'Copy code', 2000);">
+        Copy code
+      </button>
+    </div>
+    <pre><code class="language-${language}">${escapedCode}</code></pre>
+  </div>`;
+};
+
+marked.setOptions({ renderer });
+
 export default function ChatView({
   user,
   token,
@@ -27,7 +47,7 @@ export default function ChatView({
     const userMsgText = inputPrompt.trim();
     setInputPrompt('');
 
-    // Append optimistic user message
+    // Append user message
     const newHistory = [...messages, { role: 'user', content: userMsgText, timestamp: new Date().toISOString() }];
     setMessages(newHistory);
     setLoading(true);
@@ -43,8 +63,7 @@ export default function ChatView({
           prompt: userMsgText,
           conversationId: activeConvId,
           history: messages,
-          customApiKey,
-          concisenessMode: 'short'
+          customApiKey
         })
       });
 
@@ -55,38 +74,13 @@ export default function ChatView({
         const fullContent = data.response.content || '';
         const assistantMsgIndex = newHistory.length;
         
+        // Add complete response to messages list directly
         setMessages(prev => [
           ...prev,
-          { role: 'assistant', content: '', provider: data.response.provider }
+          { role: 'assistant', content: fullContent, provider: data.response.provider }
         ]);
 
-        // Real-time character streaming animation
-        let currentText = '';
-        const chunkSize = Math.max(1, Math.floor(fullContent.length / 35));
-        let charIdx = 0;
-
-        const streamInterval = setInterval(() => {
-          charIdx += chunkSize;
-          if (charIdx >= fullContent.length) {
-            currentText = fullContent;
-            clearInterval(streamInterval);
-            setLoading(false);
-          } else {
-            currentText = fullContent.substring(0, charIdx);
-          }
-
-          setMessages(prev => {
-            const updated = [...prev];
-            if (updated[assistantMsgIndex]) {
-              updated[assistantMsgIndex] = {
-                ...updated[assistantMsgIndex],
-                content: currentText
-              };
-            }
-            return updated;
-          });
-        }, 15);
-
+        setLoading(false);
         fetchConversations();
       } else {
         setMessages(prev => [
@@ -98,7 +92,7 @@ export default function ChatView({
     } catch (err) {
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: 'Connection error with LAF reasoning cluster.', provider: 'Offline' }
+        { role: 'assistant', content: 'Connection error with LAF AI cluster.', provider: 'Offline' }
       ]);
       setLoading(false);
     }
@@ -129,18 +123,18 @@ export default function ChatView({
     }
   };
 
-  const userInitial = (user?.username || 'P').substring(0, 1).toUpperCase();
+  const userInitial = (user?.username || 'U').substring(0, 1).toUpperCase();
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
       
       {/* Messages Scroll Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {messages.length === 0 ? (
             /* Floating Centered Welcome Screen */
-            <div style={{ marginTop: '120px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ marginTop: '100px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
                 alt="LAF Logo"
@@ -154,10 +148,10 @@ export default function ChatView({
                 }}
               />
 
-              <h1 style={{ fontSize: '2.1rem', fontWeight: '800', color: '#fff', marginBottom: '8px', fontFamily: 'var(--font-title)' }}>
+              <h1 style={{ fontSize: '2.2rem', fontWeight: '800', color: '#fff', marginBottom: '8px', fontFamily: 'var(--font-title)' }}>
                 Hi, I'm LAF.
               </h1>
-              <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.95rem', marginBottom: '36px' }}>
+              <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.98rem', marginBottom: '36px' }}>
                 How can I help you today?
               </p>
 
@@ -221,10 +215,10 @@ export default function ChatView({
                     gap: '14px',
                     alignItems: 'flex-start',
                     alignSelf: isUser ? 'flex-end' : 'flex-start',
-                    maxWidth: '88%'
+                    maxWidth: '94%'
                   }}
                 >
-                  {/* Avatar Icon (Centered 34px Circle) */}
+                  {/* Avatar Icon */}
                   <div
                     style={{
                       width: '34px',
@@ -272,13 +266,14 @@ export default function ChatView({
                       {isUser ? user.username : 'LAF AI'}
                     </div>
 
-                    {/* Actual Pure Text Message */}
+                    {/* Actual Pure Text & Code Box Message */}
                     <div
                       style={{
                         fontSize: '0.96rem',
                         lineHeight: '1.65',
                         color: 'var(--ds-text-primary)',
                         display: 'inline-block',
+                        width: '100%',
                         textAlign: isUser ? 'right' : 'left'
                       }}
                       dangerouslySetInnerHTML={{
@@ -298,7 +293,7 @@ export default function ChatView({
                       </button>
                       <button
                         onClick={() => handleCopy(m.content, idx)}
-                        style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                        style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? '#10b981' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
                         title="Copy text"
                       >
                         {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
@@ -313,14 +308,15 @@ export default function ChatView({
             })
           )}
 
+          {/* Thinking... Animated Indicator */}
           {loading && (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
+            <div className="thinking-animation-container">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <RefreshCw style={{ width: '14px', height: '14px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
-              <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
-                Thinking...
-              </span>
+              <div className="thinking-text-glow">
+                Thinking<span className="thinking-dots"><span>.</span><span>.</span><span>.</span></span>
+              </div>
             </div>
           )}
 
@@ -330,7 +326,7 @@ export default function ChatView({
 
       {/* Floating Bottom Input Card */}
       {messages.length > 0 && (
-        <div style={{ padding: '0 20px 16px 20px', maxWidth: '780px', width: '100%', margin: '0 auto' }}>
+        <div style={{ padding: '0 20px 16px 20px', maxWidth: '820px', width: '100%', margin: '0 auto' }}>
           <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
             <textarea
               value={inputPrompt}

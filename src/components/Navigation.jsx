@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, User, Settings, LogOut, PanelLeftClose } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, User, MoreHorizontal, Smartphone, Settings, HelpCircle, LogOut, PanelLeftClose } from 'lucide-react';
 
 export default function Navigation({
   sidebarOpen,
@@ -7,15 +7,31 @@ export default function Navigation({
   user,
   onLogout,
   onOpenSettings,
+  onOpenDownloadApp,
+  onOpenHelpFeedback,
   conversations,
   activeConvId,
   loadConversation,
   startNewChat
 }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close popup menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <aside className={`floating-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       
-      {/* Top Header: Logo + Title + Close Button (Perfectly Aligned) */}
+      {/* Top Header: Logo + Title + Close Button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 14px 2px', borderBottom: '1px solid var(--ds-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img
@@ -98,8 +114,8 @@ export default function Navigation({
         )}
       </div>
 
-      {/* User Name & Profile at Bottom (Aligned) */}
-      <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* User Profile at Bottom + (...) More Options Menu */}
+      <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <User style={{ width: '16px', color: 'var(--ds-blue)' }} />
@@ -110,13 +126,77 @@ export default function Navigation({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button onClick={onOpenSettings} style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Settings">
-            <Settings style={{ width: '16px' }} />
+        {/* (...) More Options Trigger Button */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            style={{
+              background: showMenu ? 'var(--ds-blue-bg)' : 'transparent',
+              border: showMenu ? '1px solid var(--ds-blue)' : 'none',
+              color: showMenu ? '#fff' : 'var(--ds-text-secondary)',
+              cursor: 'pointer',
+              padding: '6px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.15s ease'
+            }}
+            title="More Options (...)"
+          >
+            <MoreHorizontal style={{ width: '20px', height: '20px' }} />
           </button>
-          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Logout">
-            <LogOut style={{ width: '16px' }} />
-          </button>
+
+          {/* (...) Popover Dropdown Menu */}
+          {showMenu && (
+            <div className="more-options-popover">
+              <button
+                className="more-options-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  onOpenDownloadApp();
+                }}
+              >
+                <Smartphone style={{ width: '16px', color: 'var(--ds-blue)' }} />
+                <span>Download app</span>
+              </button>
+
+              <button
+                className="more-options-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  onOpenSettings();
+                }}
+              >
+                <Settings style={{ width: '16px', color: 'var(--ds-blue)' }} />
+                <span>Settings</span>
+              </button>
+
+              <button
+                className="more-options-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  onOpenHelpFeedback();
+                }}
+              >
+                <HelpCircle style={{ width: '16px', color: 'var(--ds-blue)' }} />
+                <span>Help & Feedback</span>
+              </button>
+
+              <div style={{ height: '1px', background: 'var(--ds-border)', margin: '4px 0' }} />
+
+              <button
+                className="more-options-item logout-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  onLogout();
+                }}
+              >
+                <LogOut style={{ width: '16px' }} />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
