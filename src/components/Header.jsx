@@ -1,151 +1,95 @@
-import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, Globe, Cpu, LogOut, Settings } from 'lucide-react';
+import React from 'react';
+import { ShieldCheck, User, Settings, LogOut } from 'lucide-react';
 
 export default function Header({ user, onLogout, onOpenSettings }) {
-  const [trends, setTrends] = useState([]);
-
-  useEffect(() => {
-    fetch('/api/trends')
-      .then(res => res.json())
-      .then(data => {
-        if (data.trends) setTrends(data.trends);
-      })
-      .catch(() => {});
-  }, []);
-
   return (
     <header style={{
-      background: 'rgba(7, 9, 19, 0.85)',
-      backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--border-color)',
+      padding: '14px 24px',
+      borderBottom: '1px solid var(--border-subtle)',
+      background: 'rgba(10, 12, 20, 0.8)',
+      backdropFilter: 'blur(16px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       zIndex: 100
     }}>
-      {/* Real-time Global Ticker */}
-      <div className="ticker-wrap">
-        <div className="ticker">
-          <span style={{ color: 'var(--primary-cyan)', fontWeight: '700', marginRight: '10px' }}>
-            ⚡ LAF LIVE TREND TICKER:
-          </span>
-          {trends.length > 0 ? (
-            trends.map((t, idx) => (
-              <span key={t.id} style={{ marginRight: '30px' }}>
-                <span style={{ color: 'var(--accent-green)', fontWeight: '600' }}>[{t.category}]</span> {t.title} • {t.updatedAt}
-              </span>
-            ))
-          ) : (
-            <span>⚡ Global Real-Time Trend Engine Active • E2EE Protected • Multimodal AI Online</span>
-          )}
+      {/* Brand & Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <img
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+          alt="LAF Logo"
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '1px solid var(--accent-cyan)'
+          }}
+        />
+
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '800', letterSpacing: '0.5px', color: '#fff' }}>
+              LAF
+            </span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontWeight: '500' }}>
+              Look At Future
+            </span>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '0.72rem',
+              color: 'var(--accent-green)',
+              background: 'rgba(16, 185, 129, 0.1)',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              fontWeight: '500'
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+              Online & Encrypted
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Main Bar */}
-      <div style={{
-        padding: '12px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
-            alt="LAF Logo"
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '2px solid var(--primary-cyan)',
-              boxShadow: '0 0 12px var(--primary-cyan)'
-            }}
-          />
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="text-glow" style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '1px' }}>
-                LAF
-              </span>
-              <span style={{
-                background: 'rgba(0, 240, 255, 0.1)',
-                color: 'var(--primary-cyan)',
-                border: '1px solid rgba(0, 240, 255, 0.3)',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '0.68rem',
-                fontWeight: '700',
-                textTransform: 'uppercase'
-              }}>
-                Fast Reasoning v2.5
-              </span>
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', letterSpacing: '0.5px' }}>
-              Look At the Future • Isolated DB Mounted
-            </div>
-          </div>
-        </div>
-
-        {/* Status Indicators & User Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div className="mobile-hide" style={{
+      {/* User Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {user && (
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(0, 255, 170, 0.08)',
-            border: '1px solid rgba(0, 255, 170, 0.25)',
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '0.78rem',
-            color: 'var(--accent-green)'
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid var(--border-subtle)',
+            padding: '6px 14px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: '0.82rem',
+            color: 'var(--text-secondary)'
           }}>
-            <ShieldCheck style={{ width: '15px' }} />
-            <span>E2EE Active</span>
+            <User style={{ width: '14px', color: 'var(--accent-cyan)' }} />
+            <span style={{ fontWeight: '600', color: '#fff' }}>{user.username}</span>
           </div>
+        )}
 
-          {user && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(138, 43, 226, 0.15)',
-              border: '1px solid rgba(138, 43, 226, 0.3)',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              fontSize: '0.84rem'
-            }}>
-              <User style={{ width: '15px', color: 'var(--primary-cyan)' }} />
-              <span style={{ fontWeight: '600' }}>{user.username}</span>
-            </div>
-          )}
+        <button
+          onClick={onOpenSettings}
+          className="btn-pro"
+          style={{ padding: '8px', borderRadius: 'var(--radius-full)' }}
+          title="Settings & API Keys"
+        >
+          <Settings style={{ width: '16px' }} />
+        </button>
 
-          <button
-            onClick={onOpenSettings}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-            title="Settings & API Keys"
-          >
-            <Settings style={{ width: '20px' }} />
-          </button>
-
-          <button
-            onClick={onLogout}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#ff4d4d',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-            title="Switch User / Logout"
-          >
-            <LogOut style={{ width: '20px' }} />
-          </button>
-        </div>
+        <button
+          onClick={onLogout}
+          className="btn-pro"
+          style={{ padding: '8px', borderRadius: 'var(--radius-full)', color: 'var(--accent-red)' }}
+          title="Switch User / Logout"
+        >
+          <LogOut style={{ width: '16px' }} />
+        </button>
       </div>
     </header>
   );

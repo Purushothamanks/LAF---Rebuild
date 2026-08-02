@@ -1,39 +1,37 @@
 import React from 'react';
-import { MessageSquare, Sparkles, Globe, Database, Shield, Zap } from 'lucide-react';
+import { MessageSquare, Sparkles, Globe, Database, Shield } from 'lucide-react';
 
 export default function Navigation({ activeTab, setActiveTab }) {
   const navItems = [
-    { id: 'chat', label: 'Reasoning AI', icon: MessageSquare, badge: 'Fast' },
-    { id: 'media', label: 'Multimodal Studio', icon: Sparkles, badge: 'Img/Aud/Vid' },
-    { id: 'trends', label: 'Global Trends', icon: Globe, badge: 'Live' },
-    { id: 'memory', label: 'Memory Vault', icon: Database, badge: 'Isolated DB' },
-    { id: 'security', label: 'Security Vault', icon: Shield, badge: 'AES-256' }
+    { id: 'chat', label: 'Reasoning AI', icon: MessageSquare },
+    { id: 'media', label: 'Multimodal Studio', icon: Sparkles },
+    { id: 'trends', label: 'Global Trends', icon: Globe },
+    { id: 'memory', label: 'Memory Vault', icon: Database },
+    { id: 'security', label: 'Security Vault', icon: Shield }
   ];
 
   return (
-    <nav className="glass-panel" style={{
-      borderRadius: 0,
-      borderTop: 'none',
-      borderLeft: 'none',
-      borderBottom: 'none',
-      width: '240px',
+    <nav style={{
+      width: '220px',
+      background: 'rgba(10, 12, 20, 0.6)',
+      borderRight: '1px solid var(--border-subtle)',
       display: 'flex',
       flexDirection: 'column',
-      padding: '16px 12px',
+      padding: '20px 12px',
       justify: 'space-between',
       flexShrink: 0
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{
-          fontSize: '0.72rem',
+          fontSize: '0.68rem',
           fontWeight: '700',
-          color: 'var(--text-dim)',
+          color: 'var(--text-tertiary)',
           textTransform: 'uppercase',
-          letterSpacing: '1px',
-          padding: '6px 12px',
-          marginBottom: '4px'
+          letterSpacing: '1.2px',
+          padding: '4px 12px',
+          marginBottom: '8px'
         }}>
-          Navigation Workspaces
+          Workspace
         </div>
 
         {navItems.map((item) => {
@@ -46,50 +44,30 @@ export default function Navigation({ activeTab, setActiveTab }) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 14px',
+                gap: '12px',
+                padding: '10px 14px',
                 borderRadius: 'var(--radius-sm)',
-                border: isActive ? '1px solid var(--primary-cyan)' : '1px solid transparent',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(138, 43, 226, 0.15) 100%)'
-                  : 'transparent',
-                color: isActive ? 'var(--primary-cyan)' : 'var(--text-muted)',
-                fontWeight: isActive ? '700' : '500',
+                border: 'none',
+                background: isActive ? 'rgba(0, 240, 255, 0.08)' : 'transparent',
+                color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                fontWeight: isActive ? '600' : '400',
+                fontSize: '0.88rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
                 textAlign: 'left'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Icon style={{ width: '18px', color: isActive ? 'var(--primary-cyan)' : 'var(--text-muted)' }} />
-                <span style={{ fontSize: '0.92rem' }}>{item.label}</span>
-              </div>
-              {item.badge && (
-                <span style={{
-                  fontSize: '0.65rem',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  background: isActive ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                  color: isActive ? 'var(--primary-cyan)' : 'var(--text-dim)',
-                  fontWeight: '600'
-                }}>
-                  {item.badge}
-                </span>
-              )}
+              <Icon style={{ width: '17px', color: isActive ? 'var(--accent-cyan)' : 'var(--text-tertiary)' }} />
+              <span>{item.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* System Status Footer */}
-      <div className="glass-panel" style={{ padding: '12px', borderRadius: 'var(--radius-sm)', marginTop: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--accent-green)' }}>
-          <Zap style={{ width: '14px' }} />
-          <span>LAF Core Engine Ready</span>
-        </div>
-        <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-          Response Speed: &lt; 350ms
-        </div>
+      {/* Footer Info */}
+      <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-subtle)', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+        <div style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '2px' }}>LAF Core 2.5</div>
+        <div>AES-256 Partitioned DB</div>
       </div>
     </nav>
   );
