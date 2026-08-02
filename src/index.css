@@ -29,6 +29,48 @@
   --radius-bent: 24px;
 }
 
+/* Theme 1: Dark (Default Royal Blue Charcoal) */
+[data-theme="dark"], :root {
+  --ds-bg-main: #0b0e14;
+  --ds-bg-sidebar: #141822;
+  --ds-bg-card: #1c212d;
+  --ds-bg-card-hover: #262c3a;
+  --ds-bg-input: #171c26;
+  --ds-border: rgba(79, 117, 255, 0.4);
+  --ds-border-glow: 0 0 18px rgba(79, 117, 255, 0.3);
+  --ds-blue: #4f75ff;
+  --ds-text-primary: #f8fafc;
+  --ds-text-secondary: #94a3b8;
+}
+
+/* Theme 2: Cyber Glow Neon */
+[data-theme="cyber"] {
+  --ds-bg-main: #060913;
+  --ds-bg-sidebar: #0d1222;
+  --ds-bg-card: #161c32;
+  --ds-bg-card-hover: #222a48;
+  --ds-bg-input: #10162a;
+  --ds-border: rgba(0, 240, 255, 0.5);
+  --ds-border-glow: 0 0 22px rgba(0, 240, 255, 0.4);
+  --ds-blue: #00f0ff;
+  --ds-text-primary: #ffffff;
+  --ds-text-secondary: #a0aec0;
+}
+
+/* Theme 3: Light Mode */
+[data-theme="light"] {
+  --ds-bg-main: #f1f5f9;
+  --ds-bg-sidebar: #ffffff;
+  --ds-bg-card: #e2e8f0;
+  --ds-bg-card-hover: #cbd5e1;
+  --ds-bg-input: #ffffff;
+  --ds-border: rgba(59, 130, 246, 0.4);
+  --ds-border-glow: 0 0 14px rgba(59, 130, 246, 0.25);
+  --ds-blue: #2563eb;
+  --ds-text-primary: #0f172a;
+  --ds-text-secondary: #475569;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -375,7 +417,7 @@ p code, li code {
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* Modal Close Button (Cancel X Symbol) Dead-Centering for Mobile & Desktop */
+/* Modal Close Button (Cancel X Symbol) - Pushed to right with margin-left auto */
 .modal-close-btn {
   width: 34px !important;
   height: 34px !important;
@@ -389,9 +431,10 @@ p code, li code {
   display: grid !important;
   place-items: center !important;
   padding: 0 !important;
-  margin: 0 !important;
+  margin: 0 0 0 auto !important; /* Pushes button to extreme right with wide gap from title */
   transition: all 0.15s ease !important;
   box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 
 .modal-close-btn svg {
