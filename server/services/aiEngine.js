@@ -1,10 +1,10 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite, custom fine-tuned AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
 
 /**
- * 100% Direct Passthrough Engine to Llama / Ollama AI Backend
+ * 100% Direct Passthrough Engine to Llama AI Model (llama3.2:latest)
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
@@ -45,7 +45,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. DIRECT PASSTHROUGH TO LLAMA / OLLAMA MODEL ENGINE (60s Timeout)
+  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (120s Timeout)
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://172.17.0.1:11434/api/chat',
@@ -53,7 +53,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     'http://host.docker.internal:11434/api/chat'
   ];
 
-  const targetModels = ['laf-v2', 'llama3.2:latest', 'laf-model'];
+  const targetModels = ['llama3.2:latest', 'laf-v2', 'laf-model'];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetModels) {
@@ -65,14 +65,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             messages: formattedMessages,
             stream: false
           },
-          { timeout: 60000 }
+          { timeout: 120000 }
         );
 
         const content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           return {
             text: content.trim(),
-            provider: `LAF Llama AI (${modelName})`
+            provider: `Llama AI (${modelName})`
           };
         }
       } catch (e) {
@@ -96,7 +96,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           })),
           generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
         },
-        { timeout: 10000 }
+        { timeout: 15000 }
       );
 
       const candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
