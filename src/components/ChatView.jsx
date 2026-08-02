@@ -38,9 +38,6 @@ export default function ChatView({
     setLoading(true);
 
     try {
-      // Simulate R1 thinking process step
-      const thoughtText = `Thinking Process:\n1. Analyzing request intent for user "${user.username}".\n2. Querying isolated encrypted memory DB index.\n3. Formulating direct, high-accuracy response.`;
-
       const res = await fetch('/api/chat/send', {
         method: 'POST',
         headers: {
@@ -59,24 +56,57 @@ export default function ChatView({
       const data = await res.json();
       if (res.ok && data.success) {
         setActiveConvId(data.conversationId);
-        const assistantMsg = {
-          ...data.response,
-          thought: thoughtText
-        };
-        setMessages(prev => [...prev, assistantMsg]);
+        
+        const fullContent = data.response.content || '';
+        const thoughtText = `Thinking Process:\n1. Analyzing prompt intent for ${user.username}.\n2. Querying isolated encrypted memory DB index.\n3. Formulating direct, high-accuracy response via ${data.response.provider || 'LAF Neural Model'}.`;
+
+        // Create placeholder assistant message for real-time streaming text effect
+        const assistantMsgIndex = newHistory.length;
+        setMessages(prev => [
+          ...prev,
+          { role: 'assistant', content: '', provider: data.response.provider, thought: thoughtText }
+        ]);
+
+        // Real-time character streaming animation effect
+        let currentText = '';
+        const chunkSize = Math.max(1, Math.floor(fullContent.length / 40));
+        let charIdx = 0;
+
+        const streamInterval = setInterval(() => {
+          charIdx += chunkSize;
+          if (charIdx >= fullContent.length) {
+            currentText = fullContent;
+            clearInterval(streamInterval);
+            setLoading(false);
+          } else {
+            currentText = fullContent.substring(0, charIdx);
+          }
+
+          setMessages(prev => {
+            const updated = [...prev];
+            if (updated[assistantMsgIndex]) {
+              updated[assistantMsgIndex] = {
+                ...updated[assistantMsgIndex],
+                content: currentText
+              };
+            }
+            return updated;
+          });
+        }, 20);
+
         fetchConversations();
       } else {
         setMessages(prev => [
           ...prev,
           { role: 'assistant', content: `Error: ${data.error || 'Failed to process request'}`, provider: 'System Error' }
         ]);
+        setLoading(false);
       }
     } catch (err) {
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: 'Connection error with LAF reasoning cluster.', provider: 'Offline' }
       ]);
-    } finally {
       setLoading(false);
     }
   };
@@ -106,14 +136,14 @@ export default function ChatView({
     }
   };
 
-  const userInitial = (user?.username || 'U').substring(0, 1).toUpperCase();
+  const userInitial = (user?.username || 'P').substring(0, 1).toUpperCase();
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
       
       {/* Messages Scroll Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {messages.length === 0 ? (
             /* Floating Centered Welcome Screen with Input Box */
@@ -187,93 +217,118 @@ export default function ChatView({
               </form>
             </div>
           ) : (
-            /* Active Conversation Messages List (Perfectly Aligned Avatars) */
-            messages.map((m, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                
-                {/* Perfectly Aligned Circle Avatar Icon */}
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: m.role === 'user' ? 'var(--ds-blue-bg)' : 'transparent',
-                  border: m.role === 'user' ? '1px solid var(--ds-blue)' : '2px solid var(--ds-blue)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'center',
-                  flexShrink: 0,
-                  marginTop: '2px',
-                  boxShadow: m.role === 'assistant' ? '0 0 10px rgba(79, 117, 255, 0.4)' : 'none',
-                  overflow: 'hidden'
-                }}>
-                  {m.role === 'user' ? (
-                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--ds-blue)', lineHeight: '1' }}>
-                      {userInitial}
-                    </span>
-                  ) : (
-                    <img
-                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
-                      alt="LAF Logo"
-                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
-                    />
-                  )}
-                </div>
-
-                {/* Message Content & Header */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: '700', color: m.role === 'user' ? '#fff' : 'var(--ds-blue)', lineHeight: '1.2' }}>
-                      {m.role === 'user' ? user.username : 'LAF AI'}
-                    </div>
-
-                    {m.role === 'assistant' && (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Read Aloud">
-                          <Volume2 style={{ width: '14px' }} />
-                        </button>
-                        <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy Response">
-                          {copiedIndex === idx ? <Check style={{ width: '14px' }} /> : <Copy style={{ width: '14px' }} />}
-                        </button>
-                      </div>
+            /* Active Conversation Messages List (User Right, AI Left) */
+            messages.map((m, idx) => {
+              const isUser = m.role === 'user';
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    flexDirection: isUser ? 'row-reverse' : 'row',
+                    gap: '12px',
+                    alignItems: 'flex-start',
+                    alignSelf: isUser ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%'
+                  }}
+                >
+                  {/* Avatar Icon (Perfectly Centered 32px Circle) */}
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      minWidth: '32px',
+                      minHeight: '32px',
+                      borderRadius: '50%',
+                      background: isUser ? 'var(--ds-blue)' : 'transparent',
+                      border: isUser ? '1px solid var(--ds-blue)' : '2px solid var(--ds-blue)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'center',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      boxShadow: !isUser ? '0 0 10px rgba(79, 117, 255, 0.4)' : 'none',
+                      marginTop: '2px'
+                    }}
+                  >
+                    {isUser ? (
+                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#fff', lineHeight: '1', display: 'block', textAlign: 'center' }}>
+                        {userInitial}
+                      </span>
+                    ) : (
+                      <img
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+                        alt="LAF Logo"
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                      />
                     )}
                   </div>
 
-                  {/* Thinking Process Accordion Box */}
-                  {m.role === 'assistant' && m.thought && (
-                    <div className="ds-thought-container">
-                      <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
-                        <Lightbulb style={{ width: '14px' }} />
-                        <span>Thinking process</span>
-                        {expandedThoughts[idx] ? <ChevronDown style={{ width: '14px' }} /> : <ChevronRight style={{ width: '14px' }} />}
+                  {/* Message Bubble Card */}
+                  <div
+                    style={{
+                      background: isUser ? 'var(--ds-blue-bg)' : 'var(--ds-bg-card)',
+                      border: `1px solid ${isUser ? 'var(--ds-blue)' : 'var(--ds-border)'}`,
+                      borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                      padding: '12px 16px',
+                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                      color: 'var(--ds-text-primary)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', gap: '12px' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? '#fff' : 'var(--ds-blue)' }}>
+                        {isUser ? user.username : 'LAF AI'}
                       </div>
-                      {expandedThoughts[idx] && (
-                        <div style={{ marginTop: '6px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
-                          {m.thought}
+
+                      {!isUser && (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Read Aloud">
+                            <Volume2 style={{ width: '13px' }} />
+                          </button>
+                          <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy Response">
+                            {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
+                          </button>
                         </div>
                       )}
                     </div>
-                  )}
 
-                  {/* Response Body */}
-                  <div
-                    style={{ fontSize: '0.95rem', lineHeight: '1.65', color: 'var(--ds-text-primary)' }}
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(marked.parse(m.content || ''))
-                    }}
-                  />
+                    {/* Thinking Process Accordion Box for AI */}
+                    {!isUser && m.thought && (
+                      <div className="ds-thought-container" style={{ margin: '6px 0 10px 0' }}>
+                        <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
+                          <Lightbulb style={{ width: '13px' }} />
+                          <span>Thinking process</span>
+                          {expandedThoughts[idx] ? <ChevronDown style={{ width: '13px' }} /> : <ChevronRight style={{ width: '13px' }} />}
+                        </div>
+                        {expandedThoughts[idx] && (
+                          <div style={{ marginTop: '6px', whiteSpace: 'pre-wrap', lineHeight: '1.45', fontSize: '0.82rem' }}>
+                            {m.thought}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Response Text / Markdown */}
+                    <div
+                      style={{ fontSize: '0.94rem', lineHeight: '1.6', wordBreak: 'break-word' }}
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(marked.parse(m.content || ''))
+                      }}
+                    />
+                  </div>
+
                 </div>
-
-              </div>
-            ))
+              );
+            })
           )}
 
           {loading && (
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
               <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
-                LAF is thinking & reasoning...
+                LAF is thinking & streaming real-time...
               </span>
             </div>
           )}
