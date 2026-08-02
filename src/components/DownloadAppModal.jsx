@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Smartphone, Download, Check, ShieldCheck } from 'lucide-react';
+import { X, Smartphone, Download, ShieldCheck } from 'lucide-react';
 
 export default function DownloadAppModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -15,7 +15,7 @@ export default function DownloadAppModal({ isOpen, onClose }) {
       zIndex: 9999,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justify: 'center',
       background: 'rgba(5, 7, 15, 0.85)',
       backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
@@ -46,20 +46,9 @@ export default function DownloadAppModal({ isOpen, onClose }) {
           <button
             onClick={onClose}
             className="modal-close-btn"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--ds-border-light)',
-              color: 'var(--ds-text-secondary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'center'
-            }}
+            title="Close"
           >
-            <X style={{ width: '18px', height: '18px' }} />
+            <X />
           </button>
         </div>
 

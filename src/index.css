@@ -228,7 +228,7 @@ body {
 .code-box-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify: space-between;
   padding: 8px 16px;
   background: #141a29;
   border-bottom: 1px solid rgba(79, 117, 255, 0.2);
@@ -334,10 +334,36 @@ p code, li code {
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* Settings Modal Header Close Button */
+/* Modal Close Button (Cancel X Symbol) Dead-Centering for Mobile & Desktop */
+.modal-close-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--ds-border-light) !important;
+  color: var(--ds-text-secondary) !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+.modal-close-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
 .modal-close-btn:hover {
   background: rgba(255, 255, 255, 0.15) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
 }
 

@@ -9,9 +9,12 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   const [savedKey, setSavedKey] = useState(false);
   const [showLegalDoc, setShowLegalDoc] = useState(null); // 'terms' or 'privacy'
 
-  // User editable phone number
+  // User editable profile details
+  const [nameInput, setNameInput] = useState(user?.name || user?.username || 'Sample');
+  const [usernameInput, setUsernameInput] = useState(user?.username ? `@${user.username.toLowerCase()}` : '@sample');
+  const [emailInput, setEmailInput] = useState(user?.email || 'sample@laf.ai');
   const [phoneInput, setPhoneInput] = useState(user?.phone || '');
-  const [savedPhone, setSavedPhone] = useState(false);
+  const [savedProfile, setSavedProfile] = useState(false);
 
   if (!isOpen) return null;
 
@@ -23,16 +26,24 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
     setTimeout(() => setSavedKey(false), 2000);
   };
 
-  const handleSavePhone = (e) => {
+  const handleSaveProfile = (e) => {
     e.preventDefault();
-    localStorage.setItem(`laf_phone_${user?.username}`, phoneInput.trim());
-    if (user) user.phone = phoneInput.trim();
-    setSavedPhone(true);
-    setTimeout(() => setSavedPhone(false), 2000);
+    const cleanUsername = usernameInput.replace(/^@/, '').trim() || 'sample';
+    if (user) {
+      user.name = nameInput.trim();
+      user.username = cleanUsername;
+      user.email = emailInput.trim();
+      user.phone = phoneInput.trim();
+    }
+    localStorage.setItem(`laf_profile_${cleanUsername}`, JSON.stringify({
+      name: nameInput.trim(),
+      username: cleanUsername,
+      email: emailInput.trim(),
+      phone: phoneInput.trim()
+    }));
+    setSavedProfile(true);
+    setTimeout(() => setSavedProfile(false), 2000);
   };
-
-  const username = user?.username || 'Sample';
-  const userEmail = user?.email || `${username.toLowerCase()}@laf.ai`;
 
   return (
     <div style={{
@@ -76,22 +87,9 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
           <button
             onClick={onClose}
             className="modal-close-btn"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--ds-border-light)',
-              color: 'var(--ds-text-secondary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'center',
-              transition: 'all 0.15s ease'
-            }}
             title="Close Settings"
           >
-            <X style={{ width: '18px', height: '18px' }} />
+            <X />
           </button>
         </div>
 
@@ -118,126 +116,181 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '24px', flex: 1, overflowY: 'auto', maxHeight: '440px' }}>
+        <div style={{ padding: '24px', flex: 1, overflowY: 'auto', maxHeight: '460px' }}>
           
-          {/* 👤 PROFILE TAB */}
+          {/* 👤 PROFILE TAB (All Fields Editable) */}
           {activeTab === 'profile' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ background: 'var(--ds-bg-card)', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {/* Editable Name */}
+                <div style={{ background: 'var(--ds-bg-card)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Name
-                  </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '700', color: '#fff' }}>{username}</div>
-                </div>
-
-                <div style={{ background: 'var(--ds-bg-card)', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    User name
-                  </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--ds-blue)' }}>@{username.toLowerCase()}</div>
-                </div>
-              </div>
-
-              <div style={{ background: 'var(--ds-bg-card)', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Email address
-                </div>
-                <div style={{ fontSize: '0.94rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{userEmail}</div>
-              </div>
-
-              {/* Editable Phone Number Field */}
-              <div style={{ background: 'var(--ds-bg-card)', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Phone number
-                </div>
-                <form onSubmit={handleSavePhone} style={{ display: 'flex', gap: '8px' }}>
+                  </label>
                   <input
                     type="text"
-                    value={phoneInput}
-                    onChange={(e) => setPhoneInput(e.target.value)}
-                    placeholder="Enter phone number (e.g. +91 90420 17110)..."
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    placeholder="Enter name (e.g. Sample)..."
                     style={{
-                      flex: 1,
-                      padding: '10px 14px',
+                      width: '100%',
+                      padding: '8px 12px',
                       background: 'rgba(0, 0, 0, 0.3)',
                       border: '1px solid var(--ds-border)',
-                      borderRadius: '12px',
+                      borderRadius: '10px',
                       color: '#fff',
-                      fontSize: '0.92rem',
-                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.94rem',
+                      fontWeight: '600',
                       outline: 'none'
                     }}
                   />
-                  <button
-                    type="submit"
+                </div>
+
+                {/* Editable Username */}
+                <div style={{ background: 'var(--ds-bg-card)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    User name
+                  </label>
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    placeholder="Enter @username (e.g. @sample)..."
                     style={{
-                      padding: '10px 16px',
-                      background: 'var(--ds-blue)',
-                      border: 'none',
-                      color: '#fff',
-                      borderRadius: '12px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid var(--ds-border)',
+                      borderRadius: '10px',
+                      color: 'var(--ds-blue)',
+                      fontSize: '0.94rem',
                       fontWeight: '600',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
+                      outline: 'none'
                     }}
-                  >
-                    {savedPhone ? <Check style={{ width: '16px' }} /> : <Save style={{ width: '16px' }} />}
-                    <span>{savedPhone ? 'Saved' : 'Save'}</span>
-                  </button>
-                </form>
+                  />
+                </div>
               </div>
 
-              <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Editable Email */}
+              <div style={{ background: 'var(--ds-bg-card)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="Enter email (e.g. sample@laf.ai)..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid var(--ds-border)',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '0.92rem',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Editable Phone Number */}
+              <div style={{ background: 'var(--ds-bg-card)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Phone number
+                </label>
+                <input
+                  type="text"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  placeholder="Enter phone number (e.g. +91 90420 17110)..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid var(--ds-border)',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '0.92rem',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Save Profile Button */}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'var(--ds-blue)',
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: '14px',
+                  fontWeight: '700',
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'center',
+                  gap: '8px',
+                  boxShadow: '0 0 16px rgba(79, 117, 255, 0.3)'
+                }}
+              >
+                {savedProfile ? <Check style={{ width: '18px' }} /> : <Save style={{ width: '18px' }} />}
+                <span>{savedProfile ? 'Profile Saved Successfully!' : 'Save Profile Changes'}</span>
+              </button>
+
+              <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button
+                  type="button"
                   onClick={() => { onLogout(); onClose(); }}
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '10px',
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid var(--ds-border)',
                     color: '#fff',
-                    borderRadius: '14px',
+                    borderRadius: '12px',
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
+                    fontSize: '0.88rem',
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
                     justify: 'center',
-                    gap: '8px',
-                    transition: 'all 0.15s ease'
+                    gap: '8px'
                   }}
                 >
                   <LogOut style={{ width: '16px' }} /> Log out of all devices
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { alert('Account deletion request initiated.'); onLogout(); onClose(); }}
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '10px',
                     background: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     color: '#ef4444',
-                    borderRadius: '14px',
+                    borderRadius: '12px',
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
+                    fontSize: '0.88rem',
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
                     justify: 'center',
-                    gap: '8px',
-                    transition: 'all 0.15s ease'
+                    gap: '8px'
                   }}
                 >
                   <Trash2 style={{ width: '16px' }} /> Delete account
                 </button>
               </div>
 
-            </div>
+            </form>
           )}
 
           {/* ⚙️ GENERAL TAB */}
