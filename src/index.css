@@ -1,128 +1,149 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg-main: #0a0c14;
-  --bg-surface: #101424;
-  --bg-surface-hover: #161c33;
-  --bg-panel: rgba(16, 20, 36, 0.75);
-  
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(0, 240, 255, 0.35);
+  /* DeepSeek Signature Dark Palette */
+  --bg-deepseek-dark: #0e1117;
+  --bg-deepseek-sidebar: #161b22;
+  --bg-deepseek-card: #1b212c;
+  --bg-deepseek-input: #212836;
+  --bg-deepseek-hover: #262f40;
 
+  --border-deepseek: #30363d;
+  --border-deepseek-light: rgba(255, 255, 255, 0.08);
+
+  --accent-ds-blue: #4f75ff;
+  --accent-ds-blue-hover: #3b62ff;
+  --accent-ds-blue-bg: rgba(79, 117, 255, 0.12);
   --accent-cyan: #00f0ff;
-  --accent-purple: #8b5cf6;
   --accent-green: #10b981;
-  --accent-red: #ef4444;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
+  --text-main: #f0f6fc;
+  --text-muted: #8b949e;
+  --text-dim: #6e7681;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-main: 'Inter', -apple-system, sans-serif;
+  --font-title: 'Outfit', sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
 
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.15);
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background-color: var(--bg-main);
-  color: var(--text-primary);
+  background-color: var(--bg-deepseek-dark);
+  color: var(--text-main);
   overflow-x: hidden;
   min-height: 100vh;
 }
 
-/* Background Ambient Lighting (Subtle, non-distracting) */
-.bg-ambient {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
+/* DeepSeek Sidebar */
+.ds-sidebar {
+  width: 260px;
+  background-color: var(--bg-deepseek-sidebar);
+  border-right: 1px solid var(--border-deepseek);
+  display: flex;
+  flex-direction: column;
   height: 100vh;
-  z-index: -1;
-  background: 
-    radial-gradient(circle at 20% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
-    #0a0c14;
-  pointer-events: none;
+  padding: 12px;
+  flex-shrink: 0;
 }
 
-/* Clean Professional Glass Panel */
-.pro-card {
-  background: var(--bg-panel);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-subtle);
+/* New Chat Button */
+.btn-ds-new-chat {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-deepseek-card);
+  border: 1px solid var(--border-deepseek);
+  color: var(--text-main);
   border-radius: var(--radius-md);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+  margin-bottom: 12px;
 }
 
-.pro-card:hover {
-  border-color: var(--border-active);
+.btn-ds-new-chat:hover {
+  background: var(--bg-deepseek-hover);
+  border-color: var(--accent-ds-blue);
 }
 
-/* Modern Gradient Text */
-.gradient-text {
-  font-family: var(--font-display);
-  background: linear-gradient(135deg, #ffffff 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* DeepSeek Card Panel */
+.ds-card {
+  background: var(--bg-deepseek-card);
+  border: 1px solid var(--border-deepseek);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
 }
 
-.cyan-text {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.ds-card:hover {
+  border-color: rgba(79, 117, 255, 0.4);
 }
 
-/* Clean Cyber Button */
-.btn-pro {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
+/* DeepSeek Reasoning Thought Box */
+.ds-thought-box {
+  background: rgba(79, 117, 255, 0.06);
+  border-left: 3px solid var(--accent-ds-blue);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
   font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ds-thought-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--accent-ds-blue);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 4px;
+}
+
+/* DeepSeek Buttons */
+.btn-ds-pill {
+  background: var(--bg-deepseek-card);
+  border: 1px solid var(--border-deepseek);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  transition: all 0.15s ease;
 }
 
-.btn-pro:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+.btn-ds-pill:hover {
+  background: var(--bg-deepseek-hover);
+  color: var(--text-main);
 }
 
-.btn-pro-primary {
-  background: var(--accent-cyan);
-  color: #05070e;
-  border: none;
+.btn-ds-pill-active {
+  background: var(--accent-ds-blue-bg);
+  border-color: var(--accent-ds-blue);
+  color: var(--accent-ds-blue);
   font-weight: 600;
 }
 
-.btn-pro-primary:hover {
-  background: #33f3ff;
-  box-shadow: var(--shadow-glow);
-}
-
-/* Custom Minimal Scrollbar */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -131,15 +152,15 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: #30363d;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.4);
+  background: var(--accent-ds-blue);
 }
 
-/* App Container Layout */
-.app-shell {
+/* App Shell Layout */
+.ds-app-shell {
   display: flex;
   height: 100vh;
   width: 100vw;
@@ -147,7 +168,11 @@ body {
 }
 
 @media (max-width: 768px) {
-  .app-shell {
+  .ds-app-shell {
     flex-direction: column;
+  }
+  .ds-sidebar {
+    width: 100%;
+    height: auto;
   }
 }

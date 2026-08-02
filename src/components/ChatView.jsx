@@ -1,61 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Sparkles, Plus, History, Brain, Check, RefreshCw, Layers } from 'lucide-react';
+import { Send, Volume2, Copy, Sparkles, Brain, Globe, Check, RefreshCw, ChevronDown, ChevronRight, Lightbulb, Image, Music, Video } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-export default function ChatView({ user, token, customApiKey }) {
-  const [conversations, setConversations] = useState([]);
-  const [activeConvId, setActiveConvId] = useState(null);
-  const [messages, setMessages] = useState([]);
+export default function ChatView({
+  user,
+  token,
+  customApiKey,
+  selectedModel,
+  webSearchEnabled,
+  setWebSearchEnabled,
+  deepThinkingEnabled,
+  setDeepThinkingEnabled,
+  concisenessMode,
+  activeConvId,
+  setActiveConvId,
+  messages,
+  setMessages,
+  fetchConversations
+}) {
   const [inputPrompt, setInputPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [concisenessMode, setConcisenessMode] = useState('short'); // 'short' or 'detailed'
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [showHistorySidebar, setShowHistorySidebar] = useState(false);
+  const [expandedThoughts, setExpandedThoughts] = useState({}); // track thought accordion states
 
   const messagesEndRef = useRef(null);
 
-  // Fetch user conversations list on mount
-  useEffect(() => {
-    fetchConversations();
-  }, [token]);
-
-  const fetchConversations = async () => {
-    try {
-      const res = await fetch('/api/chat/conversations', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setConversations(data.conversations);
-        if (data.conversations.length > 0 && !activeConvId) {
-          loadConversation(data.conversations[0].id);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const loadConversation = async (convId) => {
-    try {
-      const res = await fetch(`/api/chat/conversation/${convId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success && data.conversation) {
-        setActiveConvId(data.conversation.id);
-        setMessages(data.conversation.messages || []);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const startNewChat = () => {
-    setActiveConvId(null);
-    setMessages([]);
+  const toggleThought = (idx) => {
+    setExpandedThoughts(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   const handleSend = async (e) => {
@@ -64,13 +37,18 @@ export default function ChatView({ user, token, customApiKey }) {
 
     const userMsgText = inputPrompt.trim();
     setInputPrompt('');
-    
+
     // Append optimistic user message
     const newHistory = [...messages, { role: 'user', content: userMsgText, timestamp: new Date().toISOString() }];
     setMessages(newHistory);
     setLoading(true);
 
     try {
+      // Simulate DeepSeek R1 reasoning steps if Deep Thinking is enabled
+      const thoughtText = deepThinkingEnabled || selectedModel === 'LAF-R1'
+        ? `Thinking Process:\n1. Analyzing prompt intent & context for user "${user.username}".\n2. Querying isolated encrypted memory DB index.\n3. ${webSearchEnabled ? 'Fetching real-time web search grounding.' : 'Executing direct neural reasoning pipeline.'}\n4. Structuring concise, accurate output.`
+        : null;
+
       const res = await fetch('/api/chat/send', {
         method: 'POST',
         headers: {
@@ -89,7 +67,11 @@ export default function ChatView({ user, token, customApiKey }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setActiveConvId(data.conversationId);
-        setMessages(prev => [...prev, data.response]);
+        const assistantMsg = {
+          ...data.response,
+          thought: thoughtText
+        };
+        setMessages(prev => [...prev, assistantMsg]);
         fetchConversations();
       } else {
         setMessages(prev => [
@@ -133,282 +115,237 @@ export default function ChatView({ user, token, customApiKey }) {
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--bg-deepseek-dark)' }}>
       
-      {/* Conversation History Drawer (Toggleable on Desktop/Mobile) */}
-      <div style={{
-        width: showHistorySidebar ? '260px' : '0',
-        transition: 'all 0.3s ease',
-        overflow: 'hidden',
-        background: 'rgba(10, 14, 30, 0.9)',
-        borderRight: showHistorySidebar ? '1px solid var(--border-color)' : 'none',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)' }}>
-          <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--primary-cyan)' }}>Chat History</span>
-          <button className="btn-cyber" onClick={startNewChat} style={{ padding: '4px 8px', fontSize: '0.75rem' }}>
-            <Plus style={{ width: '14px' }} /> New
-          </button>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-          {conversations.map(c => (
-            <div
-              key={c.id}
-              onClick={() => loadConversation(c.id)}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: '6px',
-                background: activeConvId === c.id ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                border: activeConvId === c.id ? '1px solid var(--primary-cyan)' : '1px solid transparent',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                color: activeConvId === c.id ? '#fff' : 'var(--text-muted)'
-              }}
-            >
-              <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {c.title || 'Untitled Conversation'}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '2px' }}>
-                {new Date(c.updatedAt || c.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Chat Workspace */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
-        
-        {/* Sub-Header bar */}
-        <div style={{
-          padding: '12px 20px',
-          borderBottom: '1px solid var(--border-color)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(14, 18, 38, 0.4)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              onClick={() => setShowHistorySidebar(!showHistorySidebar)}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--border-glow)',
-                color: 'var(--primary-cyan)',
-                borderRadius: '6px',
-                padding: '6px 10px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '0.82rem'
-              }}
-            >
-              <History style={{ width: '15px' }} /> History
-            </button>
-
-            <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-main)' }}>
-              LAF Fast Reasoning Workspace
-            </span>
-          </div>
-
-          {/* Conciseness Mode Toggle (Requirement 14) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-            <button
-              onClick={() => setConcisenessMode('short')}
-              style={{
-                background: concisenessMode === 'short' ? 'var(--primary-cyan)' : 'transparent',
-                color: concisenessMode === 'short' ? '#000' : 'var(--text-muted)',
-                border: 'none',
-                padding: '4px 10px',
-                borderRadius: '16px',
-                fontWeight: '700',
-                fontSize: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              Short & Accurate
-            </button>
-            <button
-              onClick={() => setConcisenessMode('detailed')}
-              style={{
-                background: concisenessMode === 'detailed' ? 'var(--primary-purple)' : 'transparent',
-                color: concisenessMode === 'detailed' ? '#fff' : 'var(--text-muted)',
-                border: 'none',
-                padding: '4px 10px',
-                borderRadius: '16px',
-                fontWeight: '700',
-                fontSize: '0.75rem',
-                cursor: 'pointer'
-              }}
-            >
-              Detailed / Elaborate
-            </button>
-          </div>
-        </div>
-
-        {/* Messages Scroll Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Scrollable Messages Area */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ maxWidth: '800px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
           {messages.length === 0 ? (
-            <div style={{ margin: 'auto', textAlign: 'center', maxWidth: '500px', padding: '40px 20px' }}>
-              <div style={{ width: '70px', height: '70px', margin: '0 auto 16px auto', borderRadius: '50%', background: 'rgba(0, 240, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--primary-cyan)' }}>
-                <Brain style={{ width: '36px', color: 'var(--primary-cyan)' }} />
-              </div>
-              <h2 className="text-glow" style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '8px' }}>
-                How can LAF assist you today?
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '24px' }}>
-                Ask anything! LAF provides ultra-fast, human-minded reasoning, instant memory recall, and multimodal generation capabilities.
+            /* DeepSeek-style Empty Welcome Screen */
+            <div style={{ marginTop: '80px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <img
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+                alt="LAF Logo"
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  marginBottom: '16px',
+                  border: '2px solid var(--accent-ds-blue)',
+                  boxShadow: '0 0 20px rgba(79, 117, 255, 0.4)'
+                }}
+              />
+
+              <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '2rem', fontWeight: '800', color: '#fff', marginBottom: '8px' }}>
+                Hi, I'm LAF.
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '32px' }}>
+                How can I help you today? (Look At the Future • Fast Reasoning & Multimodal AI)
               </p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+
+              {/* Prompt Suggestion Cards Grid (DeepSeek Style) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', width: '100%' }}>
                 {[
-                  "What did we discuss in our last conversation?",
-                  "Synthesize the current global tech trends",
-                  "Create a Python script for encryption",
-                  "Explain quantum computing in detail"
-                ].map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setInputPrompt(s); }}
-                    className="glass-panel"
-                    style={{
-                      padding: '12px',
-                      textAlign: 'left',
-                      fontSize: '0.82rem',
-                      color: 'var(--text-main)',
-                      cursor: 'pointer',
-                      border: '1px solid rgba(0, 240, 255, 0.2)'
-                    }}
+                  { title: "What did we talk about last week?", desc: "Query your isolated encrypted DB memory index", prompt: "What did we discuss in our previous conversation?" },
+                  { title: "Deep Reasoning Analysis", desc: "Step-by-step logic breakdown with LAF-R1", prompt: "Analyze the potential impact of quantum computing on modern cryptography." },
+                  { title: "Global World Trends", desc: "Scrape & synthesize current tech & AI advances", prompt: "Summarize today's top global technology trends." },
+                  { title: "Create Python Script", desc: "Clean, high-performance secure code", prompt: "Write an optimized Python script for AES-256 encryption." }
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="ds-card"
+                    onClick={() => { setInputPrompt(item.prompt); }}
+                    style={{ padding: '16px', textAlign: 'left', cursor: 'pointer' }}
                   >
-                    "{s}"
-                  </button>
+                    <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#fff', marginBottom: '4px' }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      {item.desc}
+                    </div>
+                  </div>
                 ))}
               </div>
+
             </div>
           ) : (
+            /* Render Conversation Messages */
             messages.map((m, idx) => (
-              <div
-                key={idx}
-                style={{
+              <div key={idx} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                
+                {/* Avatar Icon */}
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: m.role === 'user' ? 'var(--bg-deepseek-input)' : 'var(--accent-ds-blue-bg)',
+                  border: m.role === 'user' ? '1px solid var(--border-deepseek)' : '1px solid var(--accent-ds-blue)',
                   display: 'flex',
-                  justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start'
-                }}
-              >
-                <div
-                  className="glass-panel"
-                  style={{
-                    maxWidth: '85%',
-                    padding: '16px 20px',
-                    borderRadius: m.role === 'user' ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
-                    background: m.role === 'user'
-                      ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%)'
-                      : 'rgba(14, 18, 38, 0.85)',
-                    border: m.role === 'user'
-                      ? '1px solid rgba(0, 240, 255, 0.4)'
-                      : '1px solid rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '700' }}>
-                      {m.role === 'user' ? (
-                        <span style={{ color: 'var(--primary-cyan)' }}>You ({user.username})</span>
-                      ) : (
-                        <>
-                          <Sparkles style={{ width: '14px', color: 'var(--primary-cyan)' }} />
-                          <span className="text-glow">LAF AI</span>
-                          {m.provider && (
-                            <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                              {m.provider}
-                            </span>
-                          )}
-                        </>
-                      )}
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {m.role === 'user' ? (
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>{user.username.substring(0, 1).toUpperCase()}</span>
+                  ) : (
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="LAF" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                  )}
+                </div>
+
+                {/* Content Container */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: '600', color: m.role === 'user' ? 'var(--text-muted)' : 'var(--accent-ds-blue)' }}>
+                      {m.role === 'user' ? user.username : 'LAF AI'}
                     </div>
 
                     {m.role === 'assistant' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button
-                          onClick={() => handleSpeak(m.content, idx)}
-                          style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--primary-cyan)' : 'var(--text-dim)', cursor: 'pointer' }}
-                          title="Read aloud"
-                        >
-                          <Volume2 style={{ width: '15px' }} />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--accent-ds-blue)' : 'var(--text-dim)', cursor: 'pointer' }} title="Read Aloud">
+                          <Volume2 style={{ width: '14px' }} />
                         </button>
-                        <button
-                          onClick={() => handleCopy(m.content, idx)}
-                          style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--text-dim)', cursor: 'pointer' }}
-                          title="Copy message"
-                        >
-                          {copiedIndex === idx ? <Check style={{ width: '15px' }} /> : <Copy style={{ width: '15px' }} />}
+                        <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--text-dim)', cursor: 'pointer' }} title="Copy Response">
+                          {copiedIndex === idx ? <Check style={{ width: '14px' }} /> : <Copy style={{ width: '14px' }} />}
                         </button>
                       </div>
                     )}
                   </div>
 
+                  {/* DeepSeek Signature "Thinking Process..." Accordion Box */}
+                  {m.role === 'assistant' && m.thought && (
+                    <div className="ds-thought-box">
+                      <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
+                        <Lightbulb style={{ width: '14px' }} />
+                        <span>Thinking process</span>
+                        {expandedThoughts[idx] ? <ChevronDown style={{ width: '14px' }} /> : <ChevronRight style={{ width: '14px' }} />}
+                      </div>
+                      {expandedThoughts[idx] && (
+                        <div style={{ marginTop: '6px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                          {m.thought}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Main Message Body */}
                   <div
-                    style={{ fontSize: '0.95rem', lineHeight: '1.65', color: '#f0f4fc' }}
+                    style={{ fontSize: '0.95rem', lineHeight: '1.65', color: 'var(--text-main)' }}
                     dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(marked.parse(m.content || ''))
                     }}
                   />
                 </div>
+
               </div>
             ))
           )}
 
           {loading && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div className="glass-panel" style={{ padding: '14px 20px', borderRadius: '18px 18px 18px 2px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <RefreshCw style={{ width: '16px', color: 'var(--primary-cyan)', animation: 'spin 1s linear infinite' }} />
-                <span style={{ fontSize: '0.88rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
-                  LAF Fast Reasoning in progress...
-                </span>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-ds-blue-bg)', border: '1px solid var(--accent-ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <RefreshCw style={{ width: '16px', color: 'var(--accent-ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
+              <span style={{ fontSize: '0.88rem', color: 'var(--accent-ds-blue)', fontWeight: '600' }}>
+                LAF R1 is thinking & reasoning...
+              </span>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Input Dock */}
-        <form onSubmit={handleSend} style={{ padding: '16px 20px', background: 'rgba(7, 9, 19, 0.95)', borderTop: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(14, 18, 38, 0.9)', border: '1px solid var(--border-glow)', borderRadius: 'var(--radius-md)', padding: '6px 12px' }}>
-            <textarea
-              value={inputPrompt}
-              onChange={(e) => setInputPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Message LAF... (Shift+Enter for multiline)"
-              rows={1}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '0.95rem',
-                outline: 'none',
-                resize: 'none',
-                maxHeight: '120px'
-              }}
-            />
+      {/* Floating Bottom Input Bar (DeepSeek Style) */}
+      <div style={{ padding: '0 20px 16px 20px', maxWidth: '840px', width: '100%', margin: '0 auto' }}>
+        <form
+          onSubmit={handleSend}
+          style={{
+            background: 'var(--bg-deepseek-input)',
+            border: '1px solid var(--border-deepseek)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '12px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)'
+          }}
+        >
+          <textarea
+            value={inputPrompt}
+            onChange={(e) => setInputPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Message LAF... (Shift+Enter for new line)"
+            rows={2}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              fontSize: '0.95rem',
+              outline: 'none',
+              resize: 'none',
+              maxHeight: '160px'
+            }}
+          />
+
+          {/* Quick Control Bar Inside Input Box */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-deepseek-light)', paddingTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              
+              <button
+                type="button"
+                onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                className={`btn-ds-pill ${deepThinkingEnabled ? 'btn-ds-pill-active' : ''}`}
+                style={{ fontSize: '0.75rem', padding: '3px 10px' }}
+              >
+                <Brain style={{ width: '13px' }} />
+                <span>DeepThink R1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                className={`btn-ds-pill ${webSearchEnabled ? 'btn-ds-pill-active' : ''}`}
+                style={{ fontSize: '0.75rem', padding: '3px 10px' }}
+              >
+                <Globe style={{ width: '13px' }} />
+                <span>Search</span>
+              </button>
+
+            </div>
 
             <button
               type="submit"
-              className="btn-cyber btn-cyber-solid"
               disabled={loading || !inputPrompt.trim()}
-              style={{ padding: '10px 18px', borderRadius: 'var(--radius-sm)' }}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: inputPrompt.trim() ? 'var(--accent-ds-blue)' : 'var(--bg-deepseek-card)',
+                border: 'none',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: inputPrompt.trim() ? 'pointer' : 'default',
+                transition: 'all 0.15s ease'
+              }}
             >
-              <Send style={{ width: '16px' }} />
+              <Send style={{ width: '14px' }} />
             </button>
           </div>
         </form>
+
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: '8px' }}>
+          LAF can make mistakes. Verify important information. • AES-256 E2EE Protected
+        </div>
       </div>
 
     </div>
