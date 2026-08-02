@@ -65,8 +65,8 @@ export default function Navigation({
                 setSidebarOpen(false);
               }}
               style={{
-                padding: '9px 12px',
-                borderRadius: 'var(--radius-sm)',
+                padding: '9px 14px',
+                borderRadius: 'var(--radius-oval)',
                 marginBottom: '4px',
                 background: activeConvId === c.id ? 'var(--ds-bg-card-hover)' : 'transparent',
                 border: activeConvId === c.id ? '1px solid var(--ds-border)' : '1px solid transparent',
