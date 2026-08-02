@@ -45,7 +45,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (120s Timeout)
+  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (45s Timeout)
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://172.17.0.1:11434/api/chat',
@@ -65,7 +65,10 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             messages: formattedMessages,
             stream: false
           },
-          { timeout: 120000 }
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 45000
+          }
         );
 
         const content = ollamaRes.data?.message?.content;
