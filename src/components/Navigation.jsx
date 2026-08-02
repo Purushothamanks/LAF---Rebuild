@@ -1,49 +1,54 @@
 import React from 'react';
-import { MessageSquare, Sparkles, Globe, Database, Shield, Plus, User, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { MessageSquare, Sparkles, Globe, Database, Shield, Plus, User, Settings, LogOut, PanelLeftClose } from 'lucide-react';
 
-export default function Navigation({ activeTab, setActiveTab, user, onLogout, onOpenSettings, conversations, activeConvId, loadConversation, startNewChat }) {
+export default function Navigation({
+  activeTab,
+  setActiveTab,
+  user,
+  onLogout,
+  onOpenSettings,
+  conversations,
+  activeConvId,
+  loadConversation,
+  startNewChat
+}) {
   const navItems = [
-    { id: 'chat', label: 'LAF Chat (R1 Reasoning)', icon: MessageSquare },
+    { id: 'chat', label: 'LAF Chat', icon: MessageSquare },
     { id: 'media', label: 'Multimodal Studio', icon: Sparkles },
     { id: 'trends', label: 'Global World Trends', icon: Globe },
-    { id: 'memory', label: 'Memory Vault (Isolated DB)', icon: Database },
-    { id: 'security', label: 'Security & E2EE Vault', icon: Shield }
+    { id: 'memory', label: 'Memory Vault (DB)', icon: Database },
+    { id: 'security', label: 'Security & E2EE', icon: Shield }
   ];
 
   return (
-    <aside className="ds-sidebar">
-      {/* Brand Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 4px 16px 4px', borderBottom: '1px solid var(--border-deepseek)', marginBottom: '12px' }}>
-        <img
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
-          alt="LAF Logo"
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-            border: '2px solid var(--accent-ds-blue)',
-            boxShadow: '0 0 10px rgba(79, 117, 255, 0.4)'
-          }}
-        />
-        <div>
-          <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.2rem', fontWeight: '800', color: '#fff', letterSpacing: '0.5px' }}>
-            LAF AI
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--accent-ds-blue)', fontWeight: '600', letterSpacing: '0.5px' }}>
-            Look At the Future
-          </div>
+    <aside className="ds-sidebar-container">
+      
+      {/* Top Header: LAF Logo & Title */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 4px 12px 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+            alt="LAF Logo"
+            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
+          />
+          <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#fff', letterSpacing: '0.3px' }}>
+            LAF
+          </span>
         </div>
+
+        <button style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <PanelLeftClose style={{ width: '18px' }} />
+        </button>
       </div>
 
-      {/* New Chat Button */}
-      <button className="btn-ds-new-chat" onClick={() => { setActiveTab('chat'); startNewChat(); }}>
-        <Plus style={{ width: '18px', color: 'var(--accent-ds-blue)' }} />
+      {/* New Chat Button (DeepSeek 1:1 style) */}
+      <button className="ds-new-chat-btn" onClick={() => { setActiveTab('chat'); startNewChat(); }}>
+        <Plus style={{ width: '18px', color: 'var(--ds-text-primary)' }} />
         <span>New chat</span>
       </button>
 
-      {/* Main Workspace Navigation items */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
+      {/* Navigation Modules Switcher */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', margin: '12px 0 16px 0' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -55,29 +60,29 @@ export default function Navigation({ activeTab, setActiveTab, user, onLogout, on
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: '9px 12px',
-                borderRadius: 'var(--radius-sm)',
+                padding: '8px 12px',
+                borderRadius: 'var(--ds-radius-sm)',
                 border: 'none',
-                background: isActive ? 'var(--accent-ds-blue-bg)' : 'transparent',
-                color: isActive ? 'var(--accent-ds-blue)' : 'var(--text-muted)',
+                background: isActive ? 'var(--ds-bg-card)' : 'transparent',
+                color: isActive ? 'var(--ds-text-primary)' : 'var(--ds-text-secondary)',
                 fontWeight: isActive ? '600' : '400',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 textAlign: 'left',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.12s ease'
               }}
             >
-              <Icon style={{ width: '16px', color: isActive ? 'var(--accent-ds-blue)' : 'var(--text-dim)' }} />
+              <Icon style={{ width: '16px', color: isActive ? 'var(--ds-blue)' : 'var(--ds-text-muted)' }} />
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Conversation History Section */}
-      <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid var(--border-deepseek)', paddingTop: '12px', margin: '4px 0' }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 8px 8px 8px' }}>
-          Recent Conversations
+      {/* Chat History List */}
+      <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid var(--ds-border)', paddingTop: '12px' }}>
+        <div style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--ds-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 6px 8px 6px' }}>
+          Recent Chats
         </div>
 
         {conversations && conversations.length > 0 ? (
@@ -87,13 +92,12 @@ export default function Navigation({ activeTab, setActiveTab, user, onLogout, on
               onClick={() => { setActiveTab('chat'); loadConversation(c.id); }}
               style={{
                 padding: '8px 10px',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: '4px',
-                background: activeConvId === c.id ? 'rgba(79, 117, 255, 0.15)' : 'transparent',
-                border: activeConvId === c.id ? '1px solid rgba(79, 117, 255, 0.3)' : '1px solid transparent',
+                borderRadius: 'var(--ds-radius-sm)',
+                marginBottom: '2px',
+                background: activeConvId === c.id ? 'var(--ds-bg-card-hover)' : 'transparent',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
-                color: activeConvId === c.id ? '#fff' : 'var(--text-muted)',
+                fontSize: '0.83rem',
+                color: activeConvId === c.id ? '#fff' : 'var(--ds-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justify: 'space-between'
@@ -105,26 +109,26 @@ export default function Navigation({ activeTab, setActiveTab, user, onLogout, on
             </div>
           ))
         ) : (
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', padding: '8px', textAlign: 'center' }}>
-            No prior chat history yet.
+          <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-muted)', padding: '8px', textAlign: 'center' }}>
+            No recent chats
           </div>
         )}
       </div>
 
-      {/* User Account Dock at Bottom */}
-      <div style={{ borderTop: '1px solid var(--border-deepseek)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Bottom User Account Menu */}
+      <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-ds-blue-bg)', border: '1px solid var(--accent-ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <User style={{ width: '16px', color: 'var(--accent-ds-blue)' }} />
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <User style={{ width: '15px', color: 'var(--ds-blue)' }} />
           </div>
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#fff' }}>{user?.username}</div>
+            <div style={{ fontSize: '0.84rem', fontWeight: '600', color: '#fff' }}>{user?.username}</div>
             <div style={{ fontSize: '0.68rem', color: 'var(--accent-green)' }}>● Isolated DB Active</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button onClick={onOpenSettings} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }} title="Settings">
+        <div style={{ display: 'flex', gap: '2px' }}>
+          <button onClick={onOpenSettings} style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', padding: '4px' }} title="Settings">
             <Settings style={{ width: '16px' }} />
           </button>
           <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="Logout">
@@ -132,6 +136,7 @@ export default function Navigation({ activeTab, setActiveTab, user, onLogout, on
           </button>
         </div>
       </div>
+
     </aside>
   );
 }
