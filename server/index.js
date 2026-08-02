@@ -13,7 +13,10 @@ const securityRoutes = require('./routes/security');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security Headers (configured to allow external logo and media generation assets)
+// Enable Trust Proxy for Express behind Nginx / Load Balancers
+app.set('trust proxy', 1);
+
+// Security Headers
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -22,14 +25,15 @@ app.use(helmet({
 // Cross-Origin Resource Sharing
 app.use(cors());
 
-// Parse JSON Body (max 10mb for media transfers)
+// Parse JSON Body
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Global Rate Limiting (Prevent Brute force & DDoS)
+// Global Rate Limiting with proxy validation disabled
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // max 300 requests per window
+  max: 1000, // high max for seamless usage
+  validate: { xForwardedForHeader: false },
   message: { error: 'Too many requests from this IP, please try again later.' }
 });
 app.use('/api/', limiter);
@@ -45,8 +49,8 @@ app.use('/api/security', securityRoutes);
 app.use(express.static(path.join(__dirname, '../dist')));
 app.use('/public', express.static(path.join(__dirname, '../public')));
 
-// Client SPA Fallback Routing
-app.use((req, res) => {
+// Client SPA Fallback Routing (Only for non-API GET requests)
+app.get('*', (req, res) => {
   const distIndex = path.join(__dirname, '../dist/index.html');
   if (require('fs').existsSync(distIndex)) {
     res.sendFile(distIndex);
