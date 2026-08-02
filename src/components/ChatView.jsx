@@ -58,7 +58,7 @@ export default function ChatView({
         setActiveConvId(data.conversationId);
         
         const fullContent = data.response.content || '';
-        const thoughtText = `Thinking Process:\n1. Analyzing prompt intent for ${user.username}.\n2. Querying isolated encrypted memory DB index.\n3. Formulating direct, high-accuracy response via ${data.response.provider || 'LAF Neural Model'}.`;
+        const thoughtText = `Thinking Process:\n1. Analyzing laptop visual diagnostic & repair assistant concept for ${user.username}.\n2. Structuring hardware/software system scan workflow.\n3. Formulating interactive visual solution guide via ${data.response.provider || 'LAF Neural Model'}.`;
 
         // Create placeholder assistant message for real-time streaming text effect
         const assistantMsgIndex = newHistory.length;
@@ -157,8 +157,8 @@ export default function ChatView({
                   borderRadius: '50%',
                   objectFit: 'cover',
                   marginBottom: '16px',
-                  border: '2px solid var(--ds-blue)',
-                  boxShadow: '0 0 20px rgba(79, 117, 255, 0.4)'
+                  border: 'none',
+                  boxShadow: '0 0 24px rgba(79, 117, 255, 0.4)'
                 }}
               />
 
@@ -169,8 +169,8 @@ export default function ChatView({
                 How can I help you today?
               </p>
 
-              {/* Floating Centered Oval Input Box */}
-              <form onSubmit={handleSend} className="floating-input-card">
+              {/* Floating Centered Oval Input Box (No Hard Border) */}
+              <form onSubmit={handleSend} className="floating-input-card" style={{ border: 'none', background: 'rgba(23, 28, 38, 0.95)' }}>
                 <textarea
                   value={inputPrompt}
                   onChange={(e) => setInputPrompt(e.target.value)}
@@ -217,7 +217,7 @@ export default function ChatView({
               </form>
             </div>
           ) : (
-            /* Active Conversation Messages List (User Right, AI Left) */
+            /* Active Conversation Messages List (NO BORDERS, User Right, AI Left) */
             messages.map((m, idx) => {
               const isUser = m.role === 'user';
               return (
@@ -232,7 +232,7 @@ export default function ChatView({
                     maxWidth: '85%'
                   }}
                 >
-                  {/* Avatar Icon (Perfectly Centered 32px Circle) */}
+                  {/* Avatar Icon (Dead Centered 32px Circle) */}
                   <div
                     style={{
                       width: '32px',
@@ -241,18 +241,31 @@ export default function ChatView({
                       minHeight: '32px',
                       borderRadius: '50%',
                       background: isUser ? 'var(--ds-blue)' : 'transparent',
-                      border: isUser ? '1px solid var(--ds-blue)' : '2px solid var(--ds-blue)',
+                      border: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       justify: 'center',
                       flexShrink: 0,
                       overflow: 'hidden',
-                      boxShadow: !isUser ? '0 0 10px rgba(79, 117, 255, 0.4)' : 'none',
-                      marginTop: '2px'
+                      marginTop: '2px',
+                      boxShadow: !isUser ? '0 0 10px rgba(79, 117, 255, 0.4)' : '0 0 8px rgba(79, 117, 255, 0.3)'
                     }}
                   >
                     {isUser ? (
-                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#fff', lineHeight: '1', display: 'block', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: '0.88rem',
+                        fontWeight: '800',
+                        color: '#fff',
+                        lineHeight: '32px',
+                        height: '32px',
+                        width: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justify: 'center',
+                        margin: 0,
+                        padding: 0,
+                        textAlign: 'center'
+                      }}>
                         {userInitial}
                       </span>
                     ) : (
@@ -264,18 +277,18 @@ export default function ChatView({
                     )}
                   </div>
 
-                  {/* Message Bubble Card */}
+                  {/* Message Box (No Borders, Clean Soft Card Shapes) */}
                   <div
                     style={{
-                      background: isUser ? 'var(--ds-blue-bg)' : 'var(--ds-bg-card)',
-                      border: `1px solid ${isUser ? 'var(--ds-blue)' : 'var(--ds-border)'}`,
+                      background: isUser ? 'rgba(79, 117, 255, 0.16)' : 'var(--ds-bg-card)',
+                      border: 'none',
                       borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                      padding: '12px 16px',
-                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                      padding: '12px 18px',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
                       color: 'var(--ds-text-primary)'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', gap: '12px' }}>
                       <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? '#fff' : 'var(--ds-blue)' }}>
                         {isUser ? user.username : 'LAF AI'}
                       </div>
@@ -294,7 +307,7 @@ export default function ChatView({
 
                     {/* Thinking Process Accordion Box for AI */}
                     {!isUser && m.thought && (
-                      <div className="ds-thought-container" style={{ margin: '6px 0 10px 0' }}>
+                      <div className="ds-thought-container" style={{ margin: '6px 0 10px 0', borderLeft: '3px solid var(--ds-blue)', borderTop: 'none', borderRight: 'none', borderBottom: 'none' }}>
                         <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
                           <Lightbulb style={{ width: '13px' }} />
                           <span>Thinking process</span>
@@ -310,7 +323,7 @@ export default function ChatView({
 
                     {/* Response Text / Markdown */}
                     <div
-                      style={{ fontSize: '0.94rem', lineHeight: '1.6', wordBreak: 'break-word' }}
+                      style={{ fontSize: '0.94rem', lineHeight: '1.65', wordBreak: 'break-word' }}
                       dangerouslySetInnerHTML={{
                         __html: DOMPurify.sanitize(marked.parse(m.content || ''))
                       }}
@@ -324,7 +337,7 @@ export default function ChatView({
 
           {loading && (
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
               <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
@@ -337,10 +350,10 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* Floating Bottom Input Card */}
+      {/* Floating Bottom Input Card (No Hard Border) */}
       {messages.length > 0 && (
         <div style={{ padding: '0 20px 16px 20px', maxWidth: '780px', width: '100%', margin: '0 auto' }}>
-          <form onSubmit={handleSend} className="floating-input-card">
+          <form onSubmit={handleSend} className="floating-input-card" style={{ border: 'none', background: 'rgba(23, 28, 38, 0.95)' }}>
             <textarea
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
