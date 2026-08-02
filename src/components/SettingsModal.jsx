@@ -251,7 +251,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 />
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff', fontFamily: 'var(--font-title)' }}>LAF AI</h3>
                 <div style={{ fontSize: '0.78rem', color: 'var(--ds-blue)' }}>L - Look | A - At | F - Future</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--ds-text-muted)', marginTop: '4px' }}>Version 2.5 (Production Release)</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--ds-text-muted)', marginTop: '4px' }}>Version 1.0</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid var(--ds-border)', paddingTop: '16px' }}>

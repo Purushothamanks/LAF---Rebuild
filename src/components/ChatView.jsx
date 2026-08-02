@@ -106,12 +106,14 @@ export default function ChatView({
     }
   };
 
+  const userInitial = (user?.username || 'U').substring(0, 1).toUpperCase();
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
       
       {/* Messages Scroll Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {messages.length === 0 ? (
             /* Floating Centered Welcome Screen with Input Box */
@@ -125,7 +127,8 @@ export default function ChatView({
                   borderRadius: '50%',
                   objectFit: 'cover',
                   marginBottom: '16px',
-                  border: '2px solid var(--ds-blue)'
+                  border: '2px solid var(--ds-blue)',
+                  boxShadow: '0 0 20px rgba(79, 117, 255, 0.4)'
                 }}
               />
 
@@ -136,7 +139,7 @@ export default function ChatView({
                 How can I help you today?
               </p>
 
-              {/* Floating Centered Input Box */}
+              {/* Floating Centered Oval Input Box */}
               <form onSubmit={handleSend} className="floating-input-card">
                 <textarea
                   value={inputPrompt}
@@ -165,8 +168,8 @@ export default function ChatView({
                   type="submit"
                   disabled={loading || !inputPrompt.trim()}
                   style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: '50%',
                     background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
                     border: 'none',
@@ -184,42 +187,51 @@ export default function ChatView({
               </form>
             </div>
           ) : (
-            /* Active Messages List */
+            /* Active Conversation Messages List (Perfectly Aligned Avatars) */
             messages.map((m, idx) => (
               <div key={idx} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                 
-                {/* Avatar Icon */}
+                {/* Perfectly Aligned Circle Avatar Icon */}
                 <div style={{
-                  width: '30px',
-                  height: '30px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
-                  background: m.role === 'user' ? 'var(--ds-bg-card)' : 'var(--ds-blue-bg)',
-                  border: m.role === 'user' ? '1px solid var(--ds-border)' : '1px solid var(--ds-blue-border)',
+                  background: m.role === 'user' ? 'var(--ds-blue-bg)' : 'transparent',
+                  border: m.role === 'user' ? '1px solid var(--ds-blue)' : '2px solid var(--ds-blue)',
                   display: 'flex',
                   alignItems: 'center',
                   justify: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  marginTop: '2px',
+                  boxShadow: m.role === 'assistant' ? '0 0 10px rgba(79, 117, 255, 0.4)' : 'none',
+                  overflow: 'hidden'
                 }}>
                   {m.role === 'user' ? (
-                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--ds-text-secondary)' }}>{user.username.substring(0, 1).toUpperCase()}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--ds-blue)', lineHeight: '1' }}>
+                      {userInitial}
+                    </span>
                   ) : (
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="LAF" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                    <img
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+                      alt="LAF Logo"
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                    />
                   )}
                 </div>
 
-                {/* Content */}
+                {/* Message Content & Header */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '600', color: m.role === 'user' ? 'var(--ds-text-secondary)' : 'var(--ds-blue)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: '700', color: m.role === 'user' ? '#fff' : 'var(--ds-blue)', lineHeight: '1.2' }}>
                       {m.role === 'user' ? user.username : 'LAF AI'}
                     </div>
 
                     {m.role === 'assistant' && (
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer' }} title="Read Aloud">
+                        <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Read Aloud">
                           <Volume2 style={{ width: '14px' }} />
                         </button>
-                        <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer' }} title="Copy Response">
+                        <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy Response">
                           {copiedIndex === idx ? <Check style={{ width: '14px' }} /> : <Copy style={{ width: '14px' }} />}
                         </button>
                       </div>
@@ -257,7 +269,7 @@ export default function ChatView({
 
           {loading && (
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
               <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
@@ -270,7 +282,7 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* Floating Bottom Input Card (Only rendered when messages exist) */}
+      {/* Floating Bottom Input Card */}
       {messages.length > 0 && (
         <div style={{ padding: '0 20px 16px 20px', maxWidth: '780px', width: '100%', margin: '0 auto' }}>
           <form onSubmit={handleSend} className="floating-input-card">
@@ -301,8 +313,8 @@ export default function ChatView({
               type="submit"
               disabled={loading || !inputPrompt.trim()}
               style={{
-                width: '34px',
-                height: '34px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
                 border: 'none',
