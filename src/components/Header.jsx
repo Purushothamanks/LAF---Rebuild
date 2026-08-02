@@ -1,85 +1,66 @@
 import React from 'react';
-import { Brain, Globe, Sparkles, Check } from 'lucide-react';
+import { PanelLeft, PanelLeftClose, Plus } from 'lucide-react';
 
-export default function Header({
-  selectedModel,
-  setSelectedModel,
-  webSearchEnabled,
-  setWebSearchEnabled,
-  deepThinkingEnabled,
-  setDeepThinkingEnabled,
-  concisenessMode,
-  setConcisenessMode
-}) {
+export default function Header({ sidebarOpen, setSidebarOpen, startNewChat, setActiveTab }) {
   return (
-    <header style={{
-      height: '52px',
-      borderBottom: '1px solid var(--ds-border)',
-      background: 'var(--ds-bg-main)',
-      display: 'flex',
-      alignItems: 'center',
-      justify: 'space-between',
-      padding: '0 20px',
-      zIndex: 10
-    }}>
-      {/* DeepSeek Model Selector Switcher */}
-      <div className="ds-model-toggle">
-        <button
-          onClick={() => setSelectedModel('LAF-R1')}
-          className={`ds-model-btn ${selectedModel === 'LAF-R1' ? 'active' : ''}`}
-        >
-          <Brain style={{ width: '14px' }} />
-          <span>LAF-R1</span>
-        </button>
+    <div className="floating-top-bar">
+      {/* Circle LAF Logo */}
+      <img
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+        alt="LAF Logo"
+        style={{
+          width: '30px',
+          height: '30px',
+          borderRadius: '50%',
+          objectFit: 'cover',
+          border: '2px solid var(--ds-blue)'
+        }}
+      />
 
-        <button
-          onClick={() => setSelectedModel('LAF-V3')}
-          className={`ds-model-btn ${selectedModel === 'LAF-V3' ? 'active' : ''}`}
-        >
-          <Sparkles style={{ width: '14px' }} />
-          <span>LAF-V3</span>
-        </button>
-      </div>
+      {/* Sidebar Toggle Button (Click to open or close) */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: 'var(--ds-text-primary)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '4px'
+        }}
+        title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {sidebarOpen ? (
+          <PanelLeftClose style={{ width: '20px', color: 'var(--ds-blue)' }} />
+        ) : (
+          <PanelLeft style={{ width: '20px', color: 'var(--ds-text-primary)' }} />
+        )}
+      </button>
 
-      {/* Feature Toggles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        
-        <button
-          onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-          className={`ds-control-btn ${deepThinkingEnabled ? 'active' : ''}`}
-        >
-          <Brain style={{ width: '13px' }} />
-          <span>DeepThink (R1)</span>
-          {deepThinkingEnabled && <Check style={{ width: '12px' }} />}
-        </button>
-
-        <button
-          onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-          className={`ds-control-btn ${webSearchEnabled ? 'active' : ''}`}
-        >
-          <Globe style={{ width: '13px' }} />
-          <span>Search</span>
-          {webSearchEnabled && <Check style={{ width: '12px' }} />}
-        </button>
-
-        <div style={{ borderLeft: '1px solid var(--ds-border)', paddingLeft: '8px', display: 'flex', gap: '4px' }}>
-          <button
-            onClick={() => setConcisenessMode('short')}
-            className={`ds-control-btn ${concisenessMode === 'short' ? 'active' : ''}`}
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-          >
-            Short
-          </button>
-          <button
-            onClick={() => setConcisenessMode('detailed')}
-            className={`ds-control-btn ${concisenessMode === 'detailed' ? 'active' : ''}`}
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-          >
-            Detailed
-          </button>
-        </div>
-
-      </div>
-    </header>
+      {/* Floating New Chat Option */}
+      <button
+        onClick={() => {
+          setActiveTab('chat');
+          startNewChat();
+        }}
+        style={{
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: '1px solid var(--ds-border)',
+          color: '#fff',
+          borderRadius: 'var(--radius-full)',
+          padding: '4px 12px',
+          fontSize: '0.8rem',
+          fontWeight: '600',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}
+      >
+        <Plus style={{ width: '14px', color: 'var(--ds-blue)' }} />
+        <span>New chat</span>
+      </button>
+    </div>
   );
 }

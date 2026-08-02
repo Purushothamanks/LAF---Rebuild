@@ -17,13 +17,10 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
 
-  // DeepSeek Chat UI State Controls
-  const [selectedModel, setSelectedModel] = useState('LAF-R1'); // 'LAF-R1' or 'LAF-V3'
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(true);
-  const [concisenessMode, setConcisenessMode] = useState('short'); // 'short' or 'detailed'
+  // Sidebar toggle state (open / closed)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Conversation history state
+  // Conversation state
   const [conversations, setConversations] = useState([]);
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -116,13 +113,25 @@ export default function App() {
   }
 
   return (
-    <div className="ds-app-shell">
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
-      {/* DeepSeek Sidebar Navigation */}
+      {/* Floating Top-Left Bar (Circle Logo + Sidebar Toggle + New Chat) */}
+      {user && (
+        <Header
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          startNewChat={startNewChat}
+          setActiveTab={setActiveTab}
+        />
+      )}
+
+      {/* Collapsible Floating Sidebar (Shows User Name at Bottom) */}
       {user && (
         <Navigation
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           user={user}
@@ -137,47 +146,24 @@ export default function App() {
 
       {/* Main Workspace Body */}
       {user && (
-        <div style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          
-          {/* DeepSeek Top Control Header */}
-          <Header
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            webSearchEnabled={webSearchEnabled}
-            setWebSearchEnabled={setWebSearchEnabled}
-            deepThinkingEnabled={deepThinkingEnabled}
-            setDeepThinkingEnabled={setDeepThinkingEnabled}
-            concisenessMode={concisenessMode}
-            setConcisenessMode={setConcisenessMode}
-          />
-
-          {/* Active Workspace View */}
-          <main style={{ flex: 1, height: 'calc(100% - 56px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {activeTab === 'chat' && (
-              <ChatView
-                user={user}
-                token={token}
-                customApiKey={customApiKey}
-                selectedModel={selectedModel}
-                webSearchEnabled={webSearchEnabled}
-                setWebSearchEnabled={setWebSearchEnabled}
-                deepThinkingEnabled={deepThinkingEnabled}
-                setDeepThinkingEnabled={setDeepThinkingEnabled}
-                concisenessMode={concisenessMode}
-                activeConvId={activeConvId}
-                setActiveConvId={setActiveConvId}
-                messages={messages}
-                setMessages={setMessages}
-                fetchConversations={() => fetchConversations(token)}
-              />
-            )}
-            {activeTab === 'media' && <MediaStudio token={token} />}
-            {activeTab === 'trends' && <TrendsView />}
-            {activeTab === 'memory' && <MemoryVault user={user} token={token} />}
-            {activeTab === 'security' && <SecurityVault token={token} />}
-          </main>
-
-        </div>
+        <main style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {activeTab === 'chat' && (
+            <ChatView
+              user={user}
+              token={token}
+              customApiKey={customApiKey}
+              activeConvId={activeConvId}
+              setActiveConvId={setActiveConvId}
+              messages={messages}
+              setMessages={setMessages}
+              fetchConversations={() => fetchConversations(token)}
+            />
+          )}
+          {activeTab === 'media' && <div style={{ paddingTop: '60px', height: '100%' }}><MediaStudio token={token} /></div>}
+          {activeTab === 'trends' && <div style={{ paddingTop: '60px', height: '100%' }}><TrendsView /></div>}
+          {activeTab === 'memory' && <div style={{ paddingTop: '60px', height: '100%' }}><MemoryVault user={user} token={token} /></div>}
+          {activeTab === 'security' && <div style={{ paddingTop: '60px', height: '100%' }}><SecurityVault token={token} /></div>}
+        </main>
       )}
 
       {/* Settings Modal */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Brain, Globe, Check, RefreshCw, ChevronDown, ChevronRight, Lightbulb } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, ChevronDown, ChevronRight, Lightbulb } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -7,12 +7,6 @@ export default function ChatView({
   user,
   token,
   customApiKey,
-  selectedModel,
-  webSearchEnabled,
-  setWebSearchEnabled,
-  deepThinkingEnabled,
-  setDeepThinkingEnabled,
-  concisenessMode,
   activeConvId,
   setActiveConvId,
   messages,
@@ -44,10 +38,8 @@ export default function ChatView({
     setLoading(true);
 
     try {
-      // Simulate DeepSeek R1 reasoning steps if Deep Thinking or R1 is active
-      const thoughtText = deepThinkingEnabled || selectedModel === 'LAF-R1'
-        ? `Thinking Process:\n1. Analyzing request intent for user "${user.username}".\n2. Querying isolated encrypted memory DB index.\n3. ${webSearchEnabled ? 'Fetching live web search grounding.' : 'Executing direct neural reasoning pipeline.'}\n4. Formulating concise, high-accuracy response.`
-        : null;
+      // Simulate R1 thinking process step
+      const thoughtText = `Thinking Process:\n1. Analyzing request intent for user "${user.username}".\n2. Querying isolated encrypted memory DB index.\n3. Formulating direct, high-accuracy response.`;
 
       const res = await fetch('/api/chat/send', {
         method: 'POST',
@@ -60,7 +52,7 @@ export default function ChatView({
           conversationId: activeConvId,
           history: messages,
           customApiKey,
-          concisenessMode
+          concisenessMode: 'short'
         })
       });
 
@@ -115,15 +107,15 @@ export default function ChatView({
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
       
-      {/* Scrollable Messages Area */}
+      {/* Messages Scroll Area */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ maxWidth: '800px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ maxWidth: '780px', width: '90%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {messages.length === 0 ? (
-            /* 1:1 DeepSeek Empty Landing Screen */
-            <div style={{ marginTop: '80px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            /* Floating Centered Welcome Screen with Input Box */
+            <div style={{ marginTop: '120px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
                 alt="LAF Logo"
@@ -137,39 +129,62 @@ export default function ChatView({
                 }}
               />
 
-              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#fff', marginBottom: '6px' }}>
+              <h1 style={{ fontSize: '2.1rem', fontWeight: '800', color: '#fff', marginBottom: '8px', fontFamily: 'var(--font-title)' }}>
                 Hi, I'm LAF.
               </h1>
-              <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.95rem', marginBottom: '32px' }}>
+              <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.95rem', marginBottom: '36px' }}>
                 How can I help you today?
               </p>
 
-              {/* 2x2 DeepSeek Prompt Suggestion Tiles */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', width: '100%' }}>
-                {[
-                  { title: "What did we talk about last week?", desc: "Query your isolated encrypted DB memory index", prompt: "What did we discuss in our previous conversation?" },
-                  { title: "Deep Reasoning Analysis", desc: "Step-by-step logic breakdown with LAF-R1", prompt: "Analyze the potential impact of quantum computing on modern cryptography." },
-                  { title: "Global World Trends", desc: "Scrape & synthesize current tech & AI advances", prompt: "Summarize today's top global technology trends." },
-                  { title: "Create Python Script", desc: "Clean, high-performance secure code", prompt: "Write an optimized Python script for AES-256 encryption." }
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="ds-prompt-card"
-                    onClick={() => { setInputPrompt(item.prompt); }}
-                  >
-                    <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#fff', marginBottom: '4px' }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-secondary)' }}>
-                      {item.desc}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Floating Centered Input Box */}
+              <form onSubmit={handleSend} className="floating-input-card">
+                <textarea
+                  value={inputPrompt}
+                  onChange={(e) => setInputPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Message LAF..."
+                  rows={2}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#fff',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    resize: 'none',
+                    maxHeight: '160px'
+                  }}
+                />
 
+                <button
+                  type="submit"
+                  disabled={loading || !inputPrompt.trim()}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
+                    border: 'none',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'center',
+                    cursor: inputPrompt.trim() ? 'pointer' : 'default',
+                    transition: 'all 0.15s ease',
+                    flexShrink: 0
+                  }}
+                >
+                  <Send style={{ width: '16px' }} />
+                </button>
+              </form>
             </div>
           ) : (
-            /* Render Conversation Messages */
+            /* Active Messages List */
             messages.map((m, idx) => (
               <div key={idx} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                 
@@ -182,7 +197,7 @@ export default function ChatView({
                   border: m.role === 'user' ? '1px solid var(--ds-border)' : '1px solid var(--ds-blue-border)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justify: 'center',
                   flexShrink: 0
                 }}>
                   {m.role === 'user' ? (
@@ -192,7 +207,7 @@ export default function ChatView({
                   )}
                 </div>
 
-                {/* Content Container */}
+                {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <div style={{ fontSize: '0.82rem', fontWeight: '600', color: m.role === 'user' ? 'var(--ds-text-secondary)' : 'var(--ds-blue)' }}>
@@ -211,7 +226,7 @@ export default function ChatView({
                     )}
                   </div>
 
-                  {/* DeepSeek Signature "Thinking process" Accordion Box */}
+                  {/* Thinking Process Accordion Box */}
                   {m.role === 'assistant' && m.thought && (
                     <div className="ds-thought-container">
                       <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
@@ -227,7 +242,7 @@ export default function ChatView({
                     </div>
                   )}
 
-                  {/* Main Response Markdown Body */}
+                  {/* Response Body */}
                   <div
                     style={{ fontSize: '0.95rem', lineHeight: '1.65', color: 'var(--ds-text-primary)' }}
                     dangerouslySetInnerHTML={{
@@ -246,7 +261,7 @@ export default function ChatView({
                 <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
               <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
-                LAF R1 is thinking & reasoning...
+                LAF is thinking & reasoning...
               </span>
             </div>
           )}
@@ -255,84 +270,56 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* Floating Bottom Input Card (1:1 DeepSeek Style) */}
-      <div style={{ padding: '0 20px 16px 20px', maxWidth: '820px', width: '100%', margin: '0 auto' }}>
-        <form onSubmit={handleSend} className="ds-input-card">
-          <textarea
-            value={inputPrompt}
-            onChange={(e) => setInputPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Message LAF..."
-            rows={2}
-            style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              color: '#fff',
-              fontSize: '0.95rem',
-              outline: 'none',
-              resize: 'none',
-              maxHeight: '160px'
-            }}
-          />
-
-          {/* Bottom Bar Inside Input Box */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--ds-border-light)', paddingTop: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              
-              <button
-                type="button"
-                onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                className={`ds-control-btn ${deepThinkingEnabled ? 'active' : ''}`}
-                style={{ fontSize: '0.75rem', padding: '3px 10px' }}
-              >
-                <Brain style={{ width: '13px' }} />
-                <span>DeepThink (R1)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={`ds-control-btn ${webSearchEnabled ? 'active' : ''}`}
-                style={{ fontSize: '0.75rem', padding: '3px 10px' }}
-              >
-                <Globe style={{ width: '13px' }} />
-                <span>Search</span>
-              </button>
-
-            </div>
+      {/* Floating Bottom Input Card (Only rendered when messages exist) */}
+      {messages.length > 0 && (
+        <div style={{ padding: '0 20px 16px 20px', maxWidth: '780px', width: '100%', margin: '0 auto' }}>
+          <form onSubmit={handleSend} className="floating-input-card">
+            <textarea
+              value={inputPrompt}
+              onChange={(e) => setInputPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Message LAF..."
+              rows={1}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '0.95rem',
+                outline: 'none',
+                resize: 'none',
+                maxHeight: '120px'
+              }}
+            />
 
             <button
               type="submit"
               disabled={loading || !inputPrompt.trim()}
               style={{
-                width: '32px',
-                height: '32px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '50%',
                 background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
                 border: 'none',
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justify: 'center',
                 cursor: inputPrompt.trim() ? 'pointer' : 'default',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                flexShrink: 0
               }}
             >
               <Send style={{ width: '14px' }} />
             </button>
-          </div>
-        </form>
-
-        <div style={{ fontSize: '0.72rem', color: 'var(--ds-text-muted)', textAlign: 'center', marginTop: '8px' }}>
-          LAF can make mistakes. Verify important info.
+          </form>
         </div>
-      </div>
+      )}
 
     </div>
   );
