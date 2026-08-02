@@ -4,21 +4,24 @@ import { PanelLeft, PanelLeftClose } from 'lucide-react';
 export default function Header({ sidebarOpen, setSidebarOpen }) {
   return (
     <div className="floating-top-bar">
-      {/* Circle LAF Logo */}
-      <img
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
-        alt="LAF Logo"
-        style={{
-          width: '30px',
-          height: '30px',
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '2px solid var(--ds-blue)',
-          boxShadow: '0 0 10px rgba(79, 117, 255, 0.4)'
-        }}
-      />
+      {/* Perfectly Aligned Circle LAF Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+          alt="LAF Logo"
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '2px solid var(--ds-blue)',
+            boxShadow: '0 0 10px rgba(79, 117, 255, 0.4)',
+            display: 'block'
+          }}
+        />
+      </div>
 
-      {/* Sidebar Toggle Button (Click to open or close sidebar) */}
+      {/* Sidebar Toggle Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         style={{
@@ -28,7 +31,8 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          padding: '4px'
+          justify: 'center',
+          padding: '2px'
         }}
         title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
       >

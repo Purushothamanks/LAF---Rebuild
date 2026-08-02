@@ -15,22 +15,30 @@ export default function Navigation({
   return (
     <aside className={`floating-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       
-      {/* Top Header inside sidebar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 4px 12px 4px', borderBottom: '1px solid var(--ds-border)' }}>
+      {/* Top Header: Logo + Title + Close Button (Perfectly Aligned) */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 14px 2px', borderBottom: '1px solid var(--ds-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
             alt="LAF Logo"
-            style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--ds-blue)' }}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid var(--ds-blue)',
+              display: 'block',
+              flexShrink: 0
+            }}
           />
-          <span style={{ fontSize: '1.05rem', fontWeight: '700', color: '#fff', letterSpacing: '0.3px', fontFamily: 'var(--font-title)' }}>
+          <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff', letterSpacing: '0.5px', fontFamily: 'var(--font-title)', lineHeight: '1' }}>
             LAF
           </span>
         </div>
 
         <button
           onClick={() => setSidebarOpen(false)}
-          style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           title="Close sidebar"
         >
           <PanelLeftClose style={{ width: '18px' }} />
@@ -90,23 +98,23 @@ export default function Navigation({
         )}
       </div>
 
-      {/* User Name & Profile at Bottom (Required) */}
+      {/* User Name & Profile at Bottom (Aligned) */}
       <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <User style={{ width: '16px', color: 'var(--ds-blue)' }} />
           </div>
           <div>
-            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff' }}>{user?.username}</div>
+            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff', lineHeight: '1.2' }}>{user?.username}</div>
             <div style={{ fontSize: '0.72rem', color: 'var(--ds-text-muted)' }}>@{user?.username?.toLowerCase()}</div>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button onClick={onOpenSettings} style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', padding: '4px' }} title="Settings">
+          <button onClick={onOpenSettings} style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Settings">
             <Settings style={{ width: '16px' }} />
           </button>
-          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="Logout">
+          <button onClick={onLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Logout">
             <LogOut style={{ width: '16px' }} />
           </button>
         </div>
