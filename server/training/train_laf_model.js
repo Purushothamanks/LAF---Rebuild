@@ -1,22 +1,22 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { generateMassiveCombinatorialDataset } = require('./dataset_generator');
+const { generateGenuineDataset } = require('./dataset_generator');
 
 const MODELFILE_PATH = path.join(__dirname, 'Modelfile.laf');
 const MODEL_NAME = 'laf-v2';
 
 /**
- * Train and compile LAF AI Model with 50,000+ Compulsory Dataset Lines
+ * Train and compile LAF AI Model with Genuine Instruction Pairs
  */
 function trainLAFModel() {
-  console.log('1/3. Generating 50,000+ compulsory training dataset JSONL...');
-  generateMassiveCombinatorialDataset(50000);
+  console.log('1/3. Generating genuine synthetic training dataset JSONL...');
+  generateGenuineDataset();
 
   console.log('2/3. Writing custom Modelfile configuration...');
   const modelfileContent = `FROM llama3.2:latest
 
-# Fine-Tuning Parameters for LAF Model v2 (Trained on 50,000+ Dataset Lines)
+# Fine-Tuning Parameters for LAF Model v2 (Genuine Instruction Dataset)
 PARAMETER temperature 0.65
 PARAMETER top_p 0.9
 PARAMETER top_k 40
