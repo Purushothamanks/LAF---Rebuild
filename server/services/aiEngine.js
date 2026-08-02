@@ -5,6 +5,7 @@ const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the F
 
 /**
  * 100% Direct Passthrough Engine to Llama AI Model (llama3.2:latest)
+ * Optimized with fast CPU context options (num_ctx: 2048, num_predict: 512) for sub-5 second responses.
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
@@ -36,7 +37,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   ];
 
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-6).forEach(h => {
+    history.slice(-4).forEach(h => {
       formattedMessages.push({
         role: h.role === 'user' ? 'user' : 'assistant',
         content: h.content
@@ -55,7 +56,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     'http://host.docker.internal:11434/api/chat'
   ];
 
-  const targetModels = ['llama3.2:latest', 'laf-v2', 'laf-model'];
+  const targetModels = ['llama3.2:latest', 'laf-v2:latest', 'qwen2.5:0.5b'];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetModels) {
@@ -66,7 +67,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           {
             model: modelName,
             messages: formattedMessages,
-            stream: false
+            stream: false,
+            options: {
+              num_ctx: 2048,
+              num_predict: 512,
+              temperature: 0.7
+            }
           },
           {
             headers: { 'Content-Type': 'application/json' },
