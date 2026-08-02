@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Settings, User, Key, LogOut, Trash2, Shield, FileText, Check } from 'lucide-react';
+import { X, Settings, User, LogOut, Trash2, Shield, FileText, Check, Save } from 'lucide-react';
 
 export default function SettingsModal({ isOpen, onClose, user, onLogout, customApiKey, setCustomApiKey }) {
   const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
@@ -8,6 +8,10 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   const [keyInput, setKeyInput] = useState(customApiKey || '');
   const [savedKey, setSavedKey] = useState(false);
   const [showLegalDoc, setShowLegalDoc] = useState(null); // 'terms' or 'privacy'
+
+  // User editable phone number
+  const [phoneInput, setPhoneInput] = useState(user?.phone || '');
+  const [savedPhone, setSavedPhone] = useState(false);
 
   if (!isOpen) return null;
 
@@ -19,9 +23,16 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
     setTimeout(() => setSavedKey(false), 2000);
   };
 
-  const username = user?.username || 'User';
+  const handleSavePhone = (e) => {
+    e.preventDefault();
+    localStorage.setItem(`laf_phone_${user?.username}`, phoneInput.trim());
+    if (user) user.phone = phoneInput.trim();
+    setSavedPhone(true);
+    setTimeout(() => setSavedPhone(false), 2000);
+  };
+
+  const username = user?.username || 'Sample';
   const userEmail = user?.email || `${username.toLowerCase()}@laf.ai`;
-  const userPhone = user?.phone || '+91 90420 17110';
 
   return (
     <div style={{
@@ -30,7 +41,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
       zIndex: 9999,
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justify: 'center',
       background: 'rgba(5, 7, 15, 0.85)',
       backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
@@ -55,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
           borderBottom: '1px solid var(--ds-border)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justify: 'space-between',
           background: 'rgba(28, 33, 45, 0.9)'
         }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
@@ -75,7 +86,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justify: 'center',
               transition: 'all 0.15s ease'
             }}
             title="Close Settings"
@@ -84,7 +95,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
           </button>
         </div>
 
-        {/* Tab Switcher (Bent Oval Pills) */}
+        {/* Tab Switcher */}
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--ds-border)', padding: '12px 24px', background: 'rgba(0,0,0,0.2)' }}>
           <button
             onClick={() => setActiveTab('profile')}
@@ -109,7 +120,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
         {/* Modal Body */}
         <div style={{ padding: '24px', flex: 1, overflowY: 'auto', maxHeight: '440px' }}>
           
-          {/* 👤 PROFILE TAB (Real User Details) */}
+          {/* 👤 PROFILE TAB */}
           {activeTab === 'profile' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
@@ -136,11 +147,48 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 <div style={{ fontSize: '0.94rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{userEmail}</div>
               </div>
 
+              {/* Editable Phone Number Field */}
               <div style={{ background: 'var(--ds-bg-card)', padding: '14px 18px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--ds-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Phone number
                 </div>
-                <div style={{ fontSize: '0.94rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{userPhone}</div>
+                <form onSubmit={handleSavePhone} style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder="Enter phone number (e.g. +91 90420 17110)..."
+                    style={{
+                      flex: 1,
+                      padding: '10px 14px',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      border: '1px solid var(--ds-border)',
+                      borderRadius: '12px',
+                      color: '#fff',
+                      fontSize: '0.92rem',
+                      fontFamily: 'var(--font-mono)',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '10px 16px',
+                      background: 'var(--ds-blue)',
+                      border: 'none',
+                      color: '#fff',
+                      borderRadius: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    {savedPhone ? <Check style={{ width: '16px' }} /> : <Save style={{ width: '16px' }} />}
+                    <span>{savedPhone ? 'Saved' : 'Save'}</span>
+                  </button>
+                </form>
               </div>
 
               <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -158,7 +206,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justify: 'center',
                     gap: '8px',
                     transition: 'all 0.15s ease'
                   }}
@@ -180,7 +228,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     fontWeight: '600',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justify: 'center',
                     gap: '8px',
                     transition: 'all 0.15s ease'
                   }}

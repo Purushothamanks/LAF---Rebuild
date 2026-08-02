@@ -72,7 +72,6 @@ export default function ChatView({
         setActiveConvId(data.conversationId);
         
         const fullContent = data.response.content || '';
-        const assistantMsgIndex = newHistory.length;
         
         // Add complete response to messages list directly
         setMessages(prev => [
@@ -123,7 +122,7 @@ export default function ChatView({
     }
   };
 
-  const userInitial = (user?.username || 'U').substring(0, 1).toUpperCase();
+  const userInitial = (user?.username || 'S').substring(0, 1).toUpperCase();
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
@@ -218,7 +217,7 @@ export default function ChatView({
                     maxWidth: '94%'
                   }}
                 >
-                  {/* Avatar Icon */}
+                  {/* Perfectly Centered Avatar Icon Circle */}
                   <div
                     style={{
                       width: '34px',
@@ -229,7 +228,7 @@ export default function ChatView({
                       background: isUser ? 'var(--ds-blue)' : 'transparent',
                       display: 'flex',
                       alignItems: 'center',
-                      justify: 'center',
+                      justifyContent: 'center',
                       flexShrink: 0,
                       overflow: 'hidden',
                       marginTop: '2px',
@@ -237,20 +236,23 @@ export default function ChatView({
                     }}
                   >
                     {isUser ? (
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
+                      <span style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justify: 'center',
-                        fontSize: '0.88rem',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                        fontSize: '0.92rem',
                         fontWeight: '800',
                         color: '#fff',
-                        lineHeight: '1',
-                        textAlign: 'center'
+                        lineHeight: 1,
+                        textTransform: 'uppercase',
+                        userSelect: 'none',
+                        margin: 0,
+                        padding: 0
                       }}>
                         {userInitial}
-                      </div>
+                      </span>
                     ) : (
                       <img
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
