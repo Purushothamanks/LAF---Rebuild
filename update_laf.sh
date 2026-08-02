@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-KEY_PATH="/home/purushothaman/Videos/Final-Pro-Key.pem"
-AWS_HOST="ubuntu@98.89.32.42"
+KEY_PATH="${KEY_PATH:-/home/purushothaman/Videos/Final-Pro-Key.pem}"
+AWS_HOST="${AWS_HOST:-ubuntu@98.89.32.42}"
 REMOTE_DIR="/home/ubuntu/LAF---Rebuild"
 
 COMMIT_MSG="${1:-"update: synchronize codebase changes across local, AWS server, and GitHub"}"
@@ -17,7 +17,7 @@ echo "1/4. Validating & building local frontend bundle..."
 npm run build
 
 # Step 2: Push to GitHub Repository
-echo "2/4. Syncing changes to GitHub (Purushothamanks/LAF---Rebuild)..."
+echo "2/4. Syncing changes to GitHub..."
 git rm -r --cached node_modules dist data 2>/dev/null || true
 git add .
 if git diff-index --quiet HEAD --; then
@@ -29,7 +29,7 @@ else
 fi
 
 # Step 3: Sync & Deploy to AWS Server
-echo "3/4. Deploying update to AWS Server (98.89.32.42)..."
+echo "3/4. Deploying update to AWS Host..."
 chmod 400 "$KEY_PATH"
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" "mkdir -p $REMOTE_DIR"
 
@@ -37,6 +37,8 @@ rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
   --exclude 'node_modules' \
   --exclude 'dist' \
   --exclude '.git' \
+  --exclude 'BUILD_REPORT.md' \
+  --exclude 'server/training/*.jsonl' \
   ./ "$AWS_HOST:$REMOTE_DIR/"
 
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
@@ -49,12 +51,11 @@ ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
 EOF
 
 # Step 4: Health Verification
-echo "4/4. Verifying live health on AWS host..."
+echo "4/4. Verifying live health..."
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -k https://98.89.32.42.nip.io || true)
 
 echo "======================================================="
 echo "  ✓ SYNC COMPLETED SUCCESSFULLY!"
 echo "  • GitHub Repository : Pushed & Up to date"
 echo "  • AWS Production Host: Deployed & Alive (HTTP $HTTP_STATUS)"
-echo "  • Access URL         : https://98.89.32.42.nip.io"
 echo "======================================================="

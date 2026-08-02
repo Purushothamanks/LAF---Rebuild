@@ -5,3 +5,5 @@ data/
 .env
 .env.local
 public/media_cache/
+BUILD_REPORT.md
+server/training/*.jsonl
