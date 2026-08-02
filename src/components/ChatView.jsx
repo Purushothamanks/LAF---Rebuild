@@ -192,7 +192,7 @@ export default function ChatView({
                     color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justify: 'center',
                     cursor: inputPrompt.trim() ? 'pointer' : 'default',
                     transition: 'all 0.15s ease',
                     flexShrink: 0,
@@ -222,41 +222,16 @@ export default function ChatView({
                     maxWidth: '94%'
                   }}
                 >
-                  {/* Perfectly Centered Avatar Icon Circle */}
+                  {/* Dead-Centered Avatar Icon Circle with CSS Grid */}
                   <div
+                    className="user-avatar-circle"
                     style={{
-                      width: '34px',
-                      height: '34px',
-                      minWidth: '34px',
-                      minHeight: '34px',
-                      borderRadius: '50%',
                       background: isUser ? 'var(--ds-blue)' : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justify: 'center',
-                      flexShrink: 0,
-                      overflow: 'hidden',
-                      marginTop: '2px',
                       boxShadow: !isUser ? '0 0 10px rgba(79, 117, 255, 0.4)' : 'none'
                     }}
                   >
                     {isUser ? (
-                      <span style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justify: 'center',
-                        width: '100%',
-                        height: '100%',
-                        fontSize: '0.92rem',
-                        fontWeight: '800',
-                        color: '#fff',
-                        lineHeight: 1,
-                        textTransform: 'uppercase',
-                        userSelect: 'none',
-                        margin: 0,
-                        padding: 0,
-                        transform: 'translateY(-0.5px)'
-                      }}>
+                      <span className="user-avatar-initial">
                         {userInitial}
                       </span>
                     ) : (
