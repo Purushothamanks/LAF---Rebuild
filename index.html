@@ -1,14 +1,128 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LAF - Look At Future | Autonomous AI Product Platform</title>
-    <meta name="description" content="LAF (Look At Future) is a fast, accurate, end-to-end encrypted AI platform with multimodal video, audio, and image generation capabilities." />
-    <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!doctype html>
+<html lang="en" class="notranslate" translate="no">
+<head>
+  <meta charset="UTF-8" />
+  <title>LAF - Look At Future</title>
+  <meta name="viewport" content="initial-scale=1.0,maximum-scale=1,minimum-scale=1.0,user-scalable=no,width=device-width,viewport-fit=cover" />
+  <meta name="commit-id" content="laf-v2.5-prod" />
+  <meta name="description" content="Chat with LAF AI – your intelligent assistant for fast reasoning, multimodal image, audio, and video creation, end-to-end encrypted isolated memory databases, and global world trends. | Look At Future." />
+  <meta name="keywords" content="LAF,LAF AI,LAF Chat,Look At Future,AI assistant,coding assistant,fast reasoning LLM,multimodal AI,E2EE AI,isolated database AI,AI chatbot,AI image generation,AI audio synthesis,AI video motion" />
+  
+  <!-- OpenGraph Metadata -->
+  <meta property="og:url" content="https://98.89.32.42.nip.io" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="LAF - Look At Future" />
+  <meta property="og:description" content="Chat with LAF AI - Look At Future." />
+  <meta property="og:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
+  
+  <!-- Twitter Metadata -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="twitter:domain" content="98.89.32.42.nip.io" />
+  <meta property="twitter:url" content="https://98.89.32.42.nip.io" />
+  <meta name="twitter:title" content="LAF - Look At Future" />
+  <meta name="twitter:description" content="Chat with LAF AI - Look At Future." />
+  <meta name="twitter:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
+  
+  <meta name="google" content="notranslate" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
+  <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" />
+
+  <!-- Fallback Error Overlay Styling (DeepSeek Spec adapted for LAF) -->
+  <style>
+    ._sri-logo {
+      position: absolute;
+      left: 16px;
+      top: 21px;
+      user-select: none;
+      z-index: 1;
+      height: 28px;
+      width: auto;
+    }
+    div._sri-ck {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100vh;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: #0e1117;
+      color: #f0f6fc;
+    }
+    ._sri-ck .img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin-bottom: 24px;
+      border: 2px solid #4f75ff;
+      box-shadow: 0 0 20px rgba(79, 117, 255, 0.4);
+    }
+    ._sri-ck .desc {
+      font-size: 15px;
+      line-height: 22px;
+      margin: 0 0 24px;
+      color: #8b949e;
+    }
+    ._sri-ck .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      min-width: 80px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: #4f75ff;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-family: inherit;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+    ._sri-ck .btn:hover {
+      background: #3b62ff;
+      box-shadow: 0 0 15px rgba(79, 117, 255, 0.5);
+    }
+  </style>
+
+  <!-- Script Error Handler (Adapted from DeepSeek) -->
+  <script>
+    (() => {
+      "use strict";
+      const translations = {
+        en: { d: "Unable to load LAF AI resources. Please refresh and try again.", b: "Reload", logo: "LAF AI" },
+        zh: { d: "LAF AI 页面资源加载异常，请刷新重试", b: "重新加载", logo: "LAF AI" }
+      };
+      window._sriCk = function() {
+        let langList = navigator.languages || [navigator.language || ""];
+        let userLang = "en";
+        for (let i = 0; i < langList.length; i++) {
+          let code = langList[i].toLowerCase().split("-")[0];
+          if (translations[code]) { userLang = code; break; }
+        }
+        let t = translations[userLang] || translations.en;
+        let html = '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="' + t.logo + '" class="_sri-logo">';
+        html += '<div class="_sri-ck"><img class="img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10" alt="LAF"><p class="desc">' + t.d + '</p><button class="btn" onclick="location.reload()">' + t.b + '</button></div>';
+        let container = document.createElement("div");
+        document.body.replaceChildren(container);
+        container.innerHTML = html;
+      };
+    })();
+  </script>
+</head>
+<body>
+  <!-- DeepSeek SPA Root Container -->
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>
