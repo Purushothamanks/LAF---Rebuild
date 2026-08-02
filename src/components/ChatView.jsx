@@ -224,7 +224,7 @@ export default function ChatView({
                     maxWidth: '88%'
                   }}
                 >
-                  {/* Avatar Icon (Perfectly Centered 34px Circle) */}
+                  {/* Avatar Icon (Centered 34px Circle) */}
                   <div
                     style={{
                       width: '34px',
@@ -268,24 +268,11 @@ export default function ChatView({
 
                   {/* Clean Text Message Container */}
                   <div style={{ flex: 1, minWidth: 0, textAlign: isUser ? 'right' : 'left' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: isUser ? 'flex-end' : 'space-between', marginBottom: '4px', gap: '12px' }}>
-                      <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? 'var(--ds-text-secondary)' : 'var(--ds-blue)' }}>
-                        {isUser ? user.username : 'LAF AI'}
-                      </div>
-
-                      {!isUser && (
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => handleSpeak(m.content, idx)} style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Read Aloud">
-                            <Volume2 style={{ width: '13px' }} />
-                          </button>
-                          <button onClick={() => handleCopy(m.content, idx)} style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Copy Response">
-                            {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
-                          </button>
-                        </div>
-                      )}
+                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? 'var(--ds-text-secondary)' : 'var(--ds-blue)', marginBottom: '4px' }}>
+                      {isUser ? user.username : 'LAF AI'}
                     </div>
 
-                    {/* Actual Pure Text Message (No Thinking Box) */}
+                    {/* Actual Pure Text Message */}
                     <div
                       style={{
                         fontSize: '0.96rem',
@@ -298,6 +285,27 @@ export default function ChatView({
                         __html: DOMPurify.sanitize(marked.parse(m.content || ''))
                       }}
                     />
+
+                    {/* Voice (Read Aloud) & Copy Options Under BOTH User & AI Messages */}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                      <button
+                        onClick={() => handleSpeak(m.content, idx)}
+                        style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                        title="Read Aloud"
+                      >
+                        <Volume2 style={{ width: '13px' }} />
+                        <span>Speak</span>
+                      </button>
+                      <button
+                        onClick={() => handleCopy(m.content, idx)}
+                        style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? 'var(--accent-green)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                        title="Copy text"
+                      >
+                        {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
+                        <span>{copiedIndex === idx ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+
                   </div>
 
                 </div>

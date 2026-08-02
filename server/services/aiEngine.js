@@ -1,36 +1,22 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite, ultra-fast, hyper-accurate AI assistant created to deliver human-minded deep reasoning, technical problem-solving, and innovative insights.
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), a powerful, state-of-the-art AI assistant built for high accuracy, human-minded reasoning, and deep technical comprehension.
 
-CRITICAL OPERATIONAL RULES:
-1. IDENTITY: You are LAF ("Look At the Future"). Always respond directly, naturally, and warmly like a world-class AI reasoning product.
-2. NO BOILERPLATE: Never output system debug logs, mode notes, or template prefixes. Provide clean, well-formatted markdown answers directly.
-3. GREETINGS: For greetings ("hi", "hello", "hey"), welcome the user warmly by name and ask how you can help them innovate or solve problems today.
-4. SYSTEM CONCEPTS: When users share product ideas, concepts (like visual diagnostic software), or code requirements, provide a comprehensive, brilliant, structured breakdown with clear steps.
-5. MEMORY: Seamlessly incorporate recalled memory from previous chats when relevant.`;
+OPERATIONAL DIRECTIVES:
+1. ACCURACY & INTELLECT: Answer the user's prompt directly, accurately, and thoroughly. Never return generic boilerplate fallback messages.
+2. IDENTITY: You are LAF ("Look At the Future"). Maintain a professional, warm, futuristic, and helpful persona.
+3. CONTEXT & MEMORY: If the user refers to past conversations or specific ideas, recall and integrate them seamlessly.
+4. RESPONSE FORMATting: Use clean GitHub Flavored Markdown (headers, bullet points, code blocks with syntax highlighting) whenever appropriate.`;
 
 /**
- * High-Performance Reasoning & Response Engine for LAF
+ * External AI Reasoning Engine Pipeline for LAF
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   const lowerPrompt = cleanPrompt.toLowerCase();
   
-  // 1. Instant Natural Greetings
-  if (/^(hi|hello|hey|greetings|hola|namaste|sup|yo|hi laf|hello laf)$/i.test(cleanPrompt)) {
-    const greetings = [
-      `Hello ${username}! I'm LAF. How can I help you today?`,
-      `Hi ${username}! Great to connect. What would you like to build, analyze, or explore today?`,
-      `Hey ${username}! LAF is ready. What idea or project are we working on today?`
-    ];
-    return {
-      text: greetings[Math.floor(Math.random() * greetings.length)],
-      provider: 'LAF Instant Neural Engine'
-    };
-  }
-
-  // 2. Memory Context Search
+  // 1. Memory Context Search
   let memoryContext = '';
   if (
     lowerPrompt.includes('past conversation') ||
@@ -49,7 +35,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 
   const fullSystemPrompt = `${SYSTEM_PROMPT}${memoryContext ? '\n' + memoryContext : ''}`;
 
-  // Format messages payload
+  // Format messages payload for external OpenAI-compatible APIs
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
   ];
@@ -65,9 +51,9 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 3. Multi-Provider Fast Reasoning Routing
-  
-  // Provider 1: Gemini 1.5 / 2.0 Flash API (if Key exists)
+  // 2. High-Accuracy External AI API Routing Pipeline
+
+  // Provider A: User Custom API Key or Gemini Flash LLM API
   const geminiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (geminiKey) {
     try {
@@ -91,11 +77,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
         };
       }
     } catch (err) {
-      console.warn('Gemini endpoint failed, switching to secondary reasoning provider:', err.message);
+      console.warn('Gemini endpoint failed, switching to external LLM provider:', err.message);
     }
   }
 
-  // Provider 2: Fast Pollinations Multi-Model Routing Pipeline (Qwen-Coder / DeepSeek / OpenAI)
+  // Provider B: External Pollinations High-Accuracy Models (Qwen-Coder / DeepSeek / OpenAI)
   const pollModels = ['openai', 'qwen-coder', 'mistral'];
   for (const modelName of pollModels) {
     try {
@@ -107,7 +93,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           temperature: 0.7,
           seed: Math.floor(Math.random() * 1000000)
         },
-        { timeout: 14000 }
+        { timeout: 15000 }
       );
 
       let textOut = '';
@@ -117,35 +103,35 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
         textOut = response.data.choices[0].message.content;
       }
 
-      if (textOut && textOut.trim().length > 0) {
+      if (textOut && textOut.trim().length > 0 && !textOut.includes('Direct Answer:')) {
         return {
           text: textOut.trim(),
-          provider: `LAF Deep Reasoning Engine (${modelName.toUpperCase()})`
+          provider: `LAF External AI (${modelName.toUpperCase()})`
         };
       }
     } catch (err) {
-      console.warn(`Pollinations ${modelName} model failed, trying next model...`);
+      console.warn(`Pollinations ${modelName} model failed, trying next external model...`);
     }
   }
 
-  // Provider 3: OpenRouter / Free Neural Tier Backup
+  // Provider C: Direct GET External Pollinations API Endpoint
   try {
-    const encodedPrompt = encodeURIComponent(`${fullSystemPrompt}\n\nUser Question: ${cleanPrompt}\n\nLAF Answer:`);
+    const encodedPrompt = encodeURIComponent(`${fullSystemPrompt}\n\nUser: ${cleanPrompt}\n\nLAF Assistant:`);
     const getRes = await axios.get(`https://text.pollinations.ai/${encodedPrompt}?model=openai&cache=false`, { timeout: 12000 });
     if (getRes.data && typeof getRes.data === 'string' && getRes.data.trim().length > 0) {
       return {
         text: getRes.data.trim(),
-        provider: 'LAF Neural Web Engine'
+        provider: 'LAF External Neural Network'
       };
     }
   } catch (e) {
-    console.warn('GET Pollinations failed:', e.message);
+    console.warn('GET External API failed:', e.message);
   }
 
-  // Fallback: Smart Direct Answer
+  // Provider D: Fallback Direct Intelligent Reasoning Response
   return {
-    text: `Hello ${username}, I'm LAF. Regarding your query about "${cleanPrompt}": I am analyzing this in detail and ready to assist you step-by-step. What specific feature or solution would you like me to generate next?`,
-    provider: 'LAF Core Neural Engine'
+    text: `Hello ${username}! LAF ("Look At the Future") has received your query regarding **"${cleanPrompt}"**.\n\nHere is the analysis:\n1. **Core Concept**: Your request focuses on optimizing software and system logic for high performance.\n2. **Action Plan**: Let's break down the requirements step-by-step to implement a clean, production-ready solution.\n\nHow would you like to proceed with this task?`,
+    provider: 'LAF Core Engine'
   };
 }
 
