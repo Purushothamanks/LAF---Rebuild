@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  laf-app:
+    build: .
+    container_name: laf-ai-product
+    restart: always
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - ./data:/app/data

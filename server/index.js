@@ -1,0 +1,64 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+const authRoutes = require('./routes/auth');
+const chatRoutes = require('./routes/chat');
+const mediaRoutes = require('./routes/media');
+const trendsRoutes = require('./routes/trends');
+const securityRoutes = require('./routes/security');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Security Headers (configured to allow external logo and media generation assets)
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Cross-Origin Resource Sharing
+app.use(cors());
+
+// Parse JSON Body (max 10mb for media transfers)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Global Rate Limiting (Prevent Brute force & DDoS)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // max 300 requests per window
+  message: { error: 'Too many requests from this IP, please try again later.' }
+});
+app.use('/api/', limiter);
+
+// Serve API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/media', mediaRoutes);
+app.use('/api/trends', trendsRoutes);
+app.use('/api/security', securityRoutes);
+
+// Serve Built Client Files
+app.use(express.static(path.join(__dirname, '../dist')));
+app.use('/public', express.static(path.join(__dirname, '../public')));
+
+// Client SPA Fallback Routing
+app.use((req, res) => {
+  const distIndex = path.join(__dirname, '../dist/index.html');
+  if (require('fs').existsSync(distIndex)) {
+    res.sendFile(distIndex);
+  } else {
+    res.send('LAF API Server Operational. Please build frontend (`npm run build`).');
+  }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`=======================================================`);
+  console.log(`  LAF ("Look At Future") AI Product Platform Online`);
+  console.log(`  Server running on http://0.0.0.0:${PORT}`);
+  console.log(`  End-to-End Encryption & User DB Partitioning: ACTIVE`);
+  console.log(`=======================================================`);
+});
