@@ -179,6 +179,7 @@ export default function ChatView({
                   }}
                 />
 
+                {/* Dead-Centered Send Button */}
                 <button
                   type="submit"
                   disabled={loading || !inputPrompt.trim()}
@@ -191,13 +192,17 @@ export default function ChatView({
                     color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
-                    justify: 'center',
+                    justifyContent: 'center',
                     cursor: inputPrompt.trim() ? 'pointer' : 'default',
                     transition: 'all 0.15s ease',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    padding: 0,
+                    margin: 0
                   }}
                 >
-                  <Send style={{ width: '16px' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
+                    <Send style={{ width: '16px', height: '16px' }} />
+                  </div>
                 </button>
               </form>
             </div>
@@ -228,7 +233,7 @@ export default function ChatView({
                       background: isUser ? 'var(--ds-blue)' : 'transparent',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      justify: 'center',
                       flexShrink: 0,
                       overflow: 'hidden',
                       marginTop: '2px',
@@ -239,7 +244,7 @@ export default function ChatView({
                       <span style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        justify: 'center',
                         width: '100%',
                         height: '100%',
                         fontSize: '0.92rem',
@@ -249,7 +254,8 @@ export default function ChatView({
                         textTransform: 'uppercase',
                         userSelect: 'none',
                         margin: 0,
-                        padding: 0
+                        padding: 0,
+                        transform: 'translateY(-0.5px)'
                       }}>
                         {userInitial}
                       </span>
@@ -353,6 +359,7 @@ export default function ChatView({
               }}
             />
 
+            {/* Dead-Centered Send Button */}
             <button
               type="submit"
               disabled={loading || !inputPrompt.trim()}
@@ -368,10 +375,14 @@ export default function ChatView({
                 justify: 'center',
                 cursor: inputPrompt.trim() ? 'pointer' : 'default',
                 transition: 'all 0.15s ease',
-                flexShrink: 0
+                flexShrink: 0,
+                padding: 0,
+                margin: 0
               }}
             >
-              <Send style={{ width: '14px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
+                <Send style={{ width: '15px', height: '15px' }} />
+              </div>
             </button>
           </form>
         </div>

@@ -1,15 +1,15 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF AI, an elite AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving. Always provide complete, clear, and well-structured responses. When writing code, format it cleanly in markdown code blocks.`;
+const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for fast coding, clear conversation, and creative problem solving. Provide direct, helpful answers. Format code inside clean markdown code blocks.`;
 
 /**
- * 100% Direct Passthrough Engine to Llama AI Model (llama3.2:latest)
- * Optimized with fast CPU parameters (num_ctx: 4096, num_predict: 2048) for complete, fast responses.
+ * High-Speed Direct Passthrough Engine to Ollama AI Models
+ * Tuned for sub-second to 2-second responses using fast models and CPU thread optimizations.
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Processing prompt for user "${username}": "${cleanPrompt}"`);
+  console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}"`);
 
   const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, '');
 
@@ -30,14 +30,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     }
   }
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser Name: ${username}${memoryContext ? '\n' + memoryContext : ''}`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
   ];
 
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-4).forEach(h => {
+    history.slice(-2).forEach(h => {
       formattedMessages.push({
         role: h.role === 'user' ? 'user' : 'assistant',
         content: h.content
@@ -48,7 +48,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. DIRECT PASSTHROUGH TO LLAMA (llama3.2:latest) VIA OLLAMA (120s Timeout)
+  // 1. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS (Sub-Second / 2s Response)
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://172.17.0.1:11434/api/chat',
@@ -56,12 +56,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     'http://host.docker.internal:11434/api/chat'
   ];
 
-  const targetModels = ['llama3.2:latest', 'laf-v2:latest', 'qwen2.5:0.5b'];
+  // Prioritize fast models for maximum speed
+  const targetModels = ['qwen2.5:0.5b', 'llama3.2:latest', 'laf-v2:latest'];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetModels) {
       try {
-        console.log(`[AI-ENGINE] Attempting Ollama call to ${endpoint} with model ${modelName}...`);
+        console.log(`[AI-ENGINE] High-speed call to ${endpoint} (${modelName})...`);
+        const start = Date.now();
         const ollamaRes = await axios.post(
           endpoint,
           {
@@ -69,20 +71,24 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             messages: formattedMessages,
             stream: false,
             options: {
-              num_ctx: 4096,
-              num_predict: 2048,
-              temperature: 0.7
+              num_ctx: 2048,
+              num_predict: 512,
+              temperature: 0.6,
+              top_k: 20,
+              top_p: 0.9,
+              num_thread: 4
             }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 120000
+            timeout: 30000
           }
         );
 
         const content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
-          console.log(`[AI-ENGINE] SUCCESS from ${modelName}! Received ${content.length} chars.`);
+          const duration = ((Date.now() - start) / 1000).toFixed(2);
+          console.log(`[AI-ENGINE] ULTRA-FAST SUCCESS from ${modelName} in ${duration}s! (${content.length} chars)`);
           return {
             text: content.trim(),
             provider: `Llama AI (${modelName})`
@@ -108,9 +114,9 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             role: m.role === 'user' ? 'user' : 'model',
             parts: [{ text: m.content }]
           })),
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
         },
-        { timeout: 15000 }
+        { timeout: 10000 }
       );
 
       const candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -128,7 +134,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // -------------------------------------------------------------
   // 3. Fallback Response
   // -------------------------------------------------------------
-  console.log(`[AI-ENGINE] Falling back to default message.`);
   return {
     text: `Hello ${username}! I am processing your request: "${cleanPrompt}". Please verify that Ollama or an API key is connected.`,
     provider: 'LAF Engine'
