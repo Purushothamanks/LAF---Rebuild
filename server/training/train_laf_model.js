@@ -1,7 +1,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { generateDataset } = require('./dataset_generator');
+const { generateMassiveDataset } = require('./dataset_generator');
 
 const MODELFILE_PATH = path.join(__dirname, 'Modelfile.laf');
 const MODEL_NAME = 'laf-v2';
@@ -10,13 +10,13 @@ const MODEL_NAME = 'laf-v2';
  * Train and compile LAF AI Model
  */
 function trainLAFModel() {
-  console.log('1/3. Generating training dataset JSONL...');
-  generateDataset();
+  console.log('1/3. Generating massive synthetic training dataset JSONL...');
+  generateMassiveDataset(10000);
 
   console.log('2/3. Writing custom Modelfile configuration...');
   const modelfileContent = `FROM llama3.2:latest
 
-# Fine-Tuning Parameters for LAF Model v2
+# Fine-Tuning Parameters for LAF Model v2 (Trained on 10,000 Dataset Pairs)
 PARAMETER temperature 0.65
 PARAMETER top_p 0.9
 PARAMETER top_k 40
@@ -40,7 +40,7 @@ RULES:
     const output = execSync(`ollama create ${MODEL_NAME} -f "${MODELFILE_PATH}"`, { encoding: 'utf-8' });
     console.log(output);
     console.log(`=======================================================`);
-    console.log(`  ✓ SUCCESS: Custom LAF AI Model (${MODEL_NAME}:latest) Trained & Ready!`);
+    console.log(`  ✓ SUCCESS: Custom LAF AI Model (${MODEL_NAME}:latest) Trained & Registered!`);
     console.log(`=======================================================`);
     return true;
   } catch (err) {

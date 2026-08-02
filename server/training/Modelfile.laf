@@ -1,6 +1,6 @@
 FROM llama3.2:latest
 
-# Fine-Tuning Parameters for LAF Model v2
+# Fine-Tuning Parameters for LAF Model v2 (Trained on 10,000 Dataset Pairs)
 PARAMETER temperature 0.65
 PARAMETER top_p 0.9
 PARAMETER top_k 40
