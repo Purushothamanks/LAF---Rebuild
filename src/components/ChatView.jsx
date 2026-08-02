@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, ChevronDown, ChevronRight, Lightbulb } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -17,13 +17,8 @@ export default function ChatView({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [expandedThoughts, setExpandedThoughts] = useState({});
 
   const messagesEndRef = useRef(null);
-
-  const toggleThought = (idx) => {
-    setExpandedThoughts(prev => ({ ...prev, [idx]: !prev[idx] }));
-  };
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
@@ -58,16 +53,16 @@ export default function ChatView({
         setActiveConvId(data.conversationId);
         
         const fullContent = data.response.content || '';
-        const thoughtText = `Thinking Process:\n1. Analyzing intent for ${user.username}.\n2. Querying memory DB.\n3. Generating output via ${data.response.provider || 'LAF Neural Model'}.`;
-
         const assistantMsgIndex = newHistory.length;
+        
         setMessages(prev => [
           ...prev,
-          { role: 'assistant', content: '', provider: data.response.provider, thought: thoughtText }
+          { role: 'assistant', content: '', provider: data.response.provider }
         ]);
 
+        // Real-time character streaming animation
         let currentText = '';
-        const chunkSize = Math.max(1, Math.floor(fullContent.length / 40));
+        const chunkSize = Math.max(1, Math.floor(fullContent.length / 35));
         let charIdx = 0;
 
         const streamInterval = setInterval(() => {
@@ -90,7 +85,7 @@ export default function ChatView({
             }
             return updated;
           });
-        }, 20);
+        }, 15);
 
         fetchConversations();
       } else {
@@ -214,7 +209,7 @@ export default function ChatView({
               </form>
             </div>
           ) : (
-            /* Active Conversation Messages List (NO BOX SHAPES, ACTUAL TEXT ONLY) */
+            /* Active Conversation Messages List */
             messages.map((m, idx) => {
               const isUser = m.role === 'user';
               return (
@@ -229,13 +224,13 @@ export default function ChatView({
                     maxWidth: '88%'
                   }}
                 >
-                  {/* Avatar Icon (Dead Centered 32px Circle) */}
+                  {/* Avatar Icon (Perfectly Centered 34px Circle) */}
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
-                      minWidth: '32px',
-                      minHeight: '32px',
+                      width: '34px',
+                      height: '34px',
+                      minWidth: '34px',
+                      minHeight: '34px',
                       borderRadius: '50%',
                       background: isUser ? 'var(--ds-blue)' : 'transparent',
                       display: 'flex',
@@ -248,18 +243,20 @@ export default function ChatView({
                     }}
                   >
                     {isUser ? (
-                      <span style={{
-                        fontSize: '0.85rem',
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justify: 'center',
+                        fontSize: '0.88rem',
                         fontWeight: '800',
                         color: '#fff',
-                        margin: 0,
-                        padding: 0,
-                        lineHeight: 1,
-                        textAlign: 'center',
-                        display: 'inline-block'
+                        lineHeight: '1',
+                        textAlign: 'center'
                       }}>
                         {userInitial}
-                      </span>
+                      </div>
                     ) : (
                       <img
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
@@ -269,7 +266,7 @@ export default function ChatView({
                     )}
                   </div>
 
-                  {/* Clean Text Message Container (NO CARD BOX / NO BACKGROUND / ACTUAL TEXT ONLY) */}
+                  {/* Clean Text Message Container */}
                   <div style={{ flex: 1, minWidth: 0, textAlign: isUser ? 'right' : 'left' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: isUser ? 'flex-end' : 'space-between', marginBottom: '4px', gap: '12px' }}>
                       <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? 'var(--ds-text-secondary)' : 'var(--ds-blue)' }}>
@@ -288,23 +285,7 @@ export default function ChatView({
                       )}
                     </div>
 
-                    {/* Thinking Process Accordion Box for AI */}
-                    {!isUser && m.thought && (
-                      <div className="ds-thought-container" style={{ margin: '4px 0 8px 0' }}>
-                        <div className="ds-thought-header" onClick={() => toggleThought(idx)}>
-                          <Lightbulb style={{ width: '13px' }} />
-                          <span>Thinking process</span>
-                          {expandedThoughts[idx] ? <ChevronDown style={{ width: '13px' }} /> : <ChevronRight style={{ width: '13px' }} />}
-                        </div>
-                        {expandedThoughts[idx] && (
-                          <div style={{ marginTop: '6px', whiteSpace: 'pre-wrap', lineHeight: '1.45', fontSize: '0.82rem', textAlign: 'left' }}>
-                            {m.thought}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Actual Pure Text Message (No Box Shape / No Background) */}
+                    {/* Actual Pure Text Message (No Thinking Box) */}
                     <div
                       style={{
                         fontSize: '0.96rem',
@@ -330,7 +311,7 @@ export default function ChatView({
                 <RefreshCw style={{ width: '15px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
               </div>
               <span style={{ fontSize: '0.88rem', color: 'var(--ds-blue)', fontWeight: '600' }}>
-                LAF is thinking & streaming real-time...
+                Thinking...
               </span>
             </div>
           )}
