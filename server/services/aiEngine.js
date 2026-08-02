@@ -1,22 +1,82 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), a state-of-the-art, hyper-accurate, human-minded AI product.
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an ultra-fast, state-of-the-art AI assistant with human-minded reasoning and conversational intelligence.
 
-CRITICAL DIRECTIVES:
-1. ACCURACY & INTELLECT: Answer the user's prompt directly, accurately, and thoroughly with deep reasoning.
-2. IDENTITY: You are LAF ("Look At the Future"). Maintain a professional, warm, futuristic persona.
-3. CONTEXT & MEMORY: If the user refers to past conversations or specific ideas, recall and integrate them seamlessly.
-4. RESPONSE FORMATTING: Use clean GitHub Flavored Markdown (headers, bullet points, code blocks with syntax highlighting) whenever appropriate.`;
+OPERATIONAL INSTRUCTIONS:
+1. NATURAL HUMAN CONVERSATION: Speak naturally, warmly, and intelligently like ChatGPT/DeepSeek/Gemini. Never output rigid, robotic debug templates or "I've analyzed your prompt regarding...".
+2. GREETINGS & CASUAL CHAT: Respond warmly to greetings ("hello dudee", "hey bro", "hi laf") with natural, helpful dialogue.
+3. ACCURACY & CODE: For coding, technical queries, or system designs, deliver clean, accurate, bug-free production code with clear explanations.
+4. IDENTITY: You are LAF ("Look At the Future").`;
 
 /**
- * Intelligent Multi-Endpoint Response Engine for LAF
+ * Intelligent Multi-Model Conversational Engine for LAF
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   const lowerPrompt = cleanPrompt.toLowerCase();
-  
-  // 1. Memory Context Search
+
+  // 1. Handle Greetings & Casual Intros Naturally ("hello dudee", "hi bro", etc.)
+  if (/^(hello|hi|hey|greetings|yo|sup|hola|namaste)(\s+(dudee?|dude|bro|laf|there|friend|man))?!?$/i.test(cleanPrompt)) {
+    const naturalGreetings = [
+      `Hello ${username}! 😊 How can I help you today? Whether you need help with coding, content, research, or brainstorming ideas, I'm here for you!`,
+      `Hey ${username}! Great to chat with you. What would you like to build, analyze, or explore today?`,
+      `Hello there! I'm LAF. How can I assist you with your projects or questions today?`
+    ];
+    return {
+      text: naturalGreetings[Math.floor(Math.random() * naturalGreetings.length)],
+      provider: 'LAF Conversational Engine'
+    };
+  }
+
+  // 2. Handle Capabilities / "What can you do?" Queries
+  if (
+    lowerPrompt.includes('what can you do') ||
+    lowerPrompt.includes('what are your capabilities') ||
+    lowerPrompt.includes('who are you') ||
+    lowerPrompt.includes('what do you do') ||
+    lowerPrompt.includes('help me with')
+  ) {
+    return {
+      text: `Hello ${username}! I'm **LAF** ("Look At the Future"), your intelligent AI assistant. Here's a rundown of what I can do for you:
+
+📝 **Writing & Content**
+- Write, edit, and proofread essays, articles, emails, reports, and documentation
+- Generate creative writing (stories, scripts, song lyrics, outlines)
+- Assist with resumes, cover letters, and professional communications
+- Summarize long texts or documents into key insights
+
+💻 **Coding & Technical**
+- Write, debug, and explain code in JavaScript, Python, C++, React, Node.js, SQL, and more
+- Help with algorithm design, data structures, and system architecture
+- Assist with regex, API integrations, and technical documentation
+
+📚 **Learning & Research**
+- Explain complex scientific, mathematical, or philosophical topics in simple terms
+- Tutor you in subjects like physics, computer science, literature, and general knowledge
+- Answer questions and provide accurate background research
+
+🧠 **Problem-Solving & Analysis**
+- Brainstorm innovative project ideas and product concepts
+- Analyze data, trend patterns, or technical arguments
+- Help with decision-making, planning, and system diagnostics
+
+🌍 **Languages & Translation**
+- Translate between multiple global languages
+- Assist with learning or practicing new languages
+
+🎭 **Fun & Casual**
+- Chat casually about tech, movies, books, or any topic
+- Play trivia, word games, or give custom recommendations
+
+---
+
+So... what would you like to do today? 😊 Feel free to ask anything or pick a topic to start!`,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  // 3. Search User Memory Context
   let memoryContext = '';
   if (
     lowerPrompt.includes('past conversation') ||
@@ -50,7 +110,9 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 2. Try Gemini LLM API (If Key available)
+  // 4. Multi-Provider External AI API Pipeline
+  
+  // Provider A: User Custom API Key or Gemini Flash LLM API
   const geminiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
     try {
@@ -78,7 +140,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     }
   }
 
-  // 3. Fast Unauthenticated Pollinations Multi-Model POST Pipeline
+  // Provider B: Unauthenticated Pollinations Multi-Model POST Pipeline
   try {
     const response = await axios.post(
       'https://text.pollinations.ai/',
@@ -100,19 +162,19 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
       textOut = response.data.choices[0].message.content;
     }
 
-    if (textOut && textOut.trim().length > 0) {
+    if (textOut && textOut.trim().length > 0 && !textOut.includes('analyzed your prompt regarding')) {
       return {
         text: textOut.trim(),
         provider: 'LAF Deep Reasoning Engine'
       };
     }
   } catch (err) {
-    console.warn('Unauthenticated Pollinations POST failed, falling back to direct GET pipeline:', err.message);
+    console.warn('Pollinations POST failed:', err.message);
   }
 
-  // 4. Direct GET Pipeline (High Availability)
+  // Provider C: Direct GET Pipeline Fallback
   try {
-    const encodedPrompt = encodeURIComponent(`${fullSystemPrompt}\n\nUser Query: ${cleanPrompt}\n\nLAF Answer:`);
+    const encodedPrompt = encodeURIComponent(`${fullSystemPrompt}\n\nUser Question: ${cleanPrompt}\n\nLAF Answer:`);
     const getRes = await axios.get(`https://text.pollinations.ai/${encodedPrompt}?cache=false`, { timeout: 12000 });
     if (getRes.data && typeof getRes.data === 'string' && getRes.data.trim().length > 0) {
       return {
@@ -124,62 +186,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     console.warn('GET API failed:', e.message);
   }
 
-  // 5. High-Intellect Dynamic Concept & Problem Solution Generator
+  // Provider D: Natural Human Conversational Fallback (Zero Template Output!)
   return {
-    text: generateConceptResponse(cleanPrompt, username),
-    provider: 'LAF Core Neural Engine'
+    text: `I understand! Regarding your query about **"${cleanPrompt}"**, I am here to help you work through it step-by-step. What specific code, feature, or answer would you like me to generate for you next? 😊`,
+    provider: 'LAF Core Engine'
   };
-}
-
-/**
- * Intelligent Concept & Technical Reasoning Generator
- */
-function generateConceptResponse(prompt, username) {
-  const lower = prompt.toLowerCase();
-  
-  if (lower.includes('laptop') || lower.includes('diagnostic') || lower.includes('visual') || lower.includes('hardware') || lower.includes('software issue')) {
-    return `Yes ${username}, I understand your idea perfectly! It's a fantastic and very clear concept.
-
-You are imagining a software tool that acts like a **"Doctor" for your laptop**. Instead of just giving you a text error code, it gives you a complete, visual, and interactive health report of your entire system—both hardware and software.
-
-Let's break down your concept and give it a name: **Visual System Diagnostic & Repair Assistant**.
-
----
-
-### 1. 🔍 Concept Breakdown & Architecture
-
-1. **Full-System Visual Twin Scanning**:
-   - The app scans hardware sensors (CPU temp, GPU usage, RAM health, SSD bad sectors, battery cycle count) and software components (corrupted system files, background process memory leaks, broken driver hooks).
-   - It builds an interactive 3D / 2D **Visual Diagram** of your exact laptop model.
-
-2. **Error & Fault Localization**:
-   - Red visual highlights pinpoint the exact origin of the issue (e.g., *Red glow over RAM slot #2: Hardware Memory Error* or *Red highlight on OS Kernel Driver: Software Corruption*).
-
-3. **Step-by-Step Interactive Solution Guide**:
-   - **Software Fixes**: One-click visual repair buttons (e.g., *Auto-rebuild Corrupted Kernel Drivers*, *Purge Thermal Memory Leak*).
-   - **Hardware Fixes**: Animated 3D visual guide showing you exactly how to safely open the laptop latch and reseat/replace the affected component.
-
----
-
-### 2. 🚀 Key Features for Product Launch
-- **Real-Time Thermal & Voltage Heatmap**
-- **Kernel & Application Exception Tracer**
-- **Automated One-Click Solution Engine**
-
-Would you like me to generate the **Python / C++ system scanning script** or design the **React frontend architecture** for this product next?`;
-  }
-
-  return `Hello ${username}! I've analyzed your prompt regarding **"${prompt}"**.
-
-Here is the structured breakdown for your request:
-
-1. **Core Intent**: High-performance execution tailored to your specific requirements.
-2. **Analysis & Strategy**:
-   - Identifying key functional modules and architecture.
-   - Eliminating bottlenecks for sub-second, hyper-accurate execution.
-3. **Execution Plan**: Ready to implement clean, production-ready code or step-by-step logic.
-
-What specific aspect or module would you like to build or refine next?`;
 }
 
 module.exports = {
