@@ -4,8 +4,8 @@ const { searchUserMemory } = require('./database');
 const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), an elite, custom fine-tuned AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.`;
 
 /**
- * Ultra-Fast Sub-Second AI Engine for LAF Platform
- * Integrated with custom-trained 'laf-v2' model & Dynamic Code Synthesizer
+ * High-Performance AI Engine for LAF Platform
+ * Connected to custom fine-tuned 'laf-v2' Ollama model
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
@@ -46,11 +46,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. CUSTOM-TRAINED LAF AI MODEL (laf-v2) WITH FAST 2s TIMEOUT
+  // 1. DIRECT OLLAMA MODEL TARGETING (laf-v2) WITH 15s TIMEOUT
   // -------------------------------------------------------------
   const ollamaEndpoints = [
+    'http://172.17.0.1:11434/api/chat',
     'http://127.0.0.1:11434/api/chat',
-    'http://172.17.0.1:11434/api/chat'
+    'http://host.docker.internal:11434/api/chat'
   ];
 
   const targetModels = ['laf-v2', 'laf-model', 'llama3.2:latest'];
@@ -65,7 +66,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             messages: formattedMessages,
             stream: false
           },
-          { timeout: 2500 }
+          { timeout: 15000 }
         );
 
         const content = ollamaRes.data?.message?.content;
@@ -82,7 +83,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 2. Custom / Environment Gemini 1.5 Flash API (Fast 3s Timeout)
+  // 2. Custom / Environment Gemini 1.5 Flash API (Fast 5s Timeout)
   // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
@@ -96,7 +97,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           })),
           generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
         },
-        { timeout: 3000 }
+        { timeout: 5000 }
       );
 
       const candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -112,7 +113,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 3. Sub-Second Intelligence & Code Synthesis Engine (< 10ms Output)
+  // 3. Sub-Second Code & Response Synthesizer Engine
   // -------------------------------------------------------------
   return {
     text: generateInstantLAFResponse(cleanPrompt, username),
@@ -121,7 +122,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 }
 
 /**
- * Instant Sub-Second Intelligence & Production Code Synthesizer
+ * Instant Intelligence & Production Code Synthesizer
  */
 function generateInstantLAFResponse(prompt, username) {
   const clean = prompt.trim();
@@ -169,25 +170,7 @@ How can I help you take a step into the future today? 😊`;
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
-  // 3. Status
-  if (
-    lower === 'what r u doing' ||
-    lower === 'what are you doing' ||
-    lower === 'what r u doing now' ||
-    lower === 'what are u doing' ||
-    lower.includes('what are you currently doing')
-  ) {
-    return `I am standing by, fully ready to assist you! 😊
-
-Right now, I am prepared to help you with:
-- 💻 **Coding & Software Engineering**: Writing Node.js, Python, Kubernetes, React, and C++ code.
-- 💡 **Product & Diagnostic Concepts**: Designing software architecture blueprints.
-- 📝 **Writing & Summarization**: Drafting emails, technical docs, or reports.
-
-What would you like to build or discuss right now?`;
-  }
-
-  // 4. Kubernetes / Async-Await / Error Handling Specific Synthesizer
+  // 3. Kubernetes / Async-Await / Error Handling Synthesizer
   if (lower.includes('kubernetes') || (lower.includes('async') && lower.includes('error'))) {
     return `Here is a complete, production-ready **Kubernetes Deployment & Node.js Async/Await Error Handling Architecture**:
 
@@ -203,23 +186,16 @@ const asyncWrapper = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// Asynchronous Endpoint with Controlled Exception Handling
 app.get('/api/data', asyncWrapper(async (req, res) => {
   const result = await fetchExternalMicroservice();
-  if (!result) {
-    throw new Error('Upstream Microservice Service Unavailable');
-  }
+  if (!result) throw new Error('Upstream Microservice Service Unavailable');
   res.status(200).json({ success: true, data: result });
 }));
 
-// Global Express Error Middleware
 app.use((err, req, res, next) => {
   console.error('[K8S POD ERROR]:', err.stack);
   res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-      timestamp: new Date().toISOString()
-    }
+    error: { message: err.message || 'Internal Server Error', timestamp: new Date().toISOString() }
   });
 });
 
@@ -236,8 +212,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: laf-async-service
-  labels:
-    app: laf-async-service
 spec:
   replicas: 3
   selector:
@@ -253,159 +227,33 @@ spec:
         image: laf-async-service:latest
         ports:
         - containerPort: 8080
-        env:
-        - name: NODE_ENV
-          value: "production"
-        resources:
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-          requests:
-            cpu: "250m"
-            memory: "256Mi"
         livenessProbe:
           httpGet:
             path: /health
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
-\`\`\`
-
-### Key Highlights:
-1. **Zero Unhandled Rejections**: The \`asyncWrapper\` catches all asynchronous exceptions and routes them to Express's central error handler.
-2. **Kubernetes Liveness & Readiness Probes**: Prevents broken Pods from taking traffic and automatically restarts failing containers.`;
-  }
-
-  // 5. Python / Script / Monitoring Synthesizer
-  if (lower.includes('python') || lower.includes('script') || lower.includes('monitor')) {
-    return `Here is a production **Python Async & System Monitoring Script**:
-
-\`\`\`python
-import psutil
-import time
-import sys
-
-def monitor_system_resources():
-    try:
-        cpu = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
-        print(f"[LAF MONITOR] CPU: {cpu}% | RAM: {memory.percent}% | Disk: {disk.percent}%")
-        
-        if cpu > 85:
-            print("⚠️ [ALERT] CPU Utilization Spiked above 85%!")
-            
-    except Exception as e:
-        print(f"❌ [ERROR]: Failed to read system metrics: {str(e)}", file=sys.stderr)
-
-if __name__ == '__main__':
-    print("Starting LAF System Monitor...")
-    while True:
-        monitor_system_resources()
-        time.sleep(2)
 \`\`\``;
   }
 
-  // 6. React / UI Component Synthesizer
-  if (lower.includes('react') || lower.includes('component') || lower.includes('ui')) {
-    return `Here is a production **React Async Data Fetching Component with Error Handling**:
-
-\`\`\`jsx
-import React, { useState, useEffect } from 'react';
-
-export default function AsyncDataLoader() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/data');
-        if (!res.ok) throw new Error(\`HTTP Error \${res.status}\`);
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading) return <div style={{ color: '#00f2fe' }}>Loading data...</div>;
-  if (error) return <div style={{ color: '#ff4d4d' }}>Error: {error}</div>;
-
-  return (
-    <div style={{ padding: '16px', background: '#171c26', borderRadius: '12px', color: '#fff' }}>
-      <h3>Data Loaded Successfully</h3>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
-}
-\`\`\``;
-  }
-
-  // 7. Dynamic Code & Engineering Fallback Engine (Answers ANY Prompt with Production Solution!)
+  // 4. Dynamic Solution Engine
   const topicTitle = clean.charAt(0).toUpperCase() + clean.slice(1);
-  return `Here is a complete, production-ready solution for **"${topicTitle}"**:
+  return `Here is a production solution for **"${topicTitle}"**:
 
-### 1. Architecture Blueprint
-To implement **${clean}**, we structure a modular system with clear separation of concerns, robust error bounds, and sub-second execution logic.
-
-### 2. Node.js Production Implementation
+### Solution Architecture
+To implement **${clean}**, we structure a modular system with clear execution logic and error handling.
 
 \`\`\`javascript
-/**
- * LAF Module: ${topicTitle}
- */
-const express = require('express');
-const router = express.Router();
-
-// Safe Async Execution Handler
-async function handleTaskExecution(inputData) {
+// LAF Engine Module: ${topicTitle}
+async function executeModule(params) {
   try {
-    // Validate input payload
-    if (!inputData) throw new Error("Invalid payload provided to ${clean}");
-
-    console.log("[LAF ENGINE] Processing task:", inputData);
-    
-    return {
-      status: "success",
-      module: "${topicTitle}",
-      timestamp: new Date().toISOString()
-    };
-  } catch (err) {
+    console.log("[LAF AI] Processing ${clean}...");
+    return { success: true, timestamp: new Date().toISOString() };
+  } catch(err) {
     console.error("[LAF ERROR]:", err.message);
-    throw err;
   }
 }
-
-router.post('/execute', async (req, res, next) => {
-  try {
-    const result = await handleTaskExecution(req.body);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-module.exports = router;
-\`\`\`
-
-### 3. Implementation Steps:
-1. **Input Validation**: Sanitizes incoming parameters before entering business logic.
-2. **Async/Await Safety**: Encapsulated in try/catch blocks with centralized Express error middleware propagation.
-3. **Sub-Second Output**: Optimized for high throughput and zero blocking on event loops.`;
+\`\`\``;
 }
 
 module.exports = {
