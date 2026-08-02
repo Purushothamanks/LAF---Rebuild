@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, User, MoreHorizontal, Smartphone, Settings, HelpCircle, LogOut, PanelLeftClose } from 'lucide-react';
+import { Plus, User, MoreHorizontal, Smartphone, Settings, HelpCircle, LogOut, PanelLeftClose, Trash2 } from 'lucide-react';
 
 export default function Navigation({
   sidebarOpen,
@@ -12,9 +12,11 @@ export default function Navigation({
   conversations,
   activeConvId,
   loadConversation,
+  deleteConversation,
   startNewChat
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [hoveredConvId, setHoveredConvId] = useState(null);
   const menuRef = useRef(null);
 
   // Close popup menu on outside click
@@ -88,9 +90,11 @@ export default function Navigation({
                 loadConversation(c.id);
                 setSidebarOpen(false);
               }}
+              onMouseEnter={() => setHoveredConvId(c.id)}
+              onMouseLeave={() => setHoveredConvId(null)}
               style={{
-                padding: '9px 14px',
-                borderRadius: 'var(--radius-oval)',
+                padding: '8px 12px',
+                borderRadius: '12px',
                 marginBottom: '4px',
                 background: activeConvId === c.id ? 'var(--ds-bg-card-hover)' : 'transparent',
                 border: activeConvId === c.id ? '1px solid var(--ds-border)' : '1px solid transparent',
@@ -99,12 +103,39 @@ export default function Navigation({
                 color: activeConvId === c.id ? '#fff' : 'var(--ds-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
-                justify: 'space-between'
+                justifyContent: 'space-between',
+                gap: '8px',
+                position: 'relative'
               }}
             >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                 {c.title || 'New Conversation'}
               </span>
+
+              {/* Delete Icon on Hover or Active Conversation */}
+              {(hoveredConvId === c.id || activeConvId === c.id) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(c.id);
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'center',
+                    borderRadius: '4px',
+                    opacity: 0.8
+                  }}
+                  title="Delete conversation"
+                >
+                  <Trash2 style={{ width: '14px', height: '14px' }} />
+                </button>
+              )}
             </div>
           ))
         ) : (
@@ -139,7 +170,7 @@ export default function Navigation({
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justify: 'center',
               transition: 'all 0.15s ease'
             }}
             title="More Options (...)"
@@ -183,8 +214,6 @@ export default function Navigation({
                 <span>Help & Feedback</span>
               </button>
 
-              <div style={{ height: '1px', background: 'var(--ds-border)', margin: '4px 0' }} />
-
               <button
                 className="more-options-item logout-item"
                 onClick={() => {
@@ -193,11 +222,12 @@ export default function Navigation({
                 }}
               >
                 <LogOut style={{ width: '16px' }} />
-                <span>Logout</span>
+                <span>Log out</span>
               </button>
             </div>
           )}
         </div>
+
       </div>
 
     </aside>

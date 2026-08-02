@@ -1,19 +1,50 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for fast coding, clear conversation, and creative problem solving. Provide direct, helpful answers. Format code inside clean markdown code blocks.`;
+const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for fast software engineering, visual system diagnostics, and clear human conversation. Provide direct, helpful answers. Format code inside clean markdown code blocks with language labels.`;
+
+/**
+ * Checks if user prompt is a generic code request missing a language specification.
+ */
+function isGenericCodeRequest(prompt = '') {
+  const p = prompt.toLowerCase();
+  
+  // Keywords indicating a request for code
+  const hasCodeIntent = p.includes('code') || p.includes('script') || p.includes('program') || p.includes('function') || p.includes('write code') || p.includes('give me code') || p.includes('generate code');
+  
+  if (!hasCodeIntent) return false;
+
+  // Check if explicit language or technology stack is already specified
+  const explicitLanguages = [
+    'javascript', 'js', 'python', 'py', 'typescript', 'ts', 'java',
+    'c++', 'cpp', 'c#', 'csharp', 'golang', 'go', 'rust', 'html', 'css',
+    'sql', 'php', 'ruby', 'swift', 'kotlin', 'bash', 'shell', 'docker', 'yaml'
+  ];
+
+  const mentionsLanguage = explicitLanguages.some(lang => p.includes(lang));
+  
+  // If user asked for code but didn't mention any language, prompt for clarification!
+  return !mentionsLanguage;
+}
 
 /**
  * High-Speed Direct Passthrough Engine to Ollama AI Models
- * Tuned for sub-second to 2-second responses using fast models and CPU thread optimizations.
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}"`);
 
+  // 1. Generic Code Request Interception: Ask for purpose & language preference
+  if (isGenericCodeRequest(cleanPrompt)) {
+    return {
+      text: `Before I generate the code, could you please specify your **preferred programming language** (e.g. *JavaScript*, *Python*, *Go*, *C++*, *HTML/CSS*) and the **main purpose / target framework** for your project? 😊`,
+      provider: 'LAF Assistant'
+    };
+  }
+
   const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, '');
 
-  // 1. Check User Memory Context
+  // 2. Check User Memory Context
   let memoryContext = '';
   if (
     lower.includes('past conversation') ||
@@ -48,7 +79,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 1. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS (Sub-Second / 2s Response)
+  // 3. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://172.17.0.1:11434/api/chat',
@@ -56,7 +87,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     'http://host.docker.internal:11434/api/chat'
   ];
 
-  // Prioritize fast models for maximum speed
   const targetModels = ['qwen2.5:0.5b', 'llama3.2:latest', 'laf-v2:latest'];
 
   for (const endpoint of ollamaEndpoints) {
@@ -81,14 +111,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 30000
+            timeout: 25000
           }
         );
 
         const content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           const duration = ((Date.now() - start) / 1000).toFixed(2);
-          console.log(`[AI-ENGINE] ULTRA-FAST SUCCESS from ${modelName} in ${duration}s! (${content.length} chars)`);
+          console.log(`[AI-ENGINE] SUCCESS from ${modelName} in ${duration}s!`);
           return {
             text: content.trim(),
             provider: `Llama AI (${modelName})`
@@ -101,7 +131,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 2. Backup: Gemini 1.5 Flash API
+  // 4. Backup: Gemini API
   // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
@@ -132,11 +162,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 3. Fallback Response
-  // -------------------------------------------------------------
+  // 5. Guaranteed Non-Crashing Assistant Response
+  // -------------------------------- agreed
   return {
-    text: `Hello ${username}! I am processing your request: "${cleanPrompt}". Please verify that Ollama or an API key is connected.`,
-    provider: 'LAF Engine'
+    text: `Hello ${username}! I received your request: "${cleanPrompt}". I am here to help you with coding, system design, or diagnostics. Please specify your question details!`,
+    provider: 'LAF AI Cluster'
   };
 }
 

@@ -3,6 +3,7 @@ const path = require('path');
 const { hashUsername, encryptText, decryptText } = require('../security/encryption');
 
 const DATA_DIR = path.join(__dirname, '../../data/users');
+const FEEDBACK_FILE = path.join(__dirname, '../../data/feedback.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -29,7 +30,7 @@ function readUserDb(username) {
       conversations: [], // array of { id, title, createdAt, updatedAt, messages: [] }
       mediaGenerations: [], // array of { id, type, prompt, url, createdAt }
       memorySummary: '', // cumulative context summary
-      userPreferences: { conciseness: 'short', autoSpeak: false, theme: 'cyber' }
+      userPreferences: { conciseness: 'short', autoSpeak: false, theme: 'dark' }
     };
     fs.writeFileSync(filePath, JSON.stringify(initialDb, null, 2), 'utf8');
     return initialDb;
@@ -111,7 +112,19 @@ function saveConversation(username, conversationId, title, messages) {
 }
 
 /**
- * Search user's historical conversations for memory recall ("What did we talk about last week?")
+ * Delete a specific conversation from user DB
+ */
+function deleteConversation(username, conversationId) {
+  const db = readUserDb(username);
+  if (db.conversations && Array.isArray(db.conversations)) {
+    db.conversations = db.conversations.filter(c => c.id !== conversationId);
+    saveUserDb(username, db);
+  }
+  return true;
+}
+
+/**
+ * Search user's historical conversations for memory recall
  */
 function searchUserMemory(username, query) {
   const db = readUserDb(username);
@@ -127,7 +140,6 @@ function searchUserMemory(username, query) {
     conv.messages.forEach(msg => {
       if (!msg.content) return;
       const contentLower = msg.content.toLowerCase();
-      // Match query words or return recent history if asking generally about past topics
       if (!q || contentLower.includes(q) || q.includes('last week') || q.includes('yesterday') || q.includes('speak') || q.includes('previous') || q.includes('talked')) {
         matchedMessages.push({
           conversationId: conv.id,
@@ -140,20 +152,33 @@ function searchUserMemory(username, query) {
     });
   });
   
-  return matchedMessages.slice(0, 15); // Return top 15 relevant entries
+  return matchedMessages.slice(0, 15);
 }
 
 /**
- * Record media generation in user DB
+ * Save user feedback entry to server storage
  */
-function addMediaRecord(username, mediaItem) {
-  const db = readUserDb(username);
-  db.mediaGenerations.unshift({
-    id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-    ...mediaItem,
+function saveFeedbackRecord(username, text) {
+  let feedbackList = [];
+  if (fs.existsSync(FEEDBACK_FILE)) {
+    try {
+      feedbackList = JSON.parse(fs.readFileSync(FEEDBACK_FILE, 'utf8'));
+    } catch (e) {
+      feedbackList = [];
+    }
+  }
+  
+  const record = {
+    id: `fb_${Date.now()}`,
+    username,
+    text,
+    targetEmail: 'purushothamaks1711@gmail.com',
     createdAt: new Date().toISOString()
-  });
-  saveUserDb(username, db);
+  };
+  
+  feedbackList.unshift(record);
+  fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedbackList, null, 2), 'utf8');
+  return record;
 }
 
 module.exports = {
@@ -161,6 +186,7 @@ module.exports = {
   readUserDb,
   saveUserDb,
   saveConversation,
+  deleteConversation,
   searchUserMemory,
-  addMediaRecord
+  saveFeedbackRecord
 };

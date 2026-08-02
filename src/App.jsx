@@ -17,6 +17,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('laf_custom_api_key') || '');
   
+  // Theme state ('dark', 'cyber', 'light')
+  const [theme, setTheme] = useState(localStorage.getItem('laf_theme') || 'dark');
+
   // Modal toggle states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDownloadAppOpen, setIsDownloadAppOpen] = useState(false);
@@ -31,6 +34,12 @@ export default function App() {
   const [conversations, setConversations] = useState([]);
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
+
+  // Sync theme attribute to HTML root element whenever theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('laf_theme', theme);
+  }, [theme]);
 
   // Validate session token on mount
   useEffect(() => {
@@ -86,6 +95,25 @@ export default function App() {
     }
   };
 
+  const deleteConversation = async (convId) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/chat/conversation/${convId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (activeConvId === convId) {
+          startNewChat();
+        }
+        fetchConversations(token);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const startNewChat = () => {
     setActiveConvId(null);
     setMessages([]);
@@ -124,7 +152,7 @@ export default function App() {
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
-      {/* Floating Top-Left Bar (Circle Logo + Sidebar Toggle + New Chat) */}
+      {/* Floating Top-Left Bar */}
       {user && (
         <Header
           sidebarOpen={sidebarOpen}
@@ -134,7 +162,7 @@ export default function App() {
         />
       )}
 
-      {/* Collapsible Floating Sidebar (Shows User Name + (...) Menu at Bottom) */}
+      {/* Collapsible Floating Sidebar (Includes Trash Delete Icon for each conversation) */}
       {user && (
         <Navigation
           sidebarOpen={sidebarOpen}
@@ -149,6 +177,7 @@ export default function App() {
           conversations={conversations}
           activeConvId={activeConvId}
           loadConversation={loadConversation}
+          deleteConversation={deleteConversation}
           startNewChat={startNewChat}
         />
       )}
@@ -175,7 +204,7 @@ export default function App() {
         </main>
       )}
 
-      {/* Settings Modal (Bent Corners Box Layout) */}
+      {/* Settings Modal (Includes working theme selector & editable fields) */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -183,6 +212,8 @@ export default function App() {
         onLogout={handleLogout}
         customApiKey={customApiKey}
         setCustomApiKey={setCustomApiKey}
+        theme={theme}
+        setTheme={setTheme}
       />
 
       {/* Download App Modal */}
@@ -191,10 +222,11 @@ export default function App() {
         onClose={() => setIsDownloadAppOpen(false)}
       />
 
-      {/* Help & Feedback Modal */}
+      {/* Help & Feedback Modal (Dispatches feedback to purushothamaks1711@gmail.com) */}
       <HelpFeedbackModal
         isOpen={isHelpFeedbackOpen}
         onClose={() => setIsHelpFeedbackOpen(false)}
+        token={token}
       />
     </div>
   );

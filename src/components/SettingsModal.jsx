@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { X, Settings, User, LogOut, Trash2, Shield, FileText, Check, Save } from 'lucide-react';
+import { X, Settings, LogOut, Trash2, Shield, FileText, Check, Save } from 'lucide-react';
 
-export default function SettingsModal({ isOpen, onClose, user, onLogout, customApiKey, setCustomApiKey }) {
+export default function SettingsModal({ isOpen, onClose, user, onLogout, customApiKey, setCustomApiKey, theme, setTheme }) {
   const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
-  const [theme, setTheme] = useState('dark');
   const [language, setLanguage] = useState('en');
   const [keyInput, setKeyInput] = useState(customApiKey || '');
   const [savedKey, setSavedKey] = useState(false);
@@ -50,7 +49,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
       {/* Floating Centered Card Container */}
       <div className="modal-floating-card">
         
-        {/* Header with Perfectly Aligned X Close Button */}
+        {/* Header with Perfectly Aligned X Close Button with Breathing Space */}
         <div style={{
           padding: '18px 24px',
           borderBottom: '1px solid var(--ds-border)',
@@ -272,16 +271,16 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
             </form>
           )}
 
-          {/* ⚙️ GENERAL TAB */}
+          {/* ⚙️ GENERAL TAB (Working Theme Switcher) */}
           {activeTab === 'general' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               <div>
                 <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '8px' }}>
-                  Theme
+                  Theme Accent & Mode
                 </label>
                 <select
-                  value={theme}
+                  value={theme || 'dark'}
                   onChange={(e) => setTheme(e.target.value)}
                   style={{
                     width: '100%',
@@ -290,12 +289,13 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     border: '1px solid var(--ds-border)',
                     borderRadius: '14px',
                     color: '#fff',
-                    outline: 'none'
+                    outline: 'none',
+                    fontWeight: '600'
                   }}
                 >
-                  <option value="dark">Dark (Default Blue Charcoal)</option>
-                  <option value="cyber">Cyber Glow Neon</option>
-                  <option value="light">Light Mode</option>
+                  <option value="dark">🌙 Dark (Default Royal Blue Charcoal)</option>
+                  <option value="cyber">⚡ Cyber Glow Neon (Cyan Accent)</option>
+                  <option value="light">☀️ Sleek Light Mode</option>
                 </select>
               </div>
 

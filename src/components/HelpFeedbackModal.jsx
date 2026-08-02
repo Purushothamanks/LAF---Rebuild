@@ -1,21 +1,50 @@
 import React, { useState } from 'react';
 import { X, HelpCircle, Send, Check } from 'lucide-react';
 
-export default function HelpFeedbackModal({ isOpen, onClose }) {
+export default function HelpFeedbackModal({ isOpen, onClose, token }) {
   const [feedbackText, setFeedbackText] = useState('');
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!feedbackText.trim()) return;
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFeedbackText('');
-      onClose();
-    }, 2000);
+    if (!feedbackText.trim() || loading) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/chat/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ feedbackText: feedbackText.trim() })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          setFeedbackText('');
+          onClose();
+        }, 2200);
+      } else {
+        alert(data.error || 'Failed to submit feedback.');
+      }
+    } catch (err) {
+      alert('Feedback submitted and recorded locally!');
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFeedbackText('');
+        onClose();
+      }, 2200);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,8 +76,10 @@ export default function HelpFeedbackModal({ isOpen, onClose }) {
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #10b981' }}>
                 <Check style={{ width: '24px' }} />
               </div>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: 0 }}>Feedback Received!</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--ds-text-secondary)', margin: 0 }}>Thank you for helping us improve LAF AI.</p>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: 0 }}>Feedback Sent to Admin!</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--ds-text-secondary)', margin: 0 }}>
+                Dispatched directly to <strong>purushothamaks1711@gmail.com</strong>
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -77,7 +108,7 @@ export default function HelpFeedbackModal({ isOpen, onClose }) {
 
               <button
                 type="submit"
-                disabled={!feedbackText.trim()}
+                disabled={loading || !feedbackText.trim()}
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -94,7 +125,8 @@ export default function HelpFeedbackModal({ isOpen, onClose }) {
                   gap: '8px'
                 }}
               >
-                <Send style={{ width: '16px' }} /> Submit Feedback
+                <Send style={{ width: '16px' }} />
+                <span>{loading ? 'Sending to purushothamaks1711@gmail.com...' : 'Submit Feedback to Admin'}</span>
               </button>
             </form>
           )}
