@@ -116,12 +116,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // -------------------------------------------------------------
   return {
     text: generateInstantLAFResponse(cleanPrompt, username),
-    provider: 'LAF Custom Neural Model (v2)'
+    provider: 'LAF Model'
   };
 }
 
 /**
- * Instant Sub-Second Intelligence Engine
+ * Instant Sub-Second Intelligence Engine (Zero Robotic Headers)
  */
 function generateInstantLAFResponse(prompt, username) {
   const clean = prompt.trim();
@@ -137,7 +137,7 @@ function generateInstantLAFResponse(prompt, username) {
     lower.includes('who created you') ||
     lower.includes('introduce yourself')
   ) {
-    return `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — a custom-trained, fine-tuned AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.
+    return `I am **LAF** (**L**ook **A**t **F**uture) — an intelligent, custom-trained AI assistant built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.
 
 Here is what I bring to the table:
 - 💻 **Coding & Debugging**: Write, optimize, and explain code in Python, JavaScript, React, Node.js, C++, SQL, and system design.
@@ -164,7 +164,7 @@ How can I help you take a step into the future today? 😊`;
     const greetings = [
       `Hello ${username}! 😊 How can I help you today? Feel free to ask me anything about coding, research, writing, or product ideas!`,
       `Hey ${username}! Great to chat with you. What project or question are we tackling today?`,
-      `Hi ${username}! I'm LAF Model. How can I assist you with your work or ideas today?`
+      `Hi ${username}! How can I assist you with your work or ideas today?`
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
@@ -177,7 +177,7 @@ How can I help you take a step into the future today? 😊`;
     lower === 'what are u doing' ||
     lower.includes('what are you currently doing')
   ) {
-    return `Hello ${username}! 😊 I am standing by, fully ready to assist you!
+    return `I am standing by, fully ready to assist you! 😊
 
 Right now, I am prepared to help you with:
 - 💻 **Coding & Software Engineering**: Writing and debugging production code.
@@ -207,12 +207,10 @@ You are imagining a software tool that acts like a **"Doctor" for your laptop**.
 Would you like me to write the Python diagnostic scanner script or design the React visual interface for this next?`;
   }
 
-  // General Questions
-  return `Hello ${username}! I am **LAF Custom Neural Model (v2)**.
+  // General Questions (PURE DIRECT RESPONSE - NO "Regarding ..." OR "Hello panda! I am...")
+  return `I'm ready to help you, ${username}! 😊
 
-Regarding **"${clean}"**: I am ready to help you write code, solve problems, or analyze this step-by-step.
-
-What specific code, feature, or answer would you like me to generate for you next? 😊`;
+What specific code, feature, technical architecture, or content would you like me to generate for you right now? Tell me the details and I'll build it step-by-step!`;
 }
 
 module.exports = {
