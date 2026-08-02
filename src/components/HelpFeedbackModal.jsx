@@ -19,29 +19,8 @@ export default function HelpFeedbackModal({ isOpen, onClose }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justify: 'center',
-      background: 'rgba(5, 7, 15, 0.85)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      padding: '16px'
-    }}>
-      <div style={{
-        width: '480px',
-        maxWidth: '100%',
-        background: 'var(--ds-bg-sidebar)',
-        border: '1px solid var(--ds-border)',
-        boxShadow: '0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(79, 117, 255, 0.3)',
-        borderRadius: 'var(--radius-bent)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-floating-card" style={{ width: '480px' }}>
         <div style={{
           padding: '18px 24px',
           borderBottom: '1px solid var(--ds-border)',

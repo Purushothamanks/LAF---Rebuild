@@ -46,30 +46,9 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justify: 'center',
-      background: 'rgba(5, 7, 15, 0.85)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      padding: '16px'
-    }}>
-      {/* Box Layout with Bent (Rounded) Corners */}
-      <div style={{
-        width: '560px',
-        maxWidth: '100%',
-        background: 'var(--ds-bg-sidebar)',
-        border: '1px solid var(--ds-border)',
-        boxShadow: '0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(79, 117, 255, 0.3)',
-        borderRadius: 'var(--radius-bent)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      {/* Floating Centered Card Container */}
+      <div className="modal-floating-card">
         
         {/* Header with Perfectly Aligned X Close Button */}
         <div style={{
@@ -118,7 +97,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
         {/* Modal Body */}
         <div style={{ padding: '24px', flex: 1, overflowY: 'auto', maxHeight: '460px' }}>
           
-          {/* 👤 PROFILE TAB (All Fields Editable) */}
+          {/* 👤 PROFILE TAB */}
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               

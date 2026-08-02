@@ -176,6 +176,47 @@ body {
   }
 }
 
+/* Floating Centered Modal Card */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(5, 7, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal-floating-card {
+  width: 560px;
+  max-width: 92vw;
+  max-height: 88vh;
+  background: var(--ds-bg-sidebar);
+  border: 1px solid var(--ds-border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 40px rgba(79, 117, 255, 0.35);
+  border-radius: var(--radius-bent);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: floatModalIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  margin: auto;
+}
+
+@keyframes floatModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 /* Thinking... Animated Indicator */
 .thinking-animation-container {
   display: flex;
@@ -228,7 +269,7 @@ body {
 .code-box-header {
   display: flex;
   align-items: center;
-  justify: space-between;
+  justify-content: space-between;
   padding: 8px 16px;
   background: #141a29;
   border-bottom: 1px solid rgba(79, 117, 255, 0.2);
