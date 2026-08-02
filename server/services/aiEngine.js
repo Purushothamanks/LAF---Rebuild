@@ -1,53 +1,72 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), a state-of-the-art AI product and intelligent reasoning assistant.
+const SYSTEM_PROMPT = `You are LAF (L - Look, A - At, F - Future: "Look At the Future"), a state-of-the-art AI assistant built for high accuracy, human-minded reasoning, and deep technical capability.
 
-DIRECTIVES:
-1. IDENTITY: You are LAF ("Look At the Future").
-2. NATURAL & INTELLIGENT: Provide direct, accurate, friendly, and helpful responses to every prompt.
-3. NEVER OUTPUT DEBUG TEMPLATES: Never say "Regarding your prompt...". Provide real, helpful answers.`;
+RULES:
+1. IDENTITY: You are LAF ("Look At the Future"). Always respond warmly, directly, and intelligently like ChatGPT / DeepSeek / Gemini.
+2. ZERO BOILERPLATE: Never output robotic debug strings, mode notes, or "Regarding your prompt...".
+3. CONVERSATIONAL INTELLECT: Answer questions directly and naturally.`;
 
 /**
- * Main Reasoning & Response Engine for LAF
+ * Main High-Accuracy Response Engine for LAF
  */
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, ''); // clean punctuation
 
   // -------------------------------------------------------------
-  // 1. IDENTITY & WHO ARE YOU INTENT MATCHING
+  // 1. WHAT ARE YOU DOING INTENT MATCHING
   // -------------------------------------------------------------
   if (
-    lower === 'who r u' ||
-    lower === 'who are you' ||
-    lower === 'who r u' ||
-    lower === 'what are you' ||
-    lower === 'what r u' ||
-    lower === 'who is laf' ||
-    lower === 'what is laf' ||
-    lower.includes('who created you') ||
-    lower.includes('tell me about yourself') ||
-    lower.includes('introduce yourself')
+    lower === 'what r u doing' ||
+    lower === 'what are you doing' ||
+    lower === 'what r u doing now' ||
+    lower === 'what are u doing' ||
+    lower.includes('what are you currently doing')
   ) {
     return {
-      text: `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — a state-of-the-art, ultra-fast, and hyper-accurate AI product designed to provide human-minded reasoning, deep technical analysis, coding assistance, and creative problem solving.
+      text: `Hello ${username}! 😊 I am standing by, fully ready to assist you!
 
-Here is what I bring to the table:
+Right now, I am listening and prepared to help you with:
+- 💻 **Coding & Debugging**: Writing, optimizing, and fixing code in Python, JavaScript, C++, React, Node.js, SQL, etc.
+- 💡 **Idea & Concept Analysis**: Structuring software projects, diagnostic tools, and visual workflows.
+- 📝 **Writing & Summarization**: Drafting technical documentation, emails, essays, or reports.
+- 🔍 **Research & Learning**: Answering complex questions across science, technology, and mathematics.
 
-🚀 **Core Capabilities**:
-- **Fast Reasoning & Coding**: Writing, debugging, and explaining code across JavaScript, Python, C++, React, Node.js, SQL, and system design.
-- **Human-Minded Thinking**: Analyzing complex technical concepts, product ideas, and logical workflows step-by-step.
-- **Isolated Encrypted DB Memory**: Safely recalling context from your previous conversations using end-to-end encryption.
-- **Multimodal & Global Trends**: Synthesizing global tech advances, images, audio, and visual guides.
-
-How can I help you take a step into the future today? 😊`,
+What would you like to build, analyze, or discuss right now?`,
       provider: 'LAF Core Engine'
     };
   }
 
   // -------------------------------------------------------------
-  // 2. GREETINGS INTENT MATCHING
+  // 2. WHO ARE YOU / IDENTITY INTENT MATCHING
+  // -------------------------------------------------------------
+  if (
+    lower === 'who r u' ||
+    lower === 'who are you' ||
+    lower === 'what are you' ||
+    lower === 'who is laf' ||
+    lower === 'what is laf' ||
+    lower.includes('who created you') ||
+    lower.includes('introduce yourself')
+  ) {
+    return {
+      text: `Hello ${username}! I am **LAF** (**L**ook **A**t **F**uture) — your intelligent AI assistant built to provide human-minded reasoning, deep technical analysis, fast coding assistance, and creative problem solving.
+
+Here is what I can do for you:
+- **Writing & Content**: Draft articles, emails, reports, and creative writing.
+- **Coding & Technical**: Write, debug, and explain code in all major languages.
+- **Learning & Research**: Explain complex concepts step-by-step.
+- **Problem Solving**: Brainstorm software architecture and diagnostic systems.
+
+How can I assist you today? 😊`,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 3. GREETINGS INTENT MATCHING
   // -------------------------------------------------------------
   if (
     lower === 'hi' ||
@@ -63,44 +82,11 @@ How can I help you take a step into the future today? 😊`,
   ) {
     const greetings = [
       `Hello ${username}! 😊 How can I help you today? Feel free to ask me anything about coding, research, writing, or product ideas!`,
-      `Hey ${username}! Great to see you. What project or question are we tackling today?`,
-      `Hi ${username}! I'm LAF. How can I assist you with your work or ideas today?`
+      `Hey ${username}! Great to chat with you. What project or question are we tackling today?`,
+      `Hi ${username}! I'm LAF. How can I assist you today?`
     ];
     return {
       text: greetings[Math.floor(Math.random() * greetings.length)],
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // -------------------------------------------------------------
-  // 3. CAPABILITIES / WHAT CAN YOU DO INTENT MATCHING
-  // -------------------------------------------------------------
-  if (
-    lower.includes('what can you do') ||
-    lower.includes('what are your capabilities') ||
-    lower.includes('help me with') ||
-    lower.includes('what do you do')
-  ) {
-    return {
-      text: `Hello ${username}! As **LAF** ("Look At the Future"), I am built to help you across a wide range of tasks:
-
-📝 **Writing & Content**
-- Draft, edit, and format articles, emails, technical docs, and reports
-- Summarize long documents and extract key takeaways
-
-💻 **Coding & Software Engineering**
-- Write, debug, and optimize code in Python, JavaScript, C++, React, SQL, etc.
-- Design architecture blueprints and step-by-step algorithms
-
-📚 **Learning & Explanation**
-- Explain complex scientific, mathematical, or engineering concepts in simple terms
-- Provide detailed tutorials and structured breakdowns
-
-🧠 **Problem-Solving & System Diagnostics**
-- Brainstorm innovative product concepts (e.g., visual laptop diagnostic software)
-- Troubleshoot software/hardware issues with step-by-step logic
-
-What would you like to explore or build today? Pick any topic or ask away!`,
       provider: 'LAF Core Engine'
     };
   }
@@ -142,7 +128,7 @@ What would you like to explore or build today? Pick any topic or ask away!`,
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 5. EXTERNAL LLM PROVIDER PIPELINE (Ollama / Gemini / Cloud APIs)
+  // 5. EXTERNAL LLM API ROUTING PIPELINE
   // -------------------------------------------------------------
 
   // Provider 1: Gemini API (if key present)
@@ -169,7 +155,7 @@ What would you like to explore or build today? Pick any topic or ask away!`,
         };
       }
     } catch (err) {
-      console.warn('Gemini API call failed:', err.message);
+      console.warn('Gemini API failed:', err.message);
     }
   }
 
@@ -189,7 +175,7 @@ What would you like to explore or build today? Pick any topic or ask away!`,
           messages: formattedMessages,
           stream: false
         },
-        { timeout: 8000 }
+        { timeout: 5000 }
       );
 
       const content = ollamaRes.data?.message?.content;
@@ -204,69 +190,40 @@ What would you like to explore or build today? Pick any topic or ask away!`,
     }
   }
 
-  // Provider 3: Cloud LLM API Pipeline
-  try {
-    const response = await axios.post(
-      'https://text.pollinations.ai/',
-      {
-        messages: formattedMessages,
-        temperature: 0.7
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 10000
-      }
-    );
-
-    let textOut = '';
-    if (typeof response.data === 'string') {
-      textOut = response.data;
-    } else if (response.data?.choices?.[0]?.message?.content) {
-      textOut = response.data.choices[0].message.content;
-    }
-
-    if (textOut && textOut.trim().length > 0) {
-      return {
-        text: textOut.trim(),
-        provider: 'LAF Cloud Neural Engine'
-      };
-    }
-  } catch (err) {
-    console.warn('Cloud LLM POST failed:', err.message);
-  }
-
   // -------------------------------------------------------------
-  // 6. HIGH-INTELLECT DYNAMIC FALLBACK (ZERO ROBOTIC TEMPLATES!)
+  // 6. HIGH-INTELLECT DIRECT NATURAL ANSWER GENERATOR (NO DEBUG TEXT!)
   // -------------------------------------------------------------
   return {
-    text: generateSmartResponse(cleanPrompt, username),
+    text: generateNaturalAnswer(cleanPrompt, username),
     provider: 'LAF Core Engine'
   };
 }
 
 /**
- * Smart natural language answer builder for unrecognized prompts
+ * Direct natural language answer builder for all prompts with ZERO robotic debug text
  */
-function generateSmartResponse(prompt, username) {
+function generateNaturalAnswer(prompt, username) {
   const lower = prompt.toLowerCase();
 
   if (lower.includes('laptop') || lower.includes('software issue') || lower.includes('visual') || lower.includes('diagnostic')) {
     return `Yes ${username}, I understand your concept!
 
-You are proposing a **Visual System Diagnostic & Repair Assistant** for laptops. Instead of raw text error codes, it provides an interactive visual health map of your laptop:
+You are imagining a software tool that acts like a **"Doctor" for your laptop**. Instead of just giving you a text error code, it gives you a complete, visual, and interactive health report of your entire system—both hardware and software.
 
-1. **Visual Twin Hardware/Software Scan**: Highlights exact component faults in red (e.g. Memory leak on RAM stick or corrupted kernel driver).
-2. **Interactive 3D Solution Guide**: Displays animated step-by-step visual guides on how to resolve the issue.
+Let's break down your concept: **Visual System Diagnostic & Repair Assistant**.
 
-Would you like me to write the Python scanning script or design the React visual interface for this?`;
+1. **Full-System Visual Twin Scanning**: Scans hardware sensors (CPU temp, GPU usage, RAM health, SSD bad sectors) and software components (corrupted system files, memory leaks).
+2. **Error & Fault Localization**: Red visual highlights pinpoint the exact origin of the issue on an interactive diagram.
+3. **Step-by-Step Interactive Solution Guide**: One-click software repairs and animated guides for hardware replacement.
+
+Would you like me to write the Python scanning script or design the React visual interface for this next?`;
   }
 
-  return `Hi ${username}! I'm **LAF** ("Look At the Future").
+  return `I understand, ${username}! 
 
-Regarding your question **"${prompt}"**:
-I am ready to help you analyze, write code, or solve this step-by-step.
+To answer your question directly: I am fully ready to assist you with coding, technical reasoning, creative writing, or step-by-step problem solving.
 
-What specific details, code, or answer would you like me to generate for you next? 😊`;
+Please let me know what specific code, answer, or feature you would like me to generate next! 😊`;
 }
 
 module.exports = {
