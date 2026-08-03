@@ -132,12 +132,18 @@ router.delete('/conversation/:id', authMiddleware, (req, res) => {
  */
 router.post('/feedback', authMiddleware, async (req, res) => {
   try {
-    const { feedbackText } = req.body;
+    const { feedbackText, userEmail } = req.body;
     if (!feedbackText || !feedbackText.trim()) {
       return res.status(400).json({ error: 'Feedback text cannot be empty' });
     }
+    if (!userEmail || !userEmail.trim()) {
+      return res.status(400).json({ error: 'User email address is required' });
+    }
 
-    const savedRecord = saveFeedbackRecord(req.username, feedbackText.trim());
+    const cleanEmail = userEmail.trim();
+    const cleanText = feedbackText.trim();
+
+    const savedRecord = saveFeedbackRecord(req.username, cleanText, cleanEmail);
 
     // Dispatch email notification to purushothamanks1711@gmail.com
     try {
@@ -151,20 +157,22 @@ router.post('/feedback', authMiddleware, async (req, res) => {
 
       await transporter.sendMail({
         from: '"LAF AI Platform" <noreply@laf.ai>',
+        replyTo: cleanEmail,
         to: 'purushothamanks1711@gmail.com',
-        subject: `[LAF Feedback] New Feedback from @${req.username}`,
-        text: `New LAF User Feedback Submission:\n\nUser: ${req.username}\nDate: ${new Date().toLocaleString()}\n\nFeedback Message:\n${feedbackText.trim()}\n\n---\nLAF AI Platform`,
+        subject: `[LAF Feedback] New Feedback from @${req.username} (${cleanEmail})`,
+        text: `New LAF User Feedback Submission:\n\nUser: ${req.username}\nEmail: ${cleanEmail}\nDate: ${new Date().toLocaleString()}\n\nFeedback Message:\n${cleanText}\n\n---\nLAF AI Platform`,
         html: `<div style="font-family: Arial, sans-serif; padding: 20px; background: #0f172a; color: #fff; border-radius: 12px;">
           <h2 style="color: #38bdf8;">📬 New LAF User Feedback</h2>
           <p><strong>From User:</strong> @${req.username}</p>
+          <p><strong>User Email:</strong> <a href="mailto:${cleanEmail}" style="color: #38bdf8;">${cleanEmail}</a></p>
           <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
           <hr style="border-color: #334155;"/>
           <p style="background: #1e293b; padding: 16px; border-radius: 8px; font-size: 1rem; color: #e2e8f0; white-space: pre-wrap;">
-            ${feedbackText.trim()}
+            ${cleanText}
           </p>
         </div>`
       });
-      console.log(`[FEEDBACK] Email successfully dispatched to purushothamanks1711@gmail.com for @${req.username}`);
+      console.log(`[FEEDBACK] Email successfully dispatched to purushothamanks1711@gmail.com for @${req.username} (${cleanEmail})`);
     } catch (mailErr) {
       console.log(`[FEEDBACK] Saved feedback to JSON database. Email dispatch attempt noted: ${mailErr.message}`);
     }

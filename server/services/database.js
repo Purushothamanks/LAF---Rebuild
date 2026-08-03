@@ -19,6 +19,14 @@ function getUserDbPath(username) {
 }
 
 /**
+ * Check if a user database file already exists
+ */
+function userExists(username) {
+  const filePath = getUserDbPath(username);
+  return fs.existsSync(filePath);
+}
+
+/**
  * Read user isolated database
  */
 function readUserDb(username) {
@@ -158,7 +166,7 @@ function searchUserMemory(username, query) {
 /**
  * Save user feedback entry to server storage
  */
-function saveFeedbackRecord(username, text) {
+function saveFeedbackRecord(username, text, userEmail = '') {
   let feedbackList = [];
   if (fs.existsSync(FEEDBACK_FILE)) {
     try {
@@ -171,6 +179,7 @@ function saveFeedbackRecord(username, text) {
   const record = {
     id: `fb_${Date.now()}`,
     username,
+    userEmail,
     text,
     targetEmail: 'purushothamanks1711@gmail.com',
     createdAt: new Date().toISOString()
@@ -183,6 +192,7 @@ function saveFeedbackRecord(username, text) {
 
 module.exports = {
   getUserDbPath,
+  userExists,
   readUserDb,
   saveUserDb,
   saveConversation,

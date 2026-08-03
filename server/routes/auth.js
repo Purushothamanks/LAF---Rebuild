@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { validateUsername, sanitizeInput } = require('../security/sanitize');
 const { generateUserToken, verifyUserToken } = require('../security/encryption');
-const { readUserDb } = require('../services/database');
+const { readUserDb, userExists } = require('../services/database');
 
 /**
  * POST /api/auth/login
- * Passwordless username authentication
+ * Passwordless username authentication (enforces username uniqueness)
  */
 router.post('/login', (req, res) => {
   const rawUsername = req.body.username;
@@ -15,6 +15,19 @@ router.post('/login', (req, res) => {
   if (!validateUsername(username)) {
     return res.status(400).json({
       error: 'Invalid username. Must be 2-30 characters (letters, numbers, spaces, underscores, hyphens).'
+    });
+  }
+
+  // Check if username already exists in data storage
+  const exists = userExists(username);
+  const authHeader = req.headers.authorization || '';
+  const clientToken = authHeader.replace('Bearer ', '').trim();
+  const verifiedUser = clientToken ? verifyUserToken(clientToken) : null;
+
+  // If username exists and is not coming from verified session of that username:
+  if (exists && verifiedUser !== username) {
+    return res.status(409).json({
+      error: `Username "${username}" is already taken. Please choose a different username.`
     });
   }
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, HelpCircle, Send, Check } from 'lucide-react';
 
 export default function HelpFeedbackModal({ isOpen, onClose, token }) {
+  const [userEmail, setUserEmail] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -10,7 +11,7 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!feedbackText.trim() || loading) return;
+    if (!userEmail.trim() || !feedbackText.trim() || loading) return;
     setLoading(true);
 
     try {
@@ -20,7 +21,10 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ feedbackText: feedbackText.trim() })
+        body: JSON.stringify({
+          userEmail: userEmail.trim(),
+          feedbackText: feedbackText.trim()
+        })
       });
 
       const data = await res.json();
@@ -29,23 +33,27 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
         setTimeout(() => {
           setSubmitted(false);
           setFeedbackText('');
+          setUserEmail('');
           onClose();
         }, 2200);
       } else {
         alert(data.error || 'Failed to submit feedback.');
       }
     } catch (err) {
-      alert('Feedback submitted and recorded locally!');
+      alert('Feedback recorded!');
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
         setFeedbackText('');
+        setUserEmail('');
         onClose();
       }, 2200);
     } finally {
       setLoading(false);
     }
   };
+
+  const isFormValid = userEmail.trim() && feedbackText.trim();
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -56,9 +64,9 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
           display: 'flex',
           alignItems: 'center',
           justify: 'space-between',
-          background: 'rgba(28, 33, 45, 0.9)'
+          background: 'var(--ds-bg-sidebar)'
         }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--ds-text-primary)', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
             <HelpCircle style={{ width: '20px', color: 'var(--ds-blue)' }} /> Help & Feedback
           </h2>
           <button
@@ -84,20 +92,44 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '8px' }}>
-                  How can we help you or improve LAF AI?
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '6px' }}>
+                  Your Email Address <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="Enter your email address (required)..."
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'var(--ds-bg-card)',
+                    border: '1px solid var(--ds-border)',
+                    borderRadius: '12px',
+                    color: 'var(--ds-text-primary)',
+                    outline: 'none',
+                    fontSize: '0.92rem'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '6px' }}>
+                  How can we help you or improve LAF AI? <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder="Type your feedback, bug report, or feature request here..."
-                  rows={5}
+                  rows={4}
+                  required
                   style={{
                     width: '100%',
-                    padding: '14px',
+                    padding: '12px 14px',
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
-                    borderRadius: '14px',
+                    borderRadius: '12px',
                     color: 'var(--ds-text-primary)',
                     outline: 'none',
                     fontSize: '0.92rem',
@@ -108,21 +140,22 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
 
               <button
                 type="submit"
-                disabled={loading || !feedbackText.trim()}
+                disabled={loading || !isFormValid}
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: feedbackText.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
+                  background: isFormValid ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
                   border: 'none',
                   color: '#fff',
                   borderRadius: '14px',
                   fontWeight: '700',
                   fontSize: '0.92rem',
-                  cursor: feedbackText.trim() ? 'pointer' : 'default',
+                  cursor: isFormValid ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
                   justify: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  opacity: isFormValid ? 1 : 0.6
                 }}
               >
                 <Send style={{ width: '16px' }} />

@@ -150,6 +150,12 @@ body {
   box-shadow: 0 0 26px rgba(99, 134, 255, 0.45);
 }
 
+.floating-input-card textarea::placeholder {
+  text-align: center;
+  color: var(--ds-text-muted);
+  font-weight: 500;
+}
+
 /* Oval "+ New chat" Button */
 .ds-new-chat-btn {
   width: 100%;
