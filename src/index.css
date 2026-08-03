@@ -151,7 +151,7 @@ body {
 }
 
 .floating-input-card textarea::placeholder {
-  text-align: center;
+  text-align: left;
   color: var(--ds-text-muted);
   font-weight: 500;
 }
