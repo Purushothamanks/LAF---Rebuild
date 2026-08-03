@@ -493,86 +493,8 @@ p code, li code {
   white-space: normal;
 }
 
-/* TIMELINE NODE FORMAT STYLING */
-.timeline-container {
-  position: relative;
-  margin: 1.8em 0;
-  padding-left: 6px;
-}
-
-/* Vertical glowing connector line running down the left side */
-.timeline-container::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 23px;
-  width: 2px;
-  background: linear-gradient(180deg, var(--ds-blue) 0%, rgba(79, 117, 255, 0.25) 100%);
-  box-shadow: 0 0 10px rgba(79, 117, 255, 0.4);
-  z-index: 1;
-}
-
-.timeline-node {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 22px;
-  z-index: 2;
-}
-
-.timeline-node:last-child {
-  margin-bottom: 0;
-}
-
-/* Numbered Circle Badge Node */
-.timeline-badge {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 50%;
-  background: var(--ds-blue);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 0.95rem;
-  font-family: var(--font-title);
-  display: grid;
-  place-items: center;
-  box-shadow: 0 0 16px rgba(79, 117, 255, 0.5);
-  border: 2px solid #ffffff;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* Timeline Content Card Container */
-.timeline-content {
-  flex: 1;
-  background: var(--ds-bg-card);
-  border: 1px solid var(--ds-border);
-  border-radius: 16px;
-  padding: 16px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s ease;
-}
-
-.timeline-content:hover {
-  border-color: var(--ds-blue);
-  box-shadow: 0 6px 24px rgba(79, 117, 255, 0.25);
-}
-
-.timeline-title {
-  font-size: 1.15rem !important;
-  font-weight: 800 !important;
-  color: var(--ds-text-primary) !important;
-  margin: 0 0 8px 0 !important;
-  border-bottom: none !important;
-  padding-bottom: 0 !important;
-}
-
 .message-markdown-content p {
-  margin-bottom: 1.15em;
+  margin-bottom: 1.1em;
   line-height: 1.75;
 }
 
@@ -580,75 +502,62 @@ p code, li code {
   margin-bottom: 0;
 }
 
-/* Bold Highlights (Highlighting Key Terms with Blue Badge Pill) */
+/* Bold Highlights (Clean Accent Text Color) */
 .message-markdown-content strong,
 .message-markdown-content b {
   font-weight: 700;
   color: var(--ds-blue);
-  background: var(--ds-blue-bg);
-  padding: 2px 7px;
-  border-radius: 6px;
-  border: 1px solid var(--ds-border);
-  display: inline-block;
-  margin: 2px 0;
 }
 
-/* Headings with clear bottom spacing & bottom border accent */
+/* Headings with clear bottom spacing */
 .message-markdown-content h1,
 .message-markdown-content h2,
 .message-markdown-content h3,
 .message-markdown-content h4 {
-  margin-top: 1.5em;
-  margin-bottom: 0.75em;
-  padding-bottom: 6px;
+  margin-top: 1.3em;
+  margin-bottom: 0.6em;
   font-family: var(--font-title);
   color: var(--ds-text-primary);
   font-weight: 800;
   line-height: 1.35;
-  border-bottom: 1px solid var(--ds-border-light);
 }
 
-.message-markdown-content h1 { font-size: 1.45rem; border-bottom-color: var(--ds-border); }
-.message-markdown-content h2 { font-size: 1.3rem; }
-.message-markdown-content h3 { font-size: 1.15rem; }
-.message-markdown-content h4 { font-size: 1.05rem; }
+.message-markdown-content h1 { font-size: 1.4rem; }
+.message-markdown-content h2 { font-size: 1.25rem; }
+.message-markdown-content h3 { font-size: 1.1rem; }
+.message-markdown-content h4 { font-size: 1.0rem; }
 
 .message-markdown-content ul,
 .message-markdown-content ol {
-  margin-top: 0.6em;
-  margin-bottom: 1.2em;
-  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 1.1em;
+  padding-left: 1.4em;
 }
 
 .message-markdown-content li {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.45em;
   line-height: 1.7;
 }
 
 .message-markdown-content blockquote {
-  margin: 1.2em 0;
-  padding: 12px 18px;
-  border-left: 4px solid var(--ds-blue);
+  margin: 1.1em 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--ds-blue);
   background: var(--ds-blue-bg);
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 10px 10px 0;
   color: var(--ds-text-secondary);
 }
 
 .message-markdown-content table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 1.4em 0;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--ds-border);
+  border-collapse: collapse;
+  margin: 1.2em 0;
 }
 
 .message-markdown-content th,
 .message-markdown-content td {
   padding: 10px 14px;
-  border-bottom: 1px solid var(--ds-border-light);
-  border-right: 1px solid var(--ds-border-light);
+  border: 1px solid var(--ds-border);
   text-align: left;
 }
 
@@ -656,10 +565,6 @@ p code, li code {
   background: var(--ds-bg-card);
   font-weight: 700;
   color: var(--ds-text-primary);
-}
-
-.message-markdown-content tr:last-child td {
-  border-bottom: none;
 }
 
 /* COMPREHENSIVE LIGHT MODE OVERRIDES */
