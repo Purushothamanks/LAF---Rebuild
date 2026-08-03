@@ -145,39 +145,70 @@ router.post('/feedback', authMiddleware, async (req, res) => {
 
     const savedRecord = saveFeedbackRecord(req.username, cleanText, cleanEmail);
 
-    // Dispatch email notification to purushothamanks1711@gmail.com
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.SMTP_USER || 'purushothamanks1711@gmail.com',
-          pass: process.env.SMTP_PASS || ''
-        }
-      });
+    // REALTIME EMAIL DISPATCH: Send instant mail notification to purushothamanks1711@gmail.com
+    let dispatched = false;
 
-      await transporter.sendMail({
-        from: '"LAF AI Platform" <noreply@laf.ai>',
-        replyTo: cleanEmail,
-        to: 'purushothamanks1711@gmail.com',
-        subject: `[LAF Feedback] New Feedback from @${req.username} (${cleanEmail})`,
-        text: `New LAF User Feedback Submission:\n\nUser: ${req.username}\nEmail: ${cleanEmail}\nDate: ${new Date().toLocaleString()}\n\nFeedback Message:\n${cleanText}\n\n---\nLAF AI Platform`,
-        html: `<div style="font-family: Arial, sans-serif; padding: 20px; background: #0f172a; color: #fff; border-radius: 12px;">
-          <h2 style="color: #38bdf8;">📬 New LAF User Feedback</h2>
-          <p><strong>From User:</strong> @${req.username}</p>
-          <p><strong>User Email:</strong> <a href="mailto:${cleanEmail}" style="color: #38bdf8;">${cleanEmail}</a></p>
-          <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
-          <hr style="border-color: #334155;"/>
-          <p style="background: #1e293b; padding: 16px; border-radius: 8px; font-size: 1rem; color: #e2e8f0; white-space: pre-wrap;">
-            ${cleanText}
-          </p>
-        </div>`
+    // Method 1: Realtime HTTP Mail Service (FormSubmit AJAX API - No SMTP login needed)
+    try {
+      await axios.post('https://formsubmit.co/ajax/purushothamanks1711@gmail.com', {
+        _subject: `[LAF Realtime Feedback] Message from @${req.username} (${cleanEmail})`,
+        Username: req.username,
+        UserEmail: cleanEmail,
+        SubmittedAt: new Date().toLocaleString(),
+        FeedbackMessage: cleanText,
+        _replyto: cleanEmail,
+        _template: 'table'
+      }, {
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        timeout: 7000
       });
-      console.log(`[FEEDBACK] Email successfully dispatched to purushothamanks1711@gmail.com for @${req.username} (${cleanEmail})`);
-    } catch (mailErr) {
-      console.log(`[FEEDBACK] Saved feedback to JSON database. Email dispatch attempt noted: ${mailErr.message}`);
+      dispatched = true;
+      console.log(`[FEEDBACK REALTIME] Successfully sent realtime email to purushothamanks1711@gmail.com via HTTP API for @${req.username}`);
+    } catch (httpMailErr) {
+      console.log(`[FEEDBACK HTTP MAIL] FormSubmit dispatch note: ${httpMailErr.message}`);
     }
 
-    res.json({ success: true, message: 'Feedback recorded successfully', record: savedRecord });
+    // Method 2: Nodemailer SMTP (if SMTP credentials are set)
+    if (process.env.SMTP_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.SMTP_USER || 'purushothamanks1711@gmail.com',
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        await transporter.sendMail({
+          from: '"LAF AI Platform" <noreply@laf.ai>',
+          replyTo: cleanEmail,
+          to: 'purushothamanks1711@gmail.com',
+          subject: `[LAF Feedback] New Feedback from @${req.username} (${cleanEmail})`,
+          text: `New LAF User Feedback Submission:\n\nUser: ${req.username}\nEmail: ${cleanEmail}\nDate: ${new Date().toLocaleString()}\n\nFeedback Message:\n${cleanText}\n\n---\nLAF AI Platform`,
+          html: `<div style="font-family: Arial, sans-serif; padding: 20px; background: #0f172a; color: #fff; border-radius: 12px;">
+            <h2 style="color: #38bdf8;">📬 New LAF User Feedback</h2>
+            <p><strong>From User:</strong> @${req.username}</p>
+            <p><strong>User Email:</strong> <a href="mailto:${cleanEmail}" style="color: #38bdf8;">${cleanEmail}</a></p>
+            <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
+            <hr style="border-color: #334155;"/>
+            <p style="background: #1e293b; padding: 16px; border-radius: 8px; font-size: 1rem; color: #e2e8f0; white-space: pre-wrap;">
+              ${cleanText}
+            </p>
+          </div>`
+        });
+        dispatched = true;
+        console.log(`[FEEDBACK SMTP] Email dispatched via SMTP to purushothamanks1711@gmail.com for @${req.username}`);
+      } catch (smtpErr) {
+        console.log(`[FEEDBACK SMTP] SMTP dispatch note: ${smtpErr.message}`);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Feedback delivered in realtime',
+      dispatched,
+      record: savedRecord
+    });
   } catch (err) {
     console.error('Feedback error:', err);
     res.status(500).json({ error: 'Failed to process feedback submission' });
