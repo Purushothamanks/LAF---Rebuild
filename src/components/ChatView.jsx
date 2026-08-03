@@ -21,7 +21,11 @@ renderer.code = function ({ text, lang }) {
   </div>`;
 };
 
-marked.setOptions({ renderer });
+marked.setOptions({
+  renderer,
+  breaks: true,
+  gfm: true
+});
 
 export default function ChatView({
   user,
