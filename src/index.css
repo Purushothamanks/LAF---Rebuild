@@ -504,41 +504,39 @@ p code, li code {
   margin-bottom: 0;
 }
 
-/* Bold Sub-topics & Highlight Badges */
+/* Bold Sub-topics (Clean Professional Accent Text) */
 .message-markdown-content strong,
 .message-markdown-content b {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--ds-blue);
-  background: var(--ds-blue-bg);
-  padding: 3px 9px;
-  border-radius: 8px;
-  border: 1px solid var(--ds-border);
-  display: inline-block;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  margin-right: 6px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  display: inline;
+  margin: 0;
 }
 
-/* Sub-topics & Headings with Generous Top and Bottom Breathing Space */
+/* Headings (Clean Professional Typography with zero background boxes) */
 .message-markdown-content h1,
 .message-markdown-content h2,
 .message-markdown-content h3,
 .message-markdown-content h4 {
-  margin-top: 2.4em;
-  margin-bottom: 1.1em;
-  padding: 8px 14px;
-  background: var(--ds-bg-card);
-  border: 1px solid var(--ds-border);
-  border-left: 4px solid var(--ds-blue);
-  border-radius: 12px;
+  margin-top: 1.8em;
+  margin-bottom: 0.7em;
+  padding: 0 0 6px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ds-border-light);
+  border-radius: 0;
   font-family: var(--font-title);
   color: var(--ds-text-primary);
   font-weight: 800;
-  line-height: 1.4;
-  letter-spacing: 0.3px;
+  line-height: 1.35;
+  letter-spacing: 0.2px;
 }
 
-.message-markdown-content h1 { font-size: 1.45rem; }
+.message-markdown-content h1 { font-size: 1.45rem; border-bottom-color: var(--ds-border); }
 .message-markdown-content h2 { font-size: 1.3rem; }
 .message-markdown-content h3 { font-size: 1.15rem; }
 .message-markdown-content h4 { font-size: 1.05rem; }
