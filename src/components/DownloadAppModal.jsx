@@ -1,11 +1,61 @@
-import React from 'react';
-import { X, Smartphone, Download, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Smartphone, Download, Share2, ShieldCheck, Check } from 'lucide-react';
 
 export default function DownloadAppModal({ isOpen, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const isAppMode = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.includes('android-app://')
+  );
+
   if (!isOpen) return null;
 
-  const handleDownloadPWA = () => {
-    alert('LAF AI Progressive Web App installer triggered. Click "Add to Home Screen" on your device browser.');
+  const handleAction = async () => {
+    if (isAppMode) {
+      // In App mode: Share App link
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'LAF AI Platform',
+            text: 'Experience LAF AI — Autonomous Multimodal Fast Reasoning AI Platform!',
+            url: window.location.origin
+          });
+        } catch (err) {
+          // Fallback to clipboard
+          navigator.clipboard.writeText(window.location.origin);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        }
+      } else {
+        navigator.clipboard.writeText(window.location.origin);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } else {
+      // On Website: Direct download LAF web app shortcut file
+      const appHtmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>LAF AI Platform</title>
+<meta http-equiv="refresh" content="0; url=${window.location.origin}">
+<script>window.location.href = "${window.location.origin}";</script>
+</head>
+<body>
+<p>Launching LAF AI Platform... <a href="${window.location.origin}">Click here if not redirected</a>.</p>
+</body>
+</html>`;
+      const blob = new Blob([appHtmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'LAF-AI-App.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -17,10 +67,11 @@ export default function DownloadAppModal({ isOpen, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justify: 'space-between',
-          background: 'rgba(28, 33, 45, 0.9)'
+          background: 'var(--ds-bg-sidebar)'
         }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
-            <Smartphone style={{ width: '20px', color: 'var(--ds-blue)' }} /> Download LAF App
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--ds-text-primary)', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
+            {isAppMode ? <Share2 style={{ width: '20px', color: 'var(--ds-blue)' }} /> : <Smartphone style={{ width: '20px', color: 'var(--ds-blue)' }} />}
+            <span>{isAppMode ? 'Share LAF App' : 'Download LAF App'}</span>
           </h2>
           <button
             onClick={onClose}
@@ -38,17 +89,19 @@ export default function DownloadAppModal({ isOpen, onClose }) {
             style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--ds-blue)', boxShadow: '0 0 20px rgba(79, 117, 255, 0.4)' }}
           />
 
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#fff', fontFamily: 'var(--font-title)', margin: 0 }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--ds-text-primary)', fontFamily: 'var(--font-title)', margin: 0 }}>
             LAF AI Mobile & Desktop
           </h3>
 
           <p style={{ fontSize: '0.88rem', color: 'var(--ds-text-secondary)', lineHeight: '1.5', margin: 0 }}>
-            Install the native LAF PWA on Android, iOS, Windows, or macOS for instant access and zero latency.
+            {isAppMode
+              ? 'Share the LAF AI app link with your friends and colleagues for instant access.'
+              : 'Directly download the native LAF web app shortcut for Android, iOS, Windows, or macOS.'}
           </p>
 
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
             <button
-              onClick={handleDownloadPWA}
+              onClick={handleAction}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -66,7 +119,16 @@ export default function DownloadAppModal({ isOpen, onClose }) {
                 boxShadow: '0 0 20px rgba(79, 117, 255, 0.4)'
               }}
             >
-              <Download style={{ width: '18px' }} /> Install Web App / Mobile App
+              {isAppMode ? (
+                copied ? <Check style={{ width: '18px' }} /> : <Share2 style={{ width: '18px' }} />
+              ) : (
+                <Download style={{ width: '18px' }} />
+              )}
+              <span>
+                {isAppMode
+                  ? (copied ? 'App Link Copied!' : 'Share App Link')
+                  : 'Download App'}
+              </span>
             </button>
 
             <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>

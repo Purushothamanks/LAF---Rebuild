@@ -72,15 +72,51 @@ export default function ChatView({
         setActiveConvId(data.conversationId);
         
         const fullContent = data.response.content || '';
-        
-        // Add complete response to messages list directly
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: fullContent, provider: data.response.provider }
-        ]);
+        const providerName = data.response.provider || 'LAF AI';
 
         setLoading(false);
-        fetchConversations();
+
+        // Word-by-word typewriter animation
+        const tokens = fullContent.match(/(\s+|\S+)/g) || [fullContent];
+        let currentText = '';
+        let tokenIndex = 0;
+
+        // Add empty assistant placeholder message
+        setMessages(prev => [
+          ...prev,
+          { role: 'assistant', content: '', provider: providerName, isTyping: true }
+        ]);
+
+        const timer = setInterval(() => {
+          if (tokenIndex < tokens.length) {
+            currentText += tokens[tokenIndex];
+            tokenIndex++;
+            setMessages(prev => {
+              const updated = [...prev];
+              if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+                updated[updated.length - 1] = {
+                  ...updated[updated.length - 1],
+                  content: currentText
+                };
+              }
+              return updated;
+            });
+          } else {
+            clearInterval(timer);
+            setMessages(prev => {
+              const updated = [...prev];
+              if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+                updated[updated.length - 1] = {
+                  ...updated[updated.length - 1],
+                  content: fullContent,
+                  isTyping: false
+                };
+              }
+              return updated;
+            });
+            fetchConversations();
+          }
+        }, 18);
       } else {
         setMessages(prev => [
           ...prev,
@@ -251,6 +287,7 @@ export default function ChatView({
 
                     {/* Actual Pure Text & Code Box Message */}
                     <div
+                      className="message-markdown-content"
                       style={{
                         fontSize: '0.96rem',
                         lineHeight: '1.65',

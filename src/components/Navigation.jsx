@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, User, MoreHorizontal, Smartphone, Settings, HelpCircle, LogOut, PanelLeftClose, Trash2 } from 'lucide-react';
+import { Plus, User, MoreHorizontal, Smartphone, Share2, Settings, HelpCircle, LogOut, PanelLeftClose, Trash2 } from 'lucide-react';
 
 export default function Navigation({
   sidebarOpen,
@@ -18,6 +18,12 @@ export default function Navigation({
   const [showMenu, setShowMenu] = useState(false);
   const [hoveredConvId, setHoveredConvId] = useState(null);
   const menuRef = useRef(null);
+
+  const isAppMode = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.includes('android-app://')
+  );
 
   // Close popup menu on outside click
   useEffect(() => {
@@ -188,8 +194,8 @@ export default function Navigation({
                   onOpenDownloadApp();
                 }}
               >
-                <Smartphone style={{ width: '16px', color: 'var(--ds-blue)' }} />
-                <span>Download app</span>
+                {isAppMode ? <Share2 style={{ width: '16px', color: 'var(--ds-blue)' }} /> : <Smartphone style={{ width: '16px', color: 'var(--ds-blue)' }} />}
+                <span>{isAppMode ? 'Share app' : 'Download app'}</span>
               </button>
 
               <button

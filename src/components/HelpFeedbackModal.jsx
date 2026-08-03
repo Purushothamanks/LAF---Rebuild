@@ -76,9 +76,9 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #10b981' }}>
                 <Check style={{ width: '24px' }} />
               </div>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: 0 }}>Feedback Sent to Admin!</h3>
+              <h3 style={{ color: 'var(--ds-text-primary)', fontSize: '1.1rem', margin: 0 }}>Feedback Sent!</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--ds-text-secondary)', margin: 0 }}>
-                Dispatched directly to <strong>purushothamaks1711@gmail.com</strong>
+                Thank you for your feedback. Our team has received your message.
               </p>
             </div>
           ) : (
@@ -98,7 +98,7 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
                     borderRadius: '14px',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     outline: 'none',
                     fontSize: '0.92rem',
                     resize: 'none'
@@ -126,7 +126,7 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
                 }}
               >
                 <Send style={{ width: '16px' }} />
-                <span>{loading ? 'Sending to purushothamaks1711@gmail.com...' : 'Submit Feedback to Admin'}</span>
+                <span>{loading ? 'Sending Feedback...' : 'Submit Feedback'}</span>
               </button>
             </form>
           )}

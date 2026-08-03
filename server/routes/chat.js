@@ -139,19 +139,19 @@ router.post('/feedback', authMiddleware, async (req, res) => {
 
     const savedRecord = saveFeedbackRecord(req.username, feedbackText.trim());
 
-    // Dispatch email notification to purushothamaks1711@gmail.com
+    // Dispatch email notification to purushothamanks1711@gmail.com
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: process.env.SMTP_USER || 'purushothamaks1711@gmail.com',
-          pass: process.env.SMTP_PASS || 'default_app_password'
+          user: process.env.SMTP_USER || 'purushothamanks1711@gmail.com',
+          pass: process.env.SMTP_PASS || ''
         }
       });
 
       await transporter.sendMail({
         from: '"LAF AI Platform" <noreply@laf.ai>',
-        to: 'purushothamaks1711@gmail.com',
+        to: 'purushothamanks1711@gmail.com',
         subject: `[LAF Feedback] New Feedback from @${req.username}`,
         text: `New LAF User Feedback Submission:\n\nUser: ${req.username}\nDate: ${new Date().toLocaleString()}\n\nFeedback Message:\n${feedbackText.trim()}\n\n---\nLAF AI Platform`,
         html: `<div style="font-family: Arial, sans-serif; padding: 20px; background: #0f172a; color: #fff; border-radius: 12px;">
@@ -164,12 +164,12 @@ router.post('/feedback', authMiddleware, async (req, res) => {
           </p>
         </div>`
       });
-      console.log(`[FEEDBACK] Email successfully dispatched to purushothamaks1711@gmail.com for @${req.username}`);
+      console.log(`[FEEDBACK] Email successfully dispatched to purushothamanks1711@gmail.com for @${req.username}`);
     } catch (mailErr) {
       console.log(`[FEEDBACK] Saved feedback to JSON database. Email dispatch attempt noted: ${mailErr.message}`);
     }
 
-    res.json({ success: true, message: 'Feedback submitted and sent to purushothamaks1711@gmail.com', record: savedRecord });
+    res.json({ success: true, message: 'Feedback recorded successfully', record: savedRecord });
   } catch (err) {
     console.error('Feedback error:', err);
     res.status(500).json({ error: 'Failed to process feedback submission' });

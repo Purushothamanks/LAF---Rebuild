@@ -9,9 +9,9 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   const [showLegalDoc, setShowLegalDoc] = useState(null); // 'terms' or 'privacy'
 
   // User editable profile details
-  const [nameInput, setNameInput] = useState(user?.name || user?.username || 'Sample');
-  const [usernameInput, setUsernameInput] = useState(user?.username ? `@${user.username.toLowerCase()}` : '@sample');
-  const [emailInput, setEmailInput] = useState(user?.email || 'sample@laf.ai');
+  const [nameInput, setNameInput] = useState(user?.name || user?.username || '');
+  const [usernameInput, setUsernameInput] = useState(user?.username ? `@${user.username.toLowerCase()}` : '');
+  const [emailInput, setEmailInput] = useState(user?.email || '');
   const [phoneInput, setPhoneInput] = useState(user?.phone || '');
   const [savedProfile, setSavedProfile] = useState(false);
 
@@ -27,7 +27,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
-    const cleanUsername = usernameInput.replace(/^@/, '').trim() || 'sample';
+    const cleanUsername = usernameInput.replace(/^@/, '').trim() || 'user';
     if (user) {
       user.name = nameInput.trim();
       user.username = cleanUsername;
@@ -56,9 +56,9 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
           display: 'flex',
           alignItems: 'center',
           justify: 'space-between',
-          background: 'rgba(28, 33, 45, 0.9)'
+          background: 'var(--ds-bg-sidebar)'
         }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--ds-text-primary)', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-title)', margin: 0 }}>
             <Settings style={{ width: '20px', color: 'var(--ds-blue)' }} /> Settings
           </h2>
           
@@ -72,7 +72,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--ds-border)', padding: '12px 24px', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--ds-border)', padding: '12px 24px', background: 'var(--ds-bg-main)' }}>
           <button
             onClick={() => setActiveTab('profile')}
             className={`settings-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
@@ -110,14 +110,14 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     type="text"
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    placeholder="Enter name (e.g. Sample)..."
+                    placeholder="Enter name..."
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      background: 'rgba(0, 0, 0, 0.3)',
+                      background: 'var(--ds-bg-input)',
                       border: '1px solid var(--ds-border)',
                       borderRadius: '10px',
-                      color: '#fff',
+                      color: 'var(--ds-text-primary)',
                       fontSize: '0.94rem',
                       fontWeight: '600',
                       outline: 'none'
@@ -134,11 +134,11 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     type="text"
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
-                    placeholder="Enter @username (e.g. @sample)..."
+                    placeholder="Enter @username..."
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      background: 'rgba(0, 0, 0, 0.3)',
+                      background: 'var(--ds-bg-input)',
                       border: '1px solid var(--ds-border)',
                       borderRadius: '10px',
                       color: 'var(--ds-blue)',
@@ -159,14 +159,14 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="Enter email (e.g. sample@laf.ai)..."
+                  placeholder="Enter email address..."
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    background: 'rgba(0, 0, 0, 0.3)',
+                    background: 'var(--ds-bg-input)',
                     border: '1px solid var(--ds-border)',
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     fontSize: '0.92rem',
                     fontFamily: 'var(--font-mono)',
                     outline: 'none'
@@ -183,14 +183,14 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   type="text"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="Enter phone number (e.g. +91 90420 17110)..."
+                  placeholder="Enter phone number..."
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    background: 'rgba(0, 0, 0, 0.3)',
+                    background: 'var(--ds-bg-input)',
                     border: '1px solid var(--ds-border)',
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     fontSize: '0.92rem',
                     fontFamily: 'var(--font-mono)',
                     outline: 'none'
@@ -229,9 +229,9 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   style={{
                     width: '100%',
                     padding: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     fontSize: '0.88rem',
@@ -288,7 +288,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
                     borderRadius: '14px',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     outline: 'none',
                     fontWeight: '600'
                   }}
@@ -337,11 +337,11 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                       background: 'var(--ds-bg-card)',
                       border: '1px solid var(--ds-border)',
                       borderRadius: '14px',
-                      color: '#fff',
+                      color: 'var(--ds-text-primary)',
                       outline: 'none'
                     }}
                   />
-                  <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)' }}>
+                  <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)', color: '#fff' }}>
                     {savedKey ? <Check style={{ width: '16px' }} /> : 'Save'}
                   </button>
                 </form>
@@ -360,7 +360,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   alt="LAF Logo"
                   style={{ width: '56px', height: '56px', borderRadius: '50%', marginBottom: '8px', border: '2px solid var(--ds-blue)' }}
                 />
-                <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff', fontFamily: 'var(--font-title)' }}>LAF AI</h3>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--ds-text-primary)', fontFamily: 'var(--font-title)' }}>LAF AI</h3>
                 <div style={{ fontSize: '0.8rem', color: 'var(--ds-text-muted)', marginTop: '4px' }}>Version 2.0</div>
               </div>
 
@@ -372,7 +372,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     padding: '12px 16px',
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     borderRadius: '14px',
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -389,7 +389,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 </button>
 
                 {showLegalDoc === 'terms' && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
                     LAF Terms of Use: By accessing LAF AI, you agree to secure data processing rules, isolated database partition usage, and compliant usage of reasoning LLM tools.
                   </div>
                 )}
@@ -401,7 +401,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     padding: '12px 16px',
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     borderRadius: '14px',
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -418,7 +418,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 </button>
 
                 {showLegalDoc === 'privacy' && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
                     LAF Privacy Policy: All user conversations are end-to-end encrypted (E2EE) with AES-256 keys derived per username. Zero data is shared across user partitions.
                   </div>
                 )}

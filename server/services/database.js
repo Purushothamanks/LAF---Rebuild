@@ -172,7 +172,7 @@ function saveFeedbackRecord(username, text) {
     id: `fb_${Date.now()}`,
     username,
     text,
-    targetEmail: 'purushothamaks1711@gmail.com',
+    targetEmail: 'purushothamanks1711@gmail.com',
     createdAt: new Date().toISOString()
   };
   
