@@ -33,28 +33,13 @@ export default function DownloadAppModal({ isOpen, onClose }) {
         setTimeout(() => setCopied(false), 2500);
       }
     } else {
-      // On Website: Direct download LAF web app shortcut file
-      const appHtmlContent = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>LAF AI Platform</title>
-<meta http-equiv="refresh" content="0; url=${window.location.origin}">
-<script>window.location.href = "${window.location.origin}";</script>
-</head>
-<body>
-<p>Launching LAF AI Platform... <a href="${window.location.origin}">Click here if not redirected</a>.</p>
-</body>
-</html>`;
-      const blob = new Blob([appHtmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
+      // Direct download of LAF-AI.apk application package
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'LAF-AI-App.html';
+      a.href = '/LAF-AI.apk';
+      a.download = 'LAF-AI.apk';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
   };
 

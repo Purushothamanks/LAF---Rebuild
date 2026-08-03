@@ -33,6 +33,39 @@ When it comes to raw text generation and formatting, you MUST output standard Ma
 Maintain high visual clarity, spacious uncrowded line breaks, and professional formatting.`;
 
 /**
+ * Checks if prompt is asking about LAF identity or full form
+ */
+function isLafIdentityQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  return (
+    p.includes('what is mean by laf') ||
+    p.includes('what is laf') ||
+    p.includes('what does laf stand for') ||
+    p.includes('full form of laf') ||
+    p.includes('meaning of laf') ||
+    p.includes('tell me about laf') ||
+    p.includes('what is mean laf') ||
+    p === 'laf'
+  );
+}
+
+const LAF_REAL_IDENTITY_TEXT = `The full form of "LAF" is - Look at The Future
+
+LAF is an autonomous, fast multimodal AI product platform engineered for high-speed software development, visual generation, mathematical reasoning, and intelligent human conversation.
+
+### Real Features & Purpose
+
+* **Fast Reasoning Engine:** Sub-350ms response latency for complex software engineering queries, architectural design, and step-by-step guidance.
+
+* **Multimodal Generation Studio:** Native studio capabilities for high-resolution image creation (FLUX.1-HD & SDXL), Text-to-Speech (TTS) audio synthesis, and video motion rendering.
+
+* **Real-Time World Intelligence:** Live automated scraping of technology trends, breaking news, and market intelligence auto-scraped every 15 minutes.
+
+* **Encrypted Isolated DB Vaults:** Passwordless user authentication backed by AES-256 encrypted database partitions ensuring complete privacy and cross-device account isolation.
+
+* **Long-Term Memory Vault:** Automated semantic memory extraction to recall user preferences and project context across sessions.`;
+
+/**
  * Checks if user prompt is a generic code request missing a language specification.
  */
 function isGenericCodeRequest(prompt = '') {
@@ -62,6 +95,14 @@ function isGenericCodeRequest(prompt = '') {
 async function generateResponse({ username, prompt, history = [], customApiKey }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}"`);
+
+  // 0. LAF Identity Interception
+  if (isLafIdentityQuery(cleanPrompt)) {
+    return {
+      text: LAF_REAL_IDENTITY_TEXT,
+      provider: 'LAF Core Engine'
+    };
+  }
 
   // 1. Generic Code Request Interception: Ask for purpose & language preference
   if (isGenericCodeRequest(cleanPrompt)) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -306,8 +306,24 @@ export default function ChatView({
                       }}
                     />
 
-                    {/* Voice (Read Aloud) & Copy Options Under BOTH User & AI Messages */}
+                    {/* Voice, Copy & Edit Options Under Messages */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                      {isUser && (
+                        <button
+                          onClick={() => {
+                            setInputPrompt(m.content);
+                            setTimeout(() => {
+                              const el = document.querySelector('textarea');
+                              if (el) { el.focus(); el.select(); }
+                            }, 50);
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                          title="Edit input message"
+                        >
+                          <Pencil style={{ width: '13px' }} />
+                          <span>Edit</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleSpeak(m.content, idx)}
                         style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
