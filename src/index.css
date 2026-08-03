@@ -487,84 +487,96 @@ p code, li code {
   background: var(--ds-blue);
 }
 
-/* MARKDOWN RESPONSE SPACING & FORMATTING */
+/* MARKDOWN RESPONSE SPACING & EXECUTIVE PROFESSIONAL FORMATTING */
 .message-markdown-content {
   word-break: break-word;
   white-space: normal;
 }
 
 .message-markdown-content p {
-  margin-bottom: 1.1em;
+  margin-bottom: 1.15em;
   line-height: 1.75;
+  color: var(--ds-text-primary);
 }
 
 .message-markdown-content p:last-child {
   margin-bottom: 0;
 }
 
-/* Bold Highlights (Clean Accent Text Color) */
+/* Bold Highlights (Crisp Professional Emphasis) */
 .message-markdown-content strong,
 .message-markdown-content b {
   font-weight: 700;
-  color: var(--ds-blue);
+  color: var(--ds-text-primary);
+  letter-spacing: 0.2px;
 }
 
-/* Headings with clear bottom spacing */
+/* Headings with Left Accent Bar & Clean Padding */
 .message-markdown-content h1,
 .message-markdown-content h2,
 .message-markdown-content h3,
 .message-markdown-content h4 {
-  margin-top: 1.3em;
-  margin-bottom: 0.6em;
+  margin-top: 1.5em;
+  margin-bottom: 0.7em;
+  padding-left: 12px;
+  border-left: 3px solid var(--ds-blue);
   font-family: var(--font-title);
   color: var(--ds-text-primary);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .message-markdown-content h1 { font-size: 1.4rem; }
 .message-markdown-content h2 { font-size: 1.25rem; }
-.message-markdown-content h3 { font-size: 1.1rem; }
-.message-markdown-content h4 { font-size: 1.0rem; }
+.message-markdown-content h3 { font-size: 1.12rem; }
+.message-markdown-content h4 { font-size: 1.02rem; }
 
 .message-markdown-content ul,
 .message-markdown-content ol {
-  margin-top: 0.5em;
-  margin-bottom: 1.1em;
-  padding-left: 1.4em;
+  margin-top: 0.6em;
+  margin-bottom: 1.2em;
+  padding-left: 1.5em;
 }
 
 .message-markdown-content li {
-  margin-bottom: 0.45em;
+  margin-bottom: 0.5em;
   line-height: 1.7;
 }
 
 .message-markdown-content blockquote {
-  margin: 1.1em 0;
-  padding: 10px 16px;
+  margin: 1.2em 0;
+  padding: 12px 18px;
   border-left: 3px solid var(--ds-blue);
   background: var(--ds-blue-bg);
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 12px 12px 0;
   color: var(--ds-text-secondary);
+  font-style: italic;
 }
 
 .message-markdown-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.2em 0;
+  margin: 1.4em 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--ds-border);
 }
 
 .message-markdown-content th,
 .message-markdown-content td {
-  padding: 10px 14px;
+  padding: 10px 16px;
   border: 1px solid var(--ds-border);
   text-align: left;
+  font-size: 0.92rem;
 }
 
 .message-markdown-content th {
   background: var(--ds-bg-card);
   font-weight: 700;
   color: var(--ds-text-primary);
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
 }
 
 /* COMPREHENSIVE LIGHT MODE OVERRIDES */
