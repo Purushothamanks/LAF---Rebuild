@@ -3,8 +3,9 @@ import { Send, Volume2, Copy, Check, RefreshCw } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-// Custom Marked renderer to format code blocks into sleek box layout
+// Custom Marked renderer for Timeline Node Format & Code Boxes
 const renderer = new marked.Renderer();
+
 renderer.code = function ({ text, lang }) {
   const language = (lang || 'code').trim();
   const escapedCode = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -19,6 +20,39 @@ renderer.code = function ({ text, lang }) {
     </div>
     <pre><code class="language-${language}">${escapedCode}</code></pre>
   </div>`;
+};
+
+renderer.heading = function ({ text, depth }) {
+  const match = text.match(/^(\d+|\bStep\s+\d+)\.?\s*(.*)/i);
+  if (match) {
+    const num = match[1].replace(/Step\s+/i, '');
+    const titleText = match[2];
+    return `<div class="timeline-node">
+      <div class="timeline-badge">${num}</div>
+      <div class="timeline-content">
+        <h${depth} class="timeline-title">${titleText}</h${depth}>
+      </div>
+    </div>`;
+  }
+  return `<h${depth}>${text}</h${depth}>`;
+};
+
+renderer.list = function ({ items, ordered, start }) {
+  if (ordered) {
+    let body = '';
+    items.forEach((item, index) => {
+      const num = (start || 1) + index;
+      const parsedItem = marked.parseInline(item.text);
+      body += `<div class="timeline-node">
+        <div class="timeline-badge">${num}</div>
+        <div class="timeline-content">${parsedItem}</div>
+      </div>`;
+    });
+    return `<div class="timeline-container">${body}</div>`;
+  } else {
+    let body = items.map(item => `<li>${marked.parseInline(item.text)}</li>`).join('');
+    return `<ul>${body}</ul>`;
+  }
 };
 
 marked.setOptions({

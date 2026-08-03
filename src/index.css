@@ -493,6 +493,84 @@ p code, li code {
   white-space: normal;
 }
 
+/* TIMELINE NODE FORMAT STYLING */
+.timeline-container {
+  position: relative;
+  margin: 1.8em 0;
+  padding-left: 6px;
+}
+
+/* Vertical glowing connector line running down the left side */
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 23px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--ds-blue) 0%, rgba(79, 117, 255, 0.25) 100%);
+  box-shadow: 0 0 10px rgba(79, 117, 255, 0.4);
+  z-index: 1;
+}
+
+.timeline-node {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+  z-index: 2;
+}
+
+.timeline-node:last-child {
+  margin-bottom: 0;
+}
+
+/* Numbered Circle Badge Node */
+.timeline-badge {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: var(--ds-blue);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-family: var(--font-title);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 16px rgba(79, 117, 255, 0.5);
+  border: 2px solid #ffffff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Timeline Content Card Container */
+.timeline-content {
+  flex: 1;
+  background: var(--ds-bg-card);
+  border: 1px solid var(--ds-border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.timeline-content:hover {
+  border-color: var(--ds-blue);
+  box-shadow: 0 6px 24px rgba(79, 117, 255, 0.25);
+}
+
+.timeline-title {
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: var(--ds-text-primary) !important;
+  margin: 0 0 8px 0 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
 .message-markdown-content p {
   margin-bottom: 1.15em;
   line-height: 1.75;
