@@ -45,6 +45,19 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api/security', securityRoutes);
 
+// Dedicated Secure Android Application Package Download Route
+app.get(['/api/download/app.apk', '/LAF-AI.apk'], (req, res) => {
+  const apkPath = path.join(__dirname, '../public/LAF-AI.apk');
+  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  res.setHeader('Content-Disposition', 'attachment; filename="LAF-AI.apk"');
+  res.setHeader('Cache-Control', 'no-cache');
+  if (require('fs').existsSync(apkPath)) {
+    res.sendFile(apkPath);
+  } else {
+    res.status(404).send('APK package initializing');
+  }
+});
+
 // Serve Built Client Files
 app.use(express.static(path.join(__dirname, '../dist')));
 app.use('/public', express.static(path.join(__dirname, '../public')));

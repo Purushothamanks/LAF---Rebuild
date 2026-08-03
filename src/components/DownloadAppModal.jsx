@@ -33,9 +33,9 @@ export default function DownloadAppModal({ isOpen, onClose }) {
         setTimeout(() => setCopied(false), 2500);
       }
     } else {
-      // Direct download of LAF-AI.apk application package
+      // Direct download of LAF-AI.apk via secure API route with Android package headers
       const a = document.createElement('a');
-      a.href = '/LAF-AI.apk';
+      a.href = '/api/download/app.apk';
       a.download = 'LAF-AI.apk';
       document.body.appendChild(a);
       a.click();
