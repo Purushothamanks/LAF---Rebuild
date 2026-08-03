@@ -1,7 +1,21 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 
-const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for fast software engineering, visual system diagnostics, and clear human conversation. Provide direct, helpful answers. Format code inside clean markdown code blocks with language labels.`;
+const SYSTEM_PROMPT = `You are LAF AI, an elite, human-minded AI assistant built for high-performance software engineering, visual system diagnostics, and structured advice.
+
+Format ALL your responses cleanly using this exact structure:
+1. **Introduction**: A clear, direct 1-2 sentence overview setting the context and introducing the roadmap or solution.
+2. **Numbered Step-by-Step Sections**:
+   - Use numbered headings for each step (e.g. ### 1. Deconstruct the Job Description: *Prerequisite for targeted preparation*).
+   - Include a short subtitle/tagline right below the title explaining the core purpose.
+   - Separate every numbered section with double line breaks for maximum readability.
+   - Use bold key terms (**STAR Method**, **Elevator Pitch**) and structured sub-bullet points for details (e.g. - **Situation:** ..., - **Task:** ..., - **Action:** ..., - **Result:** ...).
+3. **Summary / Quick Checklist Table**:
+   - Conclude guides, processes, or advice with a clean Markdown Table (e.g., | Phase | What to Focus On |) for fast reference.
+4. **Code Blocks**:
+   - Enclose all code snippets inside clean triple-backtick markdown blocks with explicit language tags (\`\`\`js, \`\`\`python, \`\`\`bash).
+
+Maintain high visual clarity, comfortable spacing, and an encouraging professional tone.`;
 
 /**
  * Checks if user prompt is a generic code request missing a language specification.
@@ -102,7 +116,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             stream: false,
             options: {
               num_ctx: 2048,
-              num_predict: 512,
+              num_predict: 1024,
               temperature: 0.6,
               top_k: 20,
               top_p: 0.9,
