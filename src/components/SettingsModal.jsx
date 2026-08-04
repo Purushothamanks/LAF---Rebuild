@@ -389,8 +389,15 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 </button>
 
                 {showLegalDoc === 'terms' && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
-                    LAF Terms of Use: By accessing LAF AI, you agree to secure data processing rules, isolated database partition usage, and compliant usage of reasoning LLM tools.
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '16px', borderRadius: '12px', lineHeight: '1.6', maxHeight: '250px', overflowY: 'auto' }}>
+                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '0.95rem' }}>LAF AI Terms of Service & Use</h4>
+                    <strong>Effective Date:</strong> August 4, 2026<br />
+                    <strong>Owner:</strong> Purushothamanks<br /><br />
+                    1. <strong>Acceptance:</strong> By accessing or using LAF AI ("Look at The Future"), you agree to be bound by these legal Terms of Service.<br />
+                    2. <strong>User Isolation & E2EE:</strong> Accounts operate under isolated database partitions encrypted with AES-256-GCM. You are responsible for preserving session tokens.<br />
+                    3. <strong>Acceptable Use:</strong> You agree not to perform prompt injection, server probing, rate limit evasion, or illegal content processing.<br />
+                    4. <strong>Intellectual Property:</strong> All software, branding, architecture, and logos are the sole property of Purushothamanks.<br />
+                    5. <strong>Limitation of Liability:</strong> Platform provided AS-IS. Contact purushothamanks1711@gmail.com for legal support.
                   </div>
                 )}
 
@@ -418,8 +425,46 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                 </button>
 
                 {showLegalDoc === 'privacy' && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5' }}>
-                    LAF Privacy Policy: All user conversations are end-to-end encrypted (E2EE) with AES-256 keys derived per username. Zero data is shared across user partitions.
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '16px', borderRadius: '12px', lineHeight: '1.6', maxHeight: '250px', overflowY: 'auto' }}>
+                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '0.95rem' }}>LAF AI Privacy Policy</h4>
+                    <strong>Effective Date:</strong> August 4, 2026<br /><br />
+                    1. <strong>Privacy by Design:</strong> Zero passwords or invasive tracking. Accounts rely on passwordless username tokens.<br />
+                    2. <strong>Data Encryption:</strong> All database records are stored under isolated files (<code>user_hash.json</code>) encrypted with AES-256-GCM using PBKDF2 keys.<br />
+                    3. <strong>Zero Monetization:</strong> We never sell, rent, or monetize your prompt data or personal information to third parties.<br />
+                    4. <strong>Data Erasure:</strong> Users maintain full rights to delete chat logs and partition data at any time.
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowLegalDoc(showLegalDoc === 'eula' ? null : 'eula')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'var(--ds-bg-card)',
+                    border: '1px solid var(--ds-border)',
+                    color: 'var(--ds-text-primary)',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '0.88rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'space-between'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText style={{ width: '16px', color: 'var(--ds-blue)' }} /> End-User License Agreement (EULA)
+                  </span>
+                </button>
+
+                {showLegalDoc === 'eula' && (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '16px', borderRadius: '12px', lineHeight: '1.6', maxHeight: '250px', overflowY: 'auto' }}>
+                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '0.95rem' }}>End-User License Agreement (EULA)</h4>
+                    <strong>Licensor:</strong> Purushothamanks<br /><br />
+                    1. <strong>Grant:</strong> Personal, non-exclusive, non-transferable license to run and interact with LAF AI.<br />
+                    2. <strong>Restrictions:</strong> No reverse engineering, server disruption, or unauthorized trademark usage.<br />
+                    3. <strong>Ownership:</strong> Platform source code and trademarks remain sole property of Purushothamanks.
                   </div>
                 )}
 
@@ -442,15 +487,15 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Shield style={{ width: '16px', color: 'var(--ds-blue)' }} /> Legal License (MIT)
+                    <Shield style={{ width: '16px', color: 'var(--ds-blue)' }} /> Open Source License (MIT)
                   </span>
                 </button>
 
                 {showLegalDoc === 'license' && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5', fontFamily: 'monospace' }}>
-                    <strong>MIT License</strong><br />
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '16px', borderRadius: '12px', lineHeight: '1.5', fontFamily: 'monospace', maxHeight: '250px', overflowY: 'auto' }}>
+                    <strong>MIT License</strong><br /><br />
                     Copyright (c) 2026 Purushothamanks (Look at The Future - LAF AI Platform).<br /><br />
-                    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+                    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to inclusion of the above copyright notice.
                   </div>
                 )}
               </div>
