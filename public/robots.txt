@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://98.89.32.42.nip.io/sitemap.xml
