@@ -1,7 +1,11 @@
 #!/bin/bash
 set -e
 
-KEY_PATH="/home/purushothaman/Videos/Final-Pro-Key.pem"
+if [ -f "/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem" ]; then
+  KEY_PATH="/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem"
+else
+  KEY_PATH="/home/purushothaman/Videos/Final-Pro-Key.pem"
+fi
 AWS_HOST="ubuntu@98.89.32.42"
 REMOTE_DIR="/home/ubuntu/LAF---Rebuild"
 
