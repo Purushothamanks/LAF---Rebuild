@@ -422,6 +422,37 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     LAF Privacy Policy: All user conversations are end-to-end encrypted (E2EE) with AES-256 keys derived per username. Zero data is shared across user partitions.
                   </div>
                 )}
+
+                <button
+                  onClick={() => setShowLegalDoc(showLegalDoc === 'license' ? null : 'license')}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'var(--ds-bg-card)',
+                    border: '1px solid var(--ds-border)',
+                    color: 'var(--ds-text-primary)',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '0.88rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'space-between'
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield style={{ width: '16px', color: 'var(--ds-blue)' }} /> Legal License (MIT)
+                  </span>
+                </button>
+
+                {showLegalDoc === 'license' && (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--ds-text-secondary)', background: 'var(--ds-bg-main)', padding: '14px', borderRadius: '12px', lineHeight: '1.5', fontFamily: 'monospace' }}>
+                    <strong>MIT License</strong><br />
+                    Copyright (c) 2026 Purushothamanks (Look at The Future - LAF AI Platform).<br /><br />
+                    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+                  </div>
+                )}
               </div>
 
             </div>
