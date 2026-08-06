@@ -1045,20 +1045,31 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // PRIMARY BACKEND MODEL: OLLAMA LOCAL AI MODELS
+  // DEDICATED BACKEND MODEL: OLLAMA LOCAL AI ENGINE
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
     'http://localhost:11434/api/chat',
+    'http://host.docker.internal:11434/api/chat',
     'http://172.17.0.1:11434/api/chat'
   ];
 
-  const targetOllamaModels = ['laf-v2:latest', 'llama3.2:latest', 'llama3:latest', 'qwen2.5:latest', 'mistral:latest'];
+  const targetOllamaModels = [
+    'laf-v2:latest',
+    'llama3.3:latest',
+    'llama3.2:latest',
+    'llama3.1:latest',
+    'llama3:latest',
+    'qwen2.5:latest',
+    'mistral:latest',
+    'gemma2:latest',
+    'deepseek-r1:latest'
+  ];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetOllamaModels) {
       try {
-        console.log(`[AI-ENGINE] Routing request to Ollama Backend (${endpoint} | ${modelName})...`);
+        console.log(`[AI-ENGINE] Routing request to Ollama Dedicated Backend (${endpoint} | ${modelName})...`);
         const start = Date.now();
         const ollamaRes = await axios.post(
           endpoint,
@@ -1077,14 +1088,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 1500
+            timeout: 5000
           }
         );
 
         let content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           const duration = ((Date.now() - start) / 1000).toFixed(2);
-          console.log(`[AI-ENGINE] SUCCESS from Ollama Backend (${modelName}) in ${duration}s!`);
+          console.log(`[AI-ENGINE] SUCCESS from Dedicated Ollama Backend (${modelName}) in ${duration}s!`);
 
           return {
             text: sanitizeLlmOutput(content.trim()),
@@ -1092,7 +1103,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
           };
         }
       } catch (e) {
-        // Continue to next model/endpoint
+        // Continue trying Ollama endpoints/models
       }
     }
   }
