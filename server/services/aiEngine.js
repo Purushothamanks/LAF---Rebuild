@@ -328,36 +328,20 @@ async function generateGemmaResponse({ prompt = '', username = '', liveSearchCon
     lower.includes('how can you help') ||
     lower === 'what can you doo'
   ) {
-    return `### 🚀 Capabilities of Google Gemma 2 & LAF AI
+    return `### LAF AI Capabilities
 
-I am **Google Gemma 2**, an advanced AI engine integrated directly into the LAF platform. Here is everything I can do for you:
+LAF (Look At The Future) is an autonomous, high-performance AI product platform designed for software engineering, system architecture, analytical reasoning, and live intelligence.
 
----
+#### 1. Software Engineering & Full-Stack Development
+- **Code Generation**: Clean, production-ready code in Python, JavaScript/TypeScript, React, C++, Java, Rust, and Go.
+- **Debugging & Refactoring**: Syntax diagnostic, algorithm optimization, and runtime profiling.
+- **System Architecture**: Scalable REST APIs, microservices, database schemas, and containerized deployments.
 
-#### 💻 1. Software Engineering & Full-Stack Development
-- **Code Generation**: Write clean, production-grade code in Python, JavaScript/TypeScript, React, HTML/CSS, C++, Java, Rust, and Go.
-- **Debugging & Refactoring**: Detect syntax errors, performance bottlenecks, and optimize algorithms for $O(N)$ or $O(N \log N)$ execution.
-- **System Architecture**: Design scalable Express/Node.js REST APIs, database schemas (PostgreSQL, MongoDB), and Docker deployments.
+#### 2. Live Web Intelligence & Real-Time Search
+- **Live Search**: Fetch real-time news, documentation, technical specifications, and web information.
 
----
-
-#### 🌐 2. Live Web Intelligence & Real-Time Search
-- **Live Search**: Click the **Globe icon** (Web Search) to fetch real-time sports results, news updates, weather, and current global facts via DuckDuckGo & Wikipedia.
-
----
-
-#### 🎯 3. Career & Technical Interview Coaching
-- **Interview Preparation**: Practice data structures (Trees, Graphs, DP, Hash Maps) and behavioral questions using the STAR method.
-- **Resume Feedback**: Critique project highlights, technical skills, and ATS optimizations.
-
----
-
-#### 📐 4. Science, Mathematics & Analytical Problem Solving
-- Solve complex calculus, linear algebra, discrete math, and physics problems with step-by-step LaTeX derivations.
-
----
-
-*Ask me any question or request a code snippet to get started!*`;
+#### 3. Mathematics & Technical Problem Solving
+- Detailed derivations, algorithmic analysis, and structured step-by-step problem solving.`;
   }
 
   // 2. India Specific Question ("tell me about india", "india info", etc.)
@@ -440,22 +424,18 @@ console.log("Execution Result:", output);
     try {
       const liveData = await performLiveWebSearch(p);
       if (liveData && liveData.trim().length > 30) {
-        return `### 🌐 Information & Overview for: **"${p}"**\n\n${liveData.trim()}\n\n*Compiled by Google Gemma 2 Engine.*`;
+        return liveData.trim();
       }
     } catch (e) {}
   } else {
-    return `### 🌐 Verified Live Web Intelligence for: **"${p}"**\n\n${liveSearchContext.trim()}\n\n*Compiled by Google Gemma 2 Engine.*`;
+    return liveSearchContext.trim();
   }
 
   // 7. General Questions / Reasoning Fallback
-  return `### 💡 Analysis & Overview for: **"${p}"**
+  return `Regarding **${p}**:
 
-Addressing **"${p}"** involves understanding its core components and practical applications.
-
-- **Primary Concept**: Focuses on structured analysis, key operational parameters, and practical usage.
-- **Key Takeaways**: Formulate step-by-step methodologies to ensure accuracy and maximum efficiency.
-
-*Feel free to ask for specific code snippets, detailed calculations, or further customization on this topic!*`;
+- **Core Analysis**: Requires structured evaluation of key principles, architecture, and operational parameters.
+- **Implementation Strategy**: Follow step-by-step technical methodologies to achieve optimal execution and performance.`;
 }
 
 module.exports = {
