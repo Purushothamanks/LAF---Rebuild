@@ -26,81 +26,19 @@ export default function MediaStudio({ token }) {
   // Image Generation
   const handleGenerateImage = async (e) => {
     e.preventDefault();
-    if (!imgPrompt.trim() || imgLoading) return;
-
-    setImgLoading(true);
-    const [width, height] = aspectRatio.split('x').map(Number);
-
-    try {
-      const res = await fetch('/api/media/image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ prompt: imgPrompt, width, height, model: imgModel })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setImgResult(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setImgLoading(false);
-    }
+    alert('LAF currently does not support image, video, or audio generation features.');
   };
 
   // Audio Generation
   const handleGenerateAudio = async (e) => {
     e.preventDefault();
-    if (!audioText.trim() || audioLoading) return;
-
-    setAudioLoading(true);
-    try {
-      const res = await fetch('/api/media/audio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ text: audioText, voice: voiceProfile })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAudioResult(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setAudioLoading(false);
-    }
+    alert('LAF currently does not support image, video, or audio generation features.');
   };
 
   // Video Generation
   const handleGenerateVideo = async (e) => {
     e.preventDefault();
-    if (!videoPrompt.trim() || videoLoading) return;
-
-    setVideoLoading(true);
-    try {
-      const res = await fetch('/api/media/video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ prompt: videoPrompt, duration: videoDuration })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setVideoResult(data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setVideoLoading(false);
-    }
+    alert('LAF currently does not support image, video, or audio generation features.');
   };
 
   return (
@@ -111,9 +49,18 @@ export default function MediaStudio({ token }) {
         <h1 className="text-glow" style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '6px' }}>
           LAF Multimodal Creation Studio
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Generate high-fidelity AI Images, Audio Speech, and Motion Video using cutting-edge models.
-        </p>
+        <div style={{
+          padding: '12px 16px',
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          borderRadius: '8px',
+          color: '#f87171',
+          fontSize: '0.92rem',
+          fontWeight: '600',
+          marginTop: '8px'
+        }}>
+          ⚠️ Notice: LAF currently does not support image, video, or audio generation features.
+        </div>
       </div>
 
       {/* Sub-Tab Navigation Bar */}
