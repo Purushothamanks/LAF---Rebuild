@@ -372,11 +372,41 @@ function isGenericCodeRequest(prompt = '') {
 }
 
 /**
+ * Checks if prompt is asking about LAF memory capabilities or remembered context
+ */
+function isMemoryQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  return (
+    p.includes('context memory') ||
+    p.includes('have memory') ||
+    p.includes('has memory') ||
+    p.includes('has context memory') ||
+    p.includes('have context memory') ||
+    p.includes('remember things') ||
+    p.includes('remember context') ||
+    p.includes('do you remember') ||
+    p.includes('memory vault')
+  );
+}
+
+const LAF_MEMORY_EXPLANATION_TEXT = `Yes! **LAF AI has built-in long-term Context & Memory Vault capabilities**.
+
+### How LAF Memory Works:
+1. **Per-Session History:** Keeps track of your active conversation flow and multi-turn questions.
+2. **Encrypted User Memory Vault:** Saves key preferences, project details, and past discussions into your private isolated database vault.
+3. **Semantic Recalocation:** Automatically recalls relevant past memories and applies them into your context window during conversations.`;
+
+/**
  * Intelligent Fallback Analyzer if LLMs are unreachable
  */
 function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = '', wikiData = null) {
   const clean = prompt.trim();
   const lower = clean.toLowerCase();
+
+  // Memory Capability Query
+  if (isMemoryQuery(clean)) {
+    return LAF_MEMORY_EXPLANATION_TEXT;
+  }
 
   // Project Idea Query
   if (isProjectIdeaQuery(clean)) {
@@ -418,7 +448,7 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
     return `Hello **${username}**! 👋 How can I assist you with software development, system design, or problem solving today?`;
   }
 
-  return `Here is the response for **"${clean}"**:\n\nCould you please specify your target programming language, framework, or detailed requirements for this task?`;
+  return `I have received your request regarding **"${clean}"**. Please let me know any additional details or specific requirements so I can assist you best!`;
 }
 
 /**
@@ -444,7 +474,15 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     };
   }
 
-  // 2. Tamil Nadu Government / CM Query Interception
+  // 2. Memory Capability Interception
+  if (isMemoryQuery(cleanPrompt)) {
+    return {
+      text: LAF_MEMORY_EXPLANATION_TEXT,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  // 3. Tamil Nadu Government / CM Query Interception
   if (isTnGovernmentQuery(cleanPrompt)) {
     return {
       text: TN_GOVT_LIVE_TEXT,
