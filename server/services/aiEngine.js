@@ -579,16 +579,81 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
     return generateSmartCodeFallback(clean);
   }
 
-  // 8. General Knowledge & All-Round Performer Analysis
-  return `### Analytical Overview: **"${clean}"**
+  // 8. Dynamic Expert Answer Generator for All Topics
+  return generateDynamicExpertAnswer(clean);
+}
 
-1. **Core Concept**: Addressing your inquiry regarding **"${clean}"**, focusing on foundational principles, structured methodologies, and practical applications.
-2. **Key Highlights & Principles**:
-   - Establish clear objectives and structured requirements.
-   - Apply analytical and systematic approaches to achieve optimal efficiency.
-   - Iterate and refine for continuous quality improvement.
+/**
+ * Generates structured, rich, topic-specific expert guides for non-code prompts (Interview, System Design, Career, Strategy)
+ */
+function generateDynamicExpertAnswer(prompt = '') {
+  const p = prompt.toLowerCase().trim();
 
-*Feel free to ask for step-by-step code, detailed calculations, or specific strategies on this topic!*`;
+  // Interview / Job Career Prep
+  if (p.includes('interview') || p.includes('job') || p.includes('career') || p.includes('hire')) {
+    return `### 🎯 Comprehensive Job & Technical Interview Preparation Guide
+
+Preparing for interviews requires a targeted strategy across 4 core dimensions:
+
+1. **The STAR Method (Behavioral & HR Round)**:
+   - **Situation**: Set the background context in 1-2 sentences.
+   - **Task**: Describe your specific responsibility or challenge.
+   - **Action**: Detail the exact steps **YOU** took to solve the problem.
+   - **Result**: Highlight quantifiable outcomes (*"reduced latency by 40%", "increased conversion by 25%"*).
+
+2. **Technical & Coding Checklist**:
+   - Master core data structures (Arrays, Hash Tables, Trees, Graphs).
+   - Practice key algorithm patterns (Two Pointers, Sliding Window, Binary Search, BFS/DFS).
+   - Always state constraints, brute force solution, and $O(N)$ optimization out loud before coding.
+
+3. **System Design & Architecture**:
+   - Master Load Balancing (Nginx), Caching (Redis), Database Sharding (SQL vs NoSQL), and Async Queues (Kafka).
+
+4. **Questions to Ask the Interviewer**:
+   - *"What does success look like in the first 90 days for this role?"*
+   - *"What are the biggest technical challenges the team is currently solving?"*`;
+  }
+
+  // System Architecture / API / Backend
+  if (p.includes('api') || p.includes('backend') || p.includes('system') || p.includes('server') || p.includes('database')) {
+    return `### ⚡ System Architecture & API Design Guide
+
+1. **RESTful Principles**:
+   - Use standard HTTP verbs (\`GET\`, \`POST\`, \`PUT\`, \`DELETE\`).
+   - Return structured JSON payloads with standard HTTP status codes (\`200 OK\`, \`201 Created\`, \`400 Bad Request\`, \`401 Unauthorized\`, \`500 Server Error\`).
+
+2. **Performance & Caching**:
+   - Implement Redis caching for high-read queries to achieve sub-50ms responses.
+   - Apply database indexing on frequently queried foreign keys.
+
+3. **Security & Authentication**:
+   - Use JWT with short expiration and HTTP-only refresh tokens.
+   - Enforce HTTPS and rate limiting to protect against DDoS attacks.`;
+  }
+
+  // Web Development / HTML / CSS / Frontend
+  if (p.includes('html') || p.includes('css') || p.includes('web') || p.includes('component') || p.includes('ui') || p.includes('frontend')) {
+    return generateSmartCodeFallback(prompt);
+  }
+
+  // Default Rich Universal Response
+  return `### 💡 Comprehensive Guide & Solution for: **"${prompt}"**
+
+To address **"${prompt}"** effectively, here is a structured step-by-step breakdown:
+
+#### 1. Core Principles & Overview
+- Focus on defining clear goals and understanding essential constraints.
+- Deconstruct the challenge into manageable, modular components.
+
+#### 2. Key Action Plan & Implementation
+- **Step 1:** Establish your baseline environment and gather core requirements.
+- **Step 2:** Execute core solution using industry best practices and proven patterns.
+- **Step 3:** Test, validate edge cases, and refine for long-term scalability.
+
+#### 3. Best Practices & Optimization
+- Maintain high modularity, comprehensive documentation, and performance monitoring.
+
+*Feel free to ask for specific code examples, templates, or step-by-step guidance on any step!*`;
 }
 
 /**

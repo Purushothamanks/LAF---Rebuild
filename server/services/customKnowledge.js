@@ -1,11 +1,56 @@
 /**
  * Comprehensive All-in-One Multi-Domain Knowledge Base & Custom Trained AI Engine
  * Covers Software Engineering, Web UI, Data Science, General Science, Mathematics,
- * Business Strategy, Professional Writing, Career Guidance, and Productivity.
+ * Business Strategy, Professional Writing, Career Guidance, Interview Prep, and Productivity.
  */
 
 const KNOWLEDGE_REPOSITORY = [
-  // 1. HTML/CSS Portfolio
+  // 1. Job & Technical Interview Preparation
+  {
+    keywords: ['prepare for interview', 'interview prep', 'job interview', 'coding interview', 'prepare interview', 'interview tips', 'interview questions', 'hr round'],
+    category: 'Career & Interviews',
+    response: `### 🎯 Comprehensive Job & Technical Interview Preparation Guide
+
+Preparing for interviews requires a targeted strategy across 4 core dimensions:
+
+---
+
+### 1. The STAR Method (Behavioral & HR Round)
+Structure every situational answer using **STAR**:
+- **Situation**: Set the background context in 1-2 sentences.
+- **Task**: Describe your specific responsibility or challenge.
+- **Action**: Detail the exact steps **YOU** took to solve the problem.
+- **Result**: Highlight quantifiable outcomes (*"reduced load times by 40%", "increased revenue by $15k"*).
+
+---
+
+### 2. Coding & Technical Interview Checklist
+- **Data Structures**: Arrays, Hash Maps, Linked Lists, Trees, Graphs, Stacks, Queues, Heaps.
+- **Algorithms**: Two Pointers, Sliding Window, Binary Search, BFS/DFS, Dynamic Programming.
+- **5-Step Problem Solving Framework**:
+  1. **Clarify Constraints**: Ask about input size, null inputs, and time/space complexity limits.
+  2. **Test Cases**: Walk through 1-2 test cases manually out loud.
+  3. **Brute Force First**: Briefly state the naive solution.
+  4. **Optimize**: Improve to $O(N \\log N)$ or $O(N)$.
+  5. **Clean Code & Edge Cases**: Write modular code and test edge cases (empty input, single element).
+
+---
+
+### 3. System Design Fundamentals (Mid/Senior Roles)
+- **Scalability**: Horizontal vs Vertical Scaling, Load Balancers (Nginx, HAProxy).
+- **Caching**: Redis / Memcached strategies (Cache-Aside, Write-Through).
+- **Database Selection**: SQL (PostgreSQL) vs NoSQL (MongoDB).
+- **Asynchronous Processing**: Message Queues (Kafka, RabbitMQ) for microservice decoupling.
+
+---
+
+### 4. Top Questions to Ask the Interviewer at the End
+1. *"What does success look like for someone in this role during their first 90 days?"*
+2. *"What are the biggest technical challenges the engineering team is solving right now?"*
+3. *"How does the team balance shipping new features with reducing technical debt?"*`
+  },
+
+  // 2. HTML/CSS Portfolio
   {
     keywords: ['portfolio', 'html css portfolio', 'build portfolio', 'developer portfolio', 'personal website'],
     category: 'HTML/CSS UI',
@@ -81,7 +126,7 @@ const KNOWLEDGE_REPOSITORY = [
 \`\`\``
   },
 
-  // 2. Login Page UI
+  // 3. Login Page UI
   {
     keywords: ['login page', 'login form', 'html login', 'css login', 'sign in page'],
     category: 'HTML/CSS UI',
@@ -129,7 +174,57 @@ const KNOWLEDGE_REPOSITORY = [
 \`\`\``
   },
 
-  // 3. General Science & Quantum Mechanics
+  // 4. Admin Dashboard Layout
+  {
+    keywords: ['admin dashboard', 'dashboard ui', 'dashboard template', 'sidebar layout'],
+    category: 'HTML/CSS UI',
+    response: `Here is a complete **Admin Dashboard HTML & CSS Layout**:
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; min-height: 100vh; }
+    aside { width: 240px; background: #1e293b; padding: 1.5rem; border-right: 1px solid rgba(255,255,255,0.05); }
+    aside h2 { color: #38bdf8; font-size: 1.25rem; margin-bottom: 2rem; }
+    aside nav a { display: block; color: #94a3b8; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
+    aside nav a.active, aside nav a:hover { background: #334155; color: #38bdf8; }
+    main { flex: 1; padding: 2rem; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+    .stat-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .stat-card h4 { color: #94a3b8; font-size: 0.875rem; }
+    .stat-card p { font-size: 1.8rem; font-weight: 700; color: #38bdf8; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <aside>
+    <h2>Dashboard</h2>
+    <nav>
+      <a href="#" class="active">Overview</a>
+      <a href="#">Analytics</a>
+      <a href="#">Users</a>
+      <a href="#">Settings</a>
+    </nav>
+  </aside>
+  <main>
+    <h1>Welcome, Admin</h1>
+    <div class="stats">
+      <div class="stat-card"><h4>Total Users</h4><p>12,450</p></div>
+      <div class="stat-card"><h4>Active Requests</h4><p>99.98%</p></div>
+      <div class="stat-card"><h4>Revenue</h4><p>$48,290</p></div>
+    </div>
+  </main>
+</body>
+</html>
+\`\`\``
+  },
+
+  // 5. General Science & Quantum Mechanics
   {
     keywords: ['quantum mechanics', 'quantum computing', 'theory of relativity', 'physics', 'einstein'],
     category: 'Science & Physics',
@@ -139,7 +234,7 @@ const KNOWLEDGE_REPOSITORY = [
 
 #### 1. Core Principles:
 - **Wave-Particle Duality:** Matter and light exhibit behaviors of both continuous waves and discrete particles (photons/electrons).
-- **Superposition:** Quantum states can exist in multiple combinations simultaneously until measured (e.g. $|\psi\\rangle = \\alpha|0\\rangle + \\beta|1\\rangle$).
+- **Superposition:** Quantum states can exist in multiple combinations simultaneously until measured (e.g. $|\\psi\\rangle = \\alpha|0\\rangle + \\beta|1\\rangle$).
 - **Quantum Entanglement:** Intertwined particles where the quantum state of one instantly dictates the state of another, regardless of distance.
 - **Heisenberg Uncertainty Principle:** Formulated as $\\Delta x \\cdot \\Delta p \\ge \\frac{\\hbar}{2}$, stating position and momentum cannot be simultaneously measured with arbitrary precision.
 
@@ -148,7 +243,7 @@ const KNOWLEDGE_REPOSITORY = [
 - **Semiconductors & Lasers:** Modern transistors, CPUs, and optical communications rely on quantum energy band theory.`
   },
 
-  // 4. Mathematics & Calculus
+  // 6. Mathematics & Calculus
   {
     keywords: ['calculus', 'algebra', 'linear algebra', 'derivative', 'integral', 'probability'],
     category: 'Mathematics',
@@ -167,7 +262,7 @@ Mathematical reasoning provides the foundation for computer science, quantitativ
 - **Eigenvalues & Eigenvectors:** Solves $A v = \\lambda v$, central to PCA dimension reduction and PageRank algorithms.`
   },
 
-  // 5. Business Strategy & Entrepreneurship
+  // 7. Business Strategy & Entrepreneurship
   {
     keywords: ['business strategy', 'startup', 'marketing funnel', 'business model', 'entrepreneurship'],
     category: 'Business & Management',
@@ -187,7 +282,7 @@ Building a sustainable, high-growth venture requires aligning product value, cus
 - **Phase 3 (Scale):** Expand sales capacity, automate operations, and solidify competitive moat.`
   },
 
-  // 6. Resume & Cover Letter Writing
+  // 8. Resume & Cover Letter Writing
   {
     keywords: ['resume', 'cover letter', 'cold email', 'write resume', 'job application'],
     category: 'Professional Writing',
@@ -216,7 +311,7 @@ Best regards,
 \`\`\``
   },
 
-  // 7. Productivity & Time Management
+  // 9. Productivity & Time Management
   {
     keywords: ['productivity', 'pomodoro', 'time management', 'feynman technique', 'study habits'],
     category: 'Personal Development',
