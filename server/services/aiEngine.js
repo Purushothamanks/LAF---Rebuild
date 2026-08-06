@@ -268,18 +268,32 @@ function isUserIdentityQuery(prompt = '') {
 }
 
 function handleUserIdentityQuery(username, prompt) {
+  const isDev = username && (
+    username.toLowerCase().includes('purushothaman') ||
+    username.toLowerCase().includes('developer')
+  );
+
   const memoryMatches = searchUserMemory(username, prompt);
   let memoryText = '';
+
   if (memoryMatches && memoryMatches.length > 0) {
-    memoryText = `\n\n### Recalled Vault Notes & Preferences:\n` +
-      memoryMatches.map(m => `* **${m.date}**: ${m.content}`).join('\n');
+    memoryText = `\n\n### Your Stored Context Memory:\n` +
+      memoryMatches.map(m => `* **${m.date}** [${m.role.toUpperCase()}]: ${m.content}`).join('\n');
   }
 
-  return `### User Profile Details\n\n` +
-    `* **Name**: **${username || 'Purushothaman K S'}**\n` +
-    `* **Role**: Lead Developer & Creator of **LAF AI Platform**\n` +
-    `* **LinkedIn Profile**: https://www.linkedin.com/in/purushothaman-k-s-158900282/` +
-    memoryText;
+  if (isDev) {
+    return `### Developer Profile Details\n\n` +
+      `* **Name**: **Purushothaman K S**\n` +
+      `* **Role**: Lead Developer & Creator of **LAF AI Platform**\n` +
+      `* **LinkedIn Profile**: https://www.linkedin.com/in/purushothaman-k-s-158900282/` +
+      memoryText;
+  }
+
+  if (memoryText) {
+    return `Here is what I currently know about you from your context memory vault:${memoryText}\n\nFeel free to share more details about your work, goals, or preferences so I can keep your context memory updated!`;
+  }
+
+  return `I don't know much about you yet! 😊 Please tell me a little about yourself (your name, interests, work, or preferences) and I will save it into your isolated context memory vault for our future conversations.`;
 }
 
 /**
