@@ -2,6 +2,7 @@ const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { fetchWikiSummary } = require('./trendEngine');
 const { searchCustomKnowledge } = require('./customKnowledge');
+const { getRagContext } = require('./ragEngine');
 
 const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for high-performance software engineering, visual diagnostics, mathematical reasoning, and structured advice.
 
@@ -911,7 +912,7 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
       {
         model: targetModel,
         messages: messages,
-        temperature: 0.7,
+        temperature: 0.2,
         max_tokens: 1500
       },
       {
@@ -1020,7 +1021,13 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     // Fail-safe memory lookup
   }
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveSearchContext ? '\n' + liveSearchContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
+  // Retrieve Grounded RAG Context Anchors
+  let ragContext = '';
+  try {
+    ragContext = getRagContext(cleanPrompt);
+  } catch (e) {}
+
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${ragContext ? '\n' + ragContext : ''}${liveSearchContext ? '\n' + liveSearchContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
@@ -1062,7 +1069,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
             options: {
               num_ctx: 2048,
               num_predict: 1024,
-              temperature: 0.7,
+              temperature: 0.2,
               top_k: 20,
               top_p: 0.9,
               num_thread: 4
