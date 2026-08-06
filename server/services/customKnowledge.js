@@ -5,6 +5,35 @@
  */
 
 const KNOWLEDGE_REPOSITORY = [
+  // Palindrome & Strings
+  {
+    keywords: ['palindrome', 'check palindrome', 'string palindrome', 'palindrome python'],
+    category: 'Algorithms',
+    response: `Here is a complete, optimized **Palindrome Checker in Python & JavaScript**:
+
+### Python Implementation:
+\`\`\`python
+def is_palindrome(s: str) -> bool:
+    # Clean string: lowercase and remove non-alphanumeric characters
+    cleaned = ''.join(char.lower() for char in s if char.isalnum())
+    return cleaned == cleaned[::-1]
+
+# Test Cases
+print(is_palindrome("A man, a plan, a canal: Panama"))  # True
+print(is_palindrome("race a car"))                      # False
+\`\`\`
+
+### JavaScript Implementation:
+\`\`\`javascript
+function isPalindrome(str) {
+  const cleaned = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return cleaned === cleaned.split('').reverse().join('');
+}
+
+console.log(isPalindrome("A man, a plan, a canal: Panama")); // true
+console.log(isPalindrome("race a car"));                     // false
+\`\`\``
+  },
   // 1. Job & Technical Interview Preparation
   {
     keywords: ['prepare for interview', 'interview prep', 'job interview', 'coding interview', 'prepare interview', 'interview tips', 'interview questions', 'hr round'],

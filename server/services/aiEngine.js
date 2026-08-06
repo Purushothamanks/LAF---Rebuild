@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
+const { searchCustomKnowledge } = require('./customKnowledge');
 
 const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for high-performance software engineering, visual diagnostics, mathematical reasoning, and structured advice.
 
@@ -223,63 +224,33 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 3. Direct Passthrough to Ollama Backend API
-  const ollamaEndpoints = [
-    'http://127.0.0.1:11434/api/chat',
-    'http://localhost:11434/api/chat',
-    'http://host.docker.internal:11434/api/chat',
-    'http://172.17.0.1:11434/api/chat'
-  ];
-
-  const targetOllamaModels = ['laf-v2:latest', 'gemma2:latest', 'gemma:latest', 'llama3.3:latest', 'llama3.2:latest', 'llama3:latest', 'qwen2.5:latest', 'mistral:latest'];
-
-  for (const endpoint of ollamaEndpoints) {
-    for (const modelName of targetOllamaModels) {
-      try {
-        console.log(`[AI-ENGINE] Direct Ollama Call (${endpoint} | ${modelName})...`);
-        const start = Date.now();
-        const ollamaRes = await axios.post(
-          endpoint,
-          {
-            model: modelName,
-            messages: formattedMessages,
-            stream: false,
-            options: {
-              num_ctx: 4096,
-              num_predict: 2048,
-              temperature: 0.7
-            }
-          },
-          {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 8000
-          }
-        );
-
-        let content = ollamaRes.data?.message?.content;
-        if (content && content.trim().length > 0) {
-          const duration = ((Date.now() - start) / 1000).toFixed(2);
-          console.log(`[AI-ENGINE] Ollama response generated in ${duration}s!`);
-
-          return {
-            text: sanitizeLlmOutput(content.trim()),
-            provider: enableWebSearch ? `Ollama (${modelName}) + Web Search` : `Ollama (${modelName})`
-          };
-        }
-      } catch (e) {
-        // Continue to next endpoint / model
-      }
-    }
-  }
-
-  // 4. Secondary Cloud Fallback (Google Gemma 2 & Free 70B Models)
+  // 3. Direct Connection to Primary Google Gemma Model (google/gemma-2-9b-it:free)
   const gemmaRes = await callOmniRouter({
     messages: formattedMessages,
     model: 'google/gemma-2-9b-it:free',
     apiKey: customApiKey
   });
-  if (gemmaRes) return gemmaRes;
+  if (gemmaRes) {
+    return {
+      text: gemmaRes.text,
+      provider: enableWebSearch ? 'Google Gemma 2 (Free) + Web Search' : 'Google Gemma 2 (Free)'
+    };
+  }
 
+  // Backup Gemma 27B Model
+  const gemma27bRes = await callOmniRouter({
+    messages: formattedMessages,
+    model: 'google/gemma-2-27b-it',
+    apiKey: customApiKey
+  });
+  if (gemma27bRes) {
+    return {
+      text: gemma27bRes.text,
+      provider: enableWebSearch ? 'Google Gemma 27B + Web Search' : 'Google Gemma 27B'
+    };
+  }
+
+  // Backup Free 70B Model
   const omniRes = await callOmniRouter({
     messages: formattedMessages,
     model: 'meta-llama/llama-3.3-70b-instruct:free',
