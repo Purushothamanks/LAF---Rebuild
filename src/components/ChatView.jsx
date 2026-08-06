@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, Pencil } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Globe, Cpu } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -42,6 +42,8 @@ export default function ChatView({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('laf-v2');
 
   const messagesEndRef = useRef(null);
 
@@ -68,7 +70,9 @@ export default function ChatView({
           prompt: userMsgText,
           conversationId: activeConvId,
           history: messages,
-          customApiKey
+          customApiKey,
+          selectedModel,
+          enableWebSearch: webSearchEnabled
         })
       });
 
@@ -194,6 +198,60 @@ export default function ChatView({
               <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.98rem', marginBottom: '36px' }}>
                 How can I help you today?
               </p>
+
+              {/* Controls bar: Web Search Toggle Symbol & Omni Router Model Selector */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  style={{
+                    background: webSearchEnabled ? 'rgba(56, 189, 248, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                    border: webSearchEnabled ? '1px solid #38bdf8' : '1px solid var(--ds-border)',
+                    color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
+                    borderRadius: '20px',
+                    padding: '6px 14px',
+                    fontSize: '0.82rem',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: webSearchEnabled ? '0 0 12px rgba(56, 189, 248, 0.3)' : 'none'
+                  }}
+                  title={webSearchEnabled ? "Web Search Active: Fetching live web context" : "Click to enable Web Search"}
+                >
+                  <Globe style={{ width: '15px', height: '15px' }} />
+                  <span>{webSearchEnabled ? '🌐 Web Search Enabled' : '🌐 Web Search Disabled'}</span>
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 12px', borderRadius: '20px', border: '1px solid var(--ds-border)' }}>
+                  <Cpu style={{ width: '15px', height: '15px', color: 'var(--ds-blue)' }} />
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--ds-text-primary)',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="laf-v2" style={{ background: '#171c26', color: '#fff' }}>⚡ LAF Local Model (Ollama)</option>
+                    <option value="omni/auto" style={{ background: '#171c26', color: '#fff' }}>🌐 Omni Router (Auto 250+ Models)</option>
+                    <option value="openrouter/deepseek/deepseek-r1" style={{ background: '#171c26', color: '#fff' }}>🧠 DeepSeek R1 (Omni)</option>
+                    <option value="openrouter/openai/gpt-4o" style={{ background: '#171c26', color: '#fff' }}>🚀 GPT-4o (Omni)</option>
+                    <option value="openrouter/anthropic/claude-3.5-sonnet" style={{ background: '#171c26', color: '#fff' }}>💎 Claude 3.5 Sonnet (Omni)</option>
+                    <option value="openrouter/meta-llama/llama-3.3-70b-instruct:free" style={{ background: '#171c26', color: '#fff' }}>🦙 Llama 3.3 70B (Free)</option>
+                    <option value="openrouter/google/gemini-2.0-flash-exp:free" style={{ background: '#171c26', color: '#fff' }}>⚡ Gemini 2.0 Flash (Free)</option>
+                    <option value="openrouter/qwen/qwen-2.5-72b-instruct" style={{ background: '#171c26', color: '#fff' }}>🔮 Qwen 2.5 72B (Omni)</option>
+                    <option value="openrouter/mistralai/mistral-7b-instruct:free" style={{ background: '#171c26', color: '#fff' }}>🌊 Mistral 7B (Free)</option>
+                  </select>
+                </div>
+              </div>
 
               {/* Floating Centered Oval Input Box */}
               <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
@@ -368,6 +426,59 @@ export default function ChatView({
       {/* Floating Bottom Input Card */}
       {messages.length > 0 && (
         <div style={{ padding: '0 20px 16px 20px', maxWidth: '820px', width: '100%', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+              style={{
+                background: webSearchEnabled ? 'rgba(56, 189, 248, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                border: webSearchEnabled ? '1px solid #38bdf8' : '1px solid var(--ds-border)',
+                color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
+                borderRadius: '16px',
+                padding: '4px 10px',
+                fontSize: '0.76rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: webSearchEnabled ? '0 0 10px rgba(56, 189, 248, 0.3)' : 'none'
+              }}
+              title={webSearchEnabled ? "Web Search Active" : "Click to enable Web Search"}
+            >
+              <Globe style={{ width: '13px', height: '13px' }} />
+              <span>{webSearchEnabled ? '🌐 Web Search ON' : '🌐 Web Search OFF'}</span>
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 10px', borderRadius: '16px', border: '1px solid var(--ds-border)' }}>
+              <Cpu style={{ width: '13px', height: '13px', color: 'var(--ds-blue)' }} />
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--ds-text-primary)',
+                  fontSize: '0.76rem',
+                  fontWeight: '700',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="laf-v2" style={{ background: '#171c26', color: '#fff' }}>⚡ LAF Local Model (Ollama)</option>
+                <option value="omni/auto" style={{ background: '#171c26', color: '#fff' }}>🌐 Omni Router (Auto 250+ Models)</option>
+                <option value="openrouter/deepseek/deepseek-r1" style={{ background: '#171c26', color: '#fff' }}>🧠 DeepSeek R1 (Omni)</option>
+                <option value="openrouter/openai/gpt-4o" style={{ background: '#171c26', color: '#fff' }}>🚀 GPT-4o (Omni)</option>
+                <option value="openrouter/anthropic/claude-3.5-sonnet" style={{ background: '#171c26', color: '#fff' }}>💎 Claude 3.5 Sonnet (Omni)</option>
+                <option value="openrouter/meta-llama/llama-3.3-70b-instruct:free" style={{ background: '#171c26', color: '#fff' }}>🦙 Llama 3.3 70B (Free)</option>
+                <option value="openrouter/google/gemini-2.0-flash-exp:free" style={{ background: '#171c26', color: '#fff' }}>⚡ Gemini 2.0 Flash (Free)</option>
+                <option value="openrouter/qwen/qwen-2.5-72b-instruct" style={{ background: '#171c26', color: '#fff' }}>🔮 Qwen 2.5 72B (Omni)</option>
+                <option value="openrouter/mistralai/mistral-7b-instruct:free" style={{ background: '#171c26', color: '#fff' }}>🌊 Mistral 7B (Free)</option>
+              </select>
+            </div>
+          </div>
+
           <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
             <textarea
               value={inputPrompt}

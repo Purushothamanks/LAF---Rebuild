@@ -532,18 +532,78 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
 
   // Greeting
   if (['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening', 'good afternoon'].some(g => lower.startsWith(g))) {
-    return `Hello **${username}**! 👋 How can I assist you with software development, system design, or problem solving today?`;
+    return `Hello **${username}**! 👋 How can I assist you today?`;
+  }
+
+  // Code Generation Fallback
+  if (isGenericCodeRequest(clean) || clean.toLowerCase().includes('code') || clean.toLowerCase().includes('function') || clean.toLowerCase().includes('script')) {
+    return `Here is the code solution for **"${clean}"**:\n\n\`\`\`javascript\n// Solution for: ${clean}\nfunction solution() {\n  console.log("Processing request: ${clean}");\n  // Implement core logic here\n  return true;\n}\n\nsolution();\n\`\`\`\n\n*Feel free to specify if you need this in Python, TypeScript, C++, or Go!*`;
   }
 
   return `I have received your request regarding **"${clean}"**. Please let me know any additional details or specific requirements so I can assist you best!`;
 }
 
 /**
- * High-Speed Direct Passthrough Engine to Ollama AI Models with Intelligent Intent Analysis
+ * Omni Router API Integrator (Access to 250+ Foundation Models)
  */
-async function generateResponse({ username, prompt, history = [], customApiKey }) {
+async function callOmniRouter({ messages, model = 'openrouter/auto', apiKey }) {
+  try {
+    let targetModel = model;
+    if (targetModel.startsWith('openrouter/')) {
+      targetModel = targetModel.replace('openrouter/', '');
+    } else if (targetModel.startsWith('omni/')) {
+      targetModel = targetModel.replace('omni/', '');
+    }
+    if (targetModel === 'auto' || targetModel === 'omni/auto') {
+      targetModel = 'meta-llama/llama-3.3-70b-instruct:free';
+    }
+
+    const keyToUse = apiKey || process.env.OPENROUTER_API_KEY || process.env.OMNI_ROUTER_API_KEY || '';
+
+    console.log(`[AI-ENGINE] Routing request to Omni Router model (${targetModel})...`);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:5173',
+      'X-Title': 'LAF AI Platform'
+    };
+    if (keyToUse) {
+      headers['Authorization'] = `Bearer ${keyToUse}`;
+    }
+
+    const res = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: targetModel,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 1500
+      },
+      {
+        headers,
+        timeout: 12000
+      }
+    );
+
+    const content = res.data?.choices?.[0]?.message?.content;
+    if (content && content.trim()) {
+      return {
+        text: sanitizeLlmOutput(content.trim()),
+        provider: `Omni Router (${targetModel})`
+      };
+    }
+  } catch (err) {
+    console.error(`[AI-ENGINE] Omni Router error: ${err.message}`);
+  }
+  return null;
+}
+
+/**
+ * High-Speed Direct Passthrough Engine to Ollama AI Models & Omni Router with Intelligent Intent Analysis
+ */
+async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}"`);
+  console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
 
   // 0. Developer Query Interception
   if (isDeveloperQuery(cleanPrompt)) {
@@ -596,7 +656,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // 5. Greeting Interception
   if (isGreetingQuery(cleanPrompt)) {
     return {
-      text: `Hello **${username}**! 👋 How can I assist you today with software development, system design, or problem solving?`,
+      text: `Hello **${username}**! 👋 How can I assist you today?`,
       provider: 'LAF Core Engine'
     };
   }
@@ -609,24 +669,18 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     };
   }
 
-  // 4. Generic Code Request Interception: Ask for purpose & language preference
-  if (isGenericCodeRequest(cleanPrompt)) {
-    return {
-      text: `Before I generate the code, could you please specify your **preferred programming language** (e.g. *JavaScript*, *Python*, *Go*, *C++*, *HTML/CSS*) and the **main purpose / target framework** for your project? 😊`,
-      provider: 'LAF Assistant'
-    };
-  }
-
-  // Fetch Live Wikipedia Knowledge Context for factual queries
+  // Fetch Live Wikipedia Knowledge Context ONLY if user enabled Web Search symbol
   let liveWikiContext = '';
   let wikiData = null;
-  try {
-    wikiData = await resolveWikipediaKnowledge(cleanPrompt);
-    if (wikiData) {
-      liveWikiContext = `\n[BACKGROUND WIKIPEDIA REFERENCE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
+  if (enableWebSearch) {
+    try {
+      wikiData = await resolveWikipediaKnowledge(cleanPrompt);
+      if (wikiData) {
+        liveWikiContext = `\n[BACKGROUND WIKIPEDIA REFERENCE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
+      }
+    } catch (e) {
+      // Fail-safe Wikipedia lookup
     }
-  } catch (e) {
-    // Fail-safe Wikipedia lookup
   }
 
   // 5. Always Check User Context Memory
@@ -657,6 +711,18 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
+
+  // -------------------------------------------------------------
+  // 5.5 EXPLICIT OMNI ROUTER SELECTION CHECK
+  // -------------------------------------------------------------
+  if (selectedModel && (selectedModel.startsWith('omni/') || selectedModel.startsWith('openrouter/'))) {
+    const omniRes = await callOmniRouter({
+      messages: formattedMessages,
+      model: selectedModel,
+      apiKey: customApiKey
+    });
+    if (omniRes) return omniRes;
+  }
 
   // -------------------------------------------------------------
   // 6. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS
@@ -718,6 +784,16 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
       }
     }
   }
+
+  // -------------------------------------------------------------
+  // 6.5 OMNI ROUTER FALLBACK
+  // -------------------------------------------------------------
+  const omniFallback = await callOmniRouter({
+    messages: formattedMessages,
+    model: selectedModel || 'omni/auto',
+    apiKey: customApiKey
+  });
+  if (omniFallback) return omniFallback;
 
   // -------------------------------------------------------------
   // 7. Backup: Gemini API

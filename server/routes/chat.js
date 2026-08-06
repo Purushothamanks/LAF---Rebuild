@@ -26,7 +26,7 @@ function authMiddleware(req, res, next) {
  */
 router.post('/send', authMiddleware, async (req, res) => {
   try {
-    const { prompt, conversationId, history = [], customApiKey, concisenessMode = 'short' } = req.body;
+    const { prompt, conversationId, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false, concisenessMode = 'short' } = req.body;
     const cleanPrompt = sanitizeInput(prompt);
 
     if (!cleanPrompt) {
@@ -43,6 +43,8 @@ router.post('/send', authMiddleware, async (req, res) => {
       prompt: cleanPrompt,
       history,
       customApiKey,
+      selectedModel,
+      enableWebSearch,
       concisenessMode
     });
 
@@ -82,6 +84,27 @@ router.post('/send', authMiddleware, async (req, res) => {
       }
     });
   }
+});
+
+/**
+ * GET /api/chat/models
+ * Returns available AI models (Local Ollama & Omni Router 250+ Models)
+ */
+router.get('/models', authMiddleware, (req, res) => {
+  res.json({
+    success: true,
+    models: [
+      { id: 'laf-v2', name: 'LAF Local Model (Ollama)', provider: 'Local', desc: 'Sub-350ms ultra-fast local reasoning' },
+      { id: 'omni/auto', name: 'Omni Router (Auto 250+ Models)', provider: 'Omni Router', desc: 'Auto-selects best model from 250+ AI network' },
+      { id: 'openrouter/deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'Omni Router', desc: 'Advanced math, logic & deep reasoning' },
+      { id: 'openrouter/openai/gpt-4o', name: 'GPT-4o (Omni)', provider: 'Omni Router', desc: 'Flagship multimodal intelligence' },
+      { id: 'openrouter/anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Omni Router', desc: 'Superior coding & nuanced reasoning' },
+      { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Free)', provider: 'Omni Router', desc: 'Meta open-weight 70B flagship model' },
+      { id: 'openrouter/google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free)', provider: 'Omni Router', desc: 'Ultra-fast multimodal Google model' },
+      { id: 'openrouter/qwen/qwen-2.5-72b-instruct', name: 'Qwen 2.5 72B', provider: 'Omni Router', desc: 'State of the art multilingual coding LLM' },
+      { id: 'openrouter/mistralai/mistral-7b-instruct:free', name: 'Mistral 7B (Free)', provider: 'Omni Router', desc: 'High-speed compact instruction model' }
+    ]
+  });
 });
 
 /**
