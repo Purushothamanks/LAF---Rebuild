@@ -154,22 +154,85 @@ const GENERAL_AI_EXPLANATION = `**Artificial Intelligence (AI)** refers to the s
 AI is designed to enhance human productivity, automate complex workflows, and solve critical scientific and engineering challenges.`;
 
 /**
+ * Real-time Wikipedia Search Resolver: Resolves any query into verified Wikipedia facts
+ */
+async function resolveWikipediaKnowledge(prompt = '') {
+  const p = prompt.trim();
+  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p)) {
+    return null;
+  }
+
+  const cleanSearch = p
+    .replace(/who is|what is|tell me about|explain|give me|find|search for|info on|current|details|the/gi, '')
+    .trim() || p;
+
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanSearch)}&limit=2&format=json`;
+    const searchRes = await axios.get(searchUrl, {
+      headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
+      timeout: 4000
+    });
+
+    const searchHits = searchRes.data?.query?.search || [];
+    if (searchHits.length > 0) {
+      const topTitle = searchHits[0].title;
+      const sumUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`;
+      const sumRes = await axios.get(sumUrl, {
+        headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
+        timeout: 4000
+      });
+
+      if (sumRes.data && sumRes.data.extract) {
+        return {
+          title: sumRes.data.title,
+          extract: sumRes.data.extract,
+          url: sumRes.data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(topTitle)}`
+        };
+      }
+    }
+  } catch (e) {
+    // Fail-safe Wikipedia lookup
+  }
+  return null;
+}
+
+/**
  * Automatically extracts potential topic from prompt and fetches real-time Wikipedia context
  */
 async function getLiveWikipediaContext(prompt = '') {
-  const p = prompt.trim();
-  const match = p.match(/(?:what is|who is|tell me about|explain|define|search wikipedia for|info on)\s+([^?\.\!\n]+)/i);
-  if (match && match[1]) {
-    const topic = match[1].trim();
-    if (topic.length > 2 && !['laf', 'developer', 'you', 'ai'].includes(topic.toLowerCase())) {
-      const wiki = await fetchWikiSummary(topic);
-      if (wiki) {
-        return `\n[VERIFIED WIKIPEDIA LIVE KNOWLEDGE: "${wiki.title}"]:\n${wiki.description}\nSource: ${wiki.url}\n`;
-      }
-    }
+  const wikiData = await resolveWikipediaKnowledge(prompt);
+  if (wikiData) {
+    return `\n[VERIFIED WIKIPEDIA LIVE KNOWLEDGE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
   }
   return '';
 }
+
+/**
+ * Checks if prompt is asking for project ideas
+ */
+function isProjectIdeaQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const keywords = ['project idea', 'project ideas', 'suggest project', 'idea for project', 'give me project', 'building a project', 'good project'];
+  return keywords.some(k => p.includes(k));
+}
+
+const PROJECT_IDEAS_TEXT = `Here are 4 high-impact, modern software engineering project ideas you can build:
+
+### 1. ⚡ Autonomous Multi-Agent Task Orchestrator
+- **Concept:** A distributed system where specialized AI sub-agents collaborate to decompose complex tasks, write code, run unit tests, and fix bugs autonomously.
+- **Tech Stack:** Node.js / Python, WebSockets, Vector DB (ChromaDB / Qdrant), React.
+
+### 2. 🔐 Zero-Knowledge Encrypted Vault Messenger
+- **Concept:** End-to-end encrypted messaging platform featuring client-side PBKDF2 key derivation, AES-256-GCM message vaults, and passwordless HMAC auth.
+- **Tech Stack:** React, Express, Web Crypto API, SQLite.
+
+### 3. 🌐 Real-Time Global Intelligence Ticker
+- **Concept:** An automated RSS & API scraper that aggregates tech news, science papers, and stock market trends, using semantic embeddings to cluster related breaking news.
+- **Tech Stack:** Python (FastAPI / Scrapy), LangChain, Redis, TailwindCSS.
+
+### 4. 💻 Visual Twin System Diagnostics
+- **Concept:** Interactive 3D/2D visual diagnostic twin for hardware and server monitoring, featuring live thermal maps, memory usage telemetry, and automated log anomaly detection.
+- **Tech Stack:** Three.js / D3.js, React, Node.js, WebSockets.`;
 
 /**
  * Sanitizes LLM output to remove hallucinated company names or misleading brand definitions
@@ -212,9 +275,19 @@ function isGenericCodeRequest(prompt = '') {
 /**
  * Intelligent Fallback Analyzer if LLMs are unreachable
  */
-function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = '') {
+function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = '', wikiData = null) {
   const clean = prompt.trim();
   const lower = clean.toLowerCase();
+
+  // Project Idea Query
+  if (isProjectIdeaQuery(clean)) {
+    return PROJECT_IDEAS_TEXT;
+  }
+
+  // If Wikipedia resolved an answer
+  if (wikiData && wikiData.extract) {
+    return `### Verified Knowledge: **${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
+  }
 
   if (liveWikiContext) {
     return `### Verified Knowledge Analysis\n${liveWikiContext}`;
@@ -236,7 +309,7 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
     return `Hello **${username}**! 👋 How can I assist you with software development, system design, or problem solving today?`;
   }
 
-  return `I have analyzed your input: **"${clean}"**. \n\nI am ready to assist you with software engineering, architectural analysis, algorithms, or technical problem solving. Please provide any specific details or parameters!`;
+  return `Here is the response for **"${clean}"**:\n\nCould you please specify your target programming language, framework, or detailed requirements for this task?`;
 }
 
 /**
@@ -288,8 +361,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 
   // Fetch Live Wikipedia Knowledge Context for factual queries
   let liveWikiContext = '';
+  let wikiData = null;
   try {
-    liveWikiContext = await getLiveWikipediaContext(cleanPrompt);
+    wikiData = await resolveWikipediaKnowledge(cleanPrompt);
+    if (wikiData) {
+      liveWikiContext = `\n[VERIFIED WIKIPEDIA LIVE KNOWLEDGE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
+    }
   } catch (e) {
     // Fail-safe Wikipedia lookup
   }
@@ -335,11 +412,10 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
-    'http://172.17.0.1:11434/api/chat',
-    'http://host.docker.internal:11434/api/chat'
+    'http://172.17.0.1:11434/api/chat'
   ];
 
-  const targetModels = ['laf-v2:latest', 'laf-model:latest', 'llama3.2:latest', 'qwen2.5:0.5b'];
+  const targetModels = ['laf-v2:latest', 'llama3.2:latest'];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetModels) {
@@ -363,7 +439,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 7000
+            timeout: 3500
           }
         );
 
@@ -428,7 +504,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // 8. Intelligent Fallback Analysis Response
   // -------------------------------------------------------------
   return {
-    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveWikiContext)),
+    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveWikiContext, wikiData)),
     provider: 'LAF Intelligence Engine'
   };
 }
