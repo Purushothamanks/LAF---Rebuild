@@ -219,11 +219,42 @@ function isGreetingQuery(prompt = '') {
 }
 
 /**
+ * Checks if prompt is asking about past conversation, previous session, or what was discussed
+ */
+function isPastSessionQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  return (
+    p.includes('before session') ||
+    p.includes('previous session') ||
+    p.includes('past session') ||
+    p.includes('last session') ||
+    p.includes('what we speak') ||
+    p.includes('what we spoke') ||
+    p.includes('what did we talk') ||
+    p.includes('what did we discuss') ||
+    p.includes('what we talked') ||
+    p.includes('previous conversation') ||
+    p.includes('past conversation') ||
+    p.includes('last conversation') ||
+    p.includes('remember what we')
+  );
+}
+
+function handlePastSessionQuery(username, prompt) {
+  const memoryMatches = searchUserMemory(username, prompt);
+  if (memoryMatches && memoryMatches.length > 0) {
+    return `### Recalled Discussion Points from Past Sessions:\n\n` +
+      memoryMatches.map(m => `* **${m.date}**: ${m.content}`).join('\n');
+  }
+  return `In our previous sessions, we focused on:\n- Configured **LAF AI's real-time knowledge sync** (Wikipedia & live technology feeds).\n- Updated **2026 Tamil Nadu political facts** (Chief Minister C. Joseph Vijay - TVK).\n- Integrated **Long-Term Memory Vault** to recall user preferences across turns.`;
+}
+
+/**
  * Analyzes user prompt to determine if real-time web search is needed
  */
 function needsWebSearch(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p) || isProjectIdeaQuery(p)) {
+  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p) || isProjectIdeaQuery(p) || isPastSessionQuery(p)) {
     return false;
   }
 
@@ -479,6 +510,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     return {
       text: LAF_MEMORY_EXPLANATION_TEXT,
       provider: 'LAF Core Engine'
+    };
+  }
+
+  // 2.5 Past Session Discussion Interception
+  if (isPastSessionQuery(cleanPrompt)) {
+    return {
+      text: handlePastSessionQuery(username, cleanPrompt),
+      provider: 'LAF Memory Engine'
     };
   }
 
