@@ -5,6 +5,30 @@ let lastFetchedTime = 0;
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // Auto-update every 10 minutes
 
 /**
+ * Fast HTML & Boilerplate Cleaner (trafilatura / datatrove style)
+ * Extracts high-density text while stripping scripts, styles, and UI noise.
+ */
+function cleanExtractedText(rawHtmlOrText = '') {
+  if (!rawHtmlOrText || typeof rawHtmlOrText !== 'string') return '';
+  let clean = rawHtmlOrText;
+
+  // Remove script and style elements
+  clean = clean.replace(/<script\b[^<]*>([\s\S]*?)<\/script>/gi, '');
+  clean = clean.replace(/<style\b[^<]*>([\s\S]*?)<\/style>/gi, '');
+  clean = clean.replace(/<nav\b[^<]*>([\s\S]*?)<\/nav>/gi, '');
+  clean = clean.replace(/<footer\b[^<]*>([\s\S]*?)<\/footer>/gi, '');
+  clean = clean.replace(/<!--[\s\S]*?-->/g, '');
+
+  // Strip remaining HTML tags
+  clean = clean.replace(/<[^>]+>/g, ' ');
+
+  // Normalize whitespace
+  clean = clean.replace(/\s+/g, ' ').trim();
+
+  return clean;
+}
+
+/**
  * Fetch live Wikipedia page summary for real-time global knowledge
  */
 async function fetchWikiSummary(topic) {
@@ -17,7 +41,7 @@ async function fetchWikiSummary(topic) {
     if (res.data && res.data.extract) {
       return {
         title: res.data.title,
-        description: res.data.extract,
+        description: cleanExtractedText(res.data.extract),
         url: res.data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(topic)}`,
         thumbnail: res.data.thumbnail?.source || null
       };
