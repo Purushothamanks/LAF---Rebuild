@@ -331,14 +331,60 @@ function needsWebSearch(prompt = '') {
 }
 
 /**
+ * Direct Live Web Search Engine: Sends prompt to DuckDuckGo & Wikipedia APIs directly
+ */
+async function performLiveWebSearch(prompt = '') {
+  const cleanQuery = (prompt || '').trim();
+  if (!cleanQuery) return '';
+
+  const webResults = [];
+
+  // Source 1: Live Web Search Results (DuckDuckGo Search)
+  try {
+    const ddgRes = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanQuery)}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      },
+      timeout: 5000
+    });
+
+    const regex = /class="result__snippet[^"]*"[^>]*>(.*?)<\/a>/gs;
+    let match;
+    let count = 0;
+    while ((match = regex.exec(ddgRes.data)) !== null && count < 5) {
+      const text = match[1].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
+      if (text.length > 15) {
+        count++;
+        webResults.push(`[LIVE WEB RESULT #${count}]: ${text}`);
+      }
+    }
+  } catch (err) {
+    console.error('[WEB-SEARCH] Live DuckDuckGo search error:', err.message);
+  }
+
+  // Source 2: Verified Wikipedia Reference
+  try {
+    const wikiData = await resolveWikipediaKnowledge(cleanQuery);
+    if (wikiData && wikiData.extract) {
+      webResults.push(`[WIKIPEDIA REFERENCE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}`);
+    }
+  } catch (err) {
+    // Fail-safe Wikipedia lookup
+  }
+
+  if (webResults.length > 0) {
+    return `\n[DIRECT LIVE WEB SEARCH RESULTS FOR PROMPT "${cleanQuery}"]:\n\n${webResults.join('\n\n')}\n`;
+  }
+
+  return '';
+}
+
+/**
  * Real-time Wikipedia Search Resolver: Resolves any query into verified Wikipedia facts
  */
 async function resolveWikipediaKnowledge(prompt = '') {
   const p = prompt.trim();
-  if (!needsWebSearch(p)) {
-    return null;
-  }
-
   const cleanSearch = p
     .replace(/who is|what is|tell me about|explain|give me|find|search for|info on|current|details|the/gi, '')
     .trim() || p;
@@ -546,21 +592,21 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
 /**
  * Omni Router API Integrator (Access to 250+ Foundation Models)
  */
-async function callOmniRouter({ messages, model = 'openrouter/auto', apiKey }) {
+async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-instruct:free', apiKey }) {
   try {
-    let targetModel = model;
+    let targetModel = model || 'meta-llama/llama-3.3-70b-instruct:free';
     if (targetModel.startsWith('openrouter/')) {
       targetModel = targetModel.replace('openrouter/', '');
     } else if (targetModel.startsWith('omni/')) {
       targetModel = targetModel.replace('omni/', '');
     }
-    if (targetModel === 'auto' || targetModel === 'omni/auto') {
+    if (targetModel === 'auto' || targetModel === 'omni/auto' || targetModel === 'laf-v2') {
       targetModel = 'meta-llama/llama-3.3-70b-instruct:free';
     }
 
     const keyToUse = apiKey || process.env.OPENROUTER_API_KEY || process.env.OMNI_ROUTER_API_KEY || '';
 
-    console.log(`[AI-ENGINE] Routing request to Omni Router model (${targetModel})...`);
+    console.log(`[AI-ENGINE] Routing request to Pure Free 70B LLM (${targetModel})...`);
 
     const headers = {
       'Content-Type': 'application/json',
@@ -589,7 +635,7 @@ async function callOmniRouter({ messages, model = 'openrouter/auto', apiKey }) {
     if (content && content.trim()) {
       return {
         text: sanitizeLlmOutput(content.trim()),
-        provider: `Omni Router (${targetModel})`
+        provider: `LAF AI (${targetModel})`
       };
     }
   } catch (err) {
@@ -599,9 +645,9 @@ async function callOmniRouter({ messages, model = 'openrouter/auto', apiKey }) {
 }
 
 /**
- * High-Speed Direct Passthrough Engine to Ollama AI Models & Omni Router with Intelligent Intent Analysis
+ * High-Speed Direct Passthrough Engine with Pure Free 70B Model & Direct Live Web Search
  */
-async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
+async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'meta-llama/llama-3.3-70b-instruct:free', enableWebSearch = false }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
 
@@ -669,21 +715,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
-  // Fetch Live Wikipedia Knowledge Context ONLY if user enabled Web Search symbol
-  let liveWikiContext = '';
-  let wikiData = null;
+  // DIRECT LIVE WEB SEARCH: If user enabled web search symbol, send query directly to search engines!
+  let liveSearchContext = '';
   if (enableWebSearch) {
-    try {
-      wikiData = await resolveWikipediaKnowledge(cleanPrompt);
-      if (wikiData) {
-        liveWikiContext = `\n[BACKGROUND WIKIPEDIA REFERENCE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
-      }
-    } catch (e) {
-      // Fail-safe Wikipedia lookup
-    }
+    console.log(`[AI-ENGINE] Direct Web Search Active: Querying live search engines for "${cleanPrompt}"...`);
+    liveSearchContext = await performLiveWebSearch(cleanPrompt);
   }
 
-  // 5. Always Check User Context Memory
+  // Always Check User Context Memory
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -695,7 +734,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     // Fail-safe memory lookup
   }
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveWikiContext ? '\n' + liveWikiContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveSearchContext ? '\n' + liveSearchContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
@@ -713,19 +752,18 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 5.5 EXPLICIT OMNI ROUTER SELECTION CHECK
+  // PRIMARY ENGINE: PURE FREE LLM 70B MODEL (Llama 3.3 70B Instruct Free)
   // -------------------------------------------------------------
-  if (selectedModel && (selectedModel.startsWith('omni/') || selectedModel.startsWith('openrouter/'))) {
-    const omniRes = await callOmniRouter({
-      messages: formattedMessages,
-      model: selectedModel,
-      apiKey: customApiKey
-    });
-    if (omniRes) return omniRes;
-  }
+  const primaryModel = 'meta-llama/llama-3.3-70b-instruct:free';
+  const omniRes = await callOmniRouter({
+    messages: formattedMessages,
+    model: primaryModel,
+    apiKey: customApiKey
+  });
+  if (omniRes) return omniRes;
 
   // -------------------------------------------------------------
-  // 6. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS
+  // FALLBACK 1: DIRECT PASSTHROUGH TO OLLAMA MODELS
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
@@ -765,7 +803,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
           const duration = ((Date.now() - start) / 1000).toFixed(2);
           console.log(`[AI-ENGINE] SUCCESS from ${modelName} in ${duration}s!`);
 
-          // Enforce strict output override for developer or media queries if LLM hallucinates
           if (isDeveloperQuery(cleanPrompt)) {
             content = LAF_DEVELOPER_TEXT;
           } else if (isMediaGenerationQuery(cleanPrompt)) {
