@@ -270,10 +270,18 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           }
         );
 
-        const content = ollamaRes.data?.message?.content;
+        let content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           const duration = ((Date.now() - start) / 1000).toFixed(2);
           console.log(`[AI-ENGINE] SUCCESS from ${modelName} in ${duration}s!`);
+
+          // Enforce strict output override for developer or media queries if LLM hallucinates
+          if (isDeveloperQuery(cleanPrompt)) {
+            content = LAF_DEVELOPER_TEXT;
+          } else if (isMediaGenerationQuery(cleanPrompt)) {
+            content = LAF_MEDIA_UNSUPPORTED_TEXT;
+          }
+
           return {
             text: content.trim(),
             provider: `LAF AI (${modelName})`
