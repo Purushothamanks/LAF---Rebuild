@@ -174,6 +174,53 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
 }
 
 /**
+ * Direct Connection to Local Ollama AI Server (Primary 24/7 Engine)
+ */
+async function callOllamaLocal({ messages, model = 'laf-v2' }) {
+  const ollamaEndpoints = [
+    process.env.OLLAMA_URL,
+    'http://localhost:11434',
+    'http://host.docker.internal:11434',
+    'http://172.17.0.1:11434'
+  ].filter(Boolean);
+
+  let targetModel = model || 'laf-v2';
+  if (!targetModel || targetModel.includes('auto') || targetModel.includes('free')) {
+    targetModel = 'laf-v2';
+  }
+
+  for (const baseUrl of ollamaEndpoints) {
+    try {
+      console.log(`[AI-ENGINE] Connecting to 24/7 Ollama Server (${baseUrl}) with model "${targetModel}"...`);
+      const res = await axios.post(
+        `${baseUrl}/api/chat`,
+        {
+          model: targetModel,
+          messages: messages,
+          stream: false,
+          keep_alive: '24h',
+          options: {
+            temperature: 0.7
+          }
+        },
+        { timeout: 120000 }
+      );
+
+      const content = res.data?.message?.content;
+      if (content && content.trim()) {
+        return {
+          text: sanitizeLlmOutput(content.trim()),
+          provider: `Ollama (${res.data.model || targetModel})`
+        };
+      }
+    } catch (err) {
+      console.log(`[AI-ENGINE] Ollama endpoint ${baseUrl} note: ${err.message}`);
+    }
+  }
+  return null;
+}
+
+/**
  * Rebuilt Clean AI Engine: Direct Passthrough to Ollama Backend
  */
 async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
@@ -224,7 +271,19 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 3. Direct Connection to Primary Google Gemma Model (google/gemma-2-9b-it:free)
+  // 3. Primary 24/7 Engine: Direct Call to Local Ollama Server
+  const ollamaRes = await callOllamaLocal({
+    messages: formattedMessages,
+    model: selectedModel || 'laf-v2'
+  });
+  if (ollamaRes) {
+    return {
+      text: ollamaRes.text,
+      provider: enableWebSearch ? `${ollamaRes.provider} + Live Web Search` : ollamaRes.provider
+    };
+  }
+
+  // Backup 1: OmniRouter Cloud API (Gemma 9B)
   const gemmaRes = await callOmniRouter({
     messages: formattedMessages,
     model: 'google/gemma-2-9b-it:free',
@@ -237,20 +296,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
-  // Backup Gemma 27B Model
-  const gemma27bRes = await callOmniRouter({
-    messages: formattedMessages,
-    model: 'google/gemma-2-27b-it',
-    apiKey: customApiKey
-  });
-  if (gemma27bRes) {
-    return {
-      text: gemma27bRes.text,
-      provider: enableWebSearch ? 'Google Gemma 27B + Web Search' : 'Google Gemma 27B'
-    };
-  }
-
-  // Backup Free 70B Model
+  // Backup 2: OmniRouter Cloud API (Llama 3.3 70B)
   const omniRes = await callOmniRouter({
     messages: formattedMessages,
     model: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -258,11 +304,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   });
   if (omniRes) return omniRes;
 
-  // 4. Grounded Google Gemma Intelligence Fallback (Guarantees 100% Response Delivery)
-  const gemmaFallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, liveSearchContext });
+  // Backup 3: Grounded Fallback Engine
+  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, liveSearchContext });
   return {
-    text: gemmaFallbackText,
-    provider: enableWebSearch ? 'Google Gemma 2 + Live Web Search' : 'Google Gemma 2 Engine'
+    text: fallbackText,
+    provider: enableWebSearch ? 'LAF Engine + Live Web Search' : 'LAF Core Engine'
   };
 }
 

@@ -114,12 +114,12 @@ router.get('/models', authMiddleware, (req, res) => {
   res.json({
     success: true,
     models: [
-      { id: 'google/gemma-2-9b-it:free', name: 'Google Gemma 2 (Free)', provider: 'Google AI', desc: 'Primary high-speed reasoning & coding model' },
-      { id: 'google/gemma-2-27b-it', name: 'Google Gemma 2 27B', provider: 'Google AI', desc: 'Large high-precision Google Gemma model' },
-      { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Free)', provider: 'Meta AI', desc: 'Meta open-weight 70B flagship model' },
-      { id: 'openrouter/deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', desc: 'Advanced math, logic & deep reasoning' },
-      { id: 'openrouter/openai/gpt-4o', name: 'GPT-4o (Omni)', provider: 'OpenAI', desc: 'Flagship multimodal intelligence' },
-      { id: 'openrouter/anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', desc: 'Superior coding & nuanced reasoning' }
+      { id: 'laf-v2', name: 'Ollama LAF v2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Primary 24/7 fast local model' },
+      { id: 'llama3.2', name: 'Ollama Llama 3.2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Meta Llama 3.2 local model' },
+      { id: 'laf-model', name: 'Ollama LAF Model (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Custom LAF model' },
+      { id: 'google/gemma-2-9b-it:free', name: 'Google Gemma 2 (Cloud)', provider: 'Google AI', desc: 'High-speed reasoning & coding model' },
+      { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Cloud)', provider: 'Meta AI', desc: 'Meta open-weight 70B model' },
+      { id: 'openrouter/deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', desc: 'Advanced math, logic & deep reasoning' }
     ]
   });
 });
