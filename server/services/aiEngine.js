@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
+const { fetchWikiSummary } = require('./trendEngine');
 
 const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for high-performance software engineering, visual diagnostics, mathematical reasoning, and structured advice.
 
@@ -153,6 +154,24 @@ const GENERAL_AI_EXPLANATION = `**Artificial Intelligence (AI)** refers to the s
 AI is designed to enhance human productivity, automate complex workflows, and solve critical scientific and engineering challenges.`;
 
 /**
+ * Automatically extracts potential topic from prompt and fetches real-time Wikipedia context
+ */
+async function getLiveWikipediaContext(prompt = '') {
+  const p = prompt.trim();
+  const match = p.match(/(?:what is|who is|tell me about|explain|define|search wikipedia for|info on)\s+([^?\.\!\n]+)/i);
+  if (match && match[1]) {
+    const topic = match[1].trim();
+    if (topic.length > 2 && !['laf', 'developer', 'you', 'ai'].includes(topic.toLowerCase())) {
+      const wiki = await fetchWikiSummary(topic);
+      if (wiki) {
+        return `\n[VERIFIED WIKIPEDIA LIVE KNOWLEDGE: "${wiki.title}"]:\n${wiki.description}\nSource: ${wiki.url}\n`;
+      }
+    }
+  }
+  return '';
+}
+
+/**
  * Sanitizes LLM output to remove hallucinated company names or misleading brand definitions
  */
 function sanitizeLlmOutput(text = '') {
@@ -193,9 +212,13 @@ function isGenericCodeRequest(prompt = '') {
 /**
  * Intelligent Fallback Analyzer if LLMs are unreachable
  */
-function analyzeUserInputFallback(prompt = '', username = '') {
+function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = '') {
   const clean = prompt.trim();
   const lower = clean.toLowerCase();
+
+  if (liveWikiContext) {
+    return `### Verified Knowledge Analysis\n${liveWikiContext}`;
+  }
 
   // Math calculation check
   if (/^[\d\s\+\-\*\/\^\(\)\.\=]+$/.test(clean) && clean.length > 1) {
@@ -263,6 +286,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     };
   }
 
+  // Fetch Live Wikipedia Knowledge Context for factual queries
+  let liveWikiContext = '';
+  try {
+    liveWikiContext = await getLiveWikipediaContext(cleanPrompt);
+  } catch (e) {
+    // Fail-safe Wikipedia lookup
+  }
+
   const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, '');
 
   // 5. Check User Memory Context
@@ -282,7 +313,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     }
   }
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveWikiContext ? '\n' + liveWikiContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
@@ -332,7 +363,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 25000
+            timeout: 7000
           }
         );
 
@@ -397,7 +428,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   // 8. Intelligent Fallback Analysis Response
   // -------------------------------------------------------------
   return {
-    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username)),
+    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveWikiContext)),
     provider: 'LAF Intelligence Engine'
   };
 }
@@ -405,5 +436,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 module.exports = {
   generateResponse
 };
+
 
 
