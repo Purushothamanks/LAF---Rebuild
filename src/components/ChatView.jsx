@@ -229,11 +229,11 @@ export default function ChatView({
                   type="button"
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
                   style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: '50%',
                     background: webSearchEnabled ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-                    border: webSearchEnabled ? '1px solid #38bdf8' : '1px solid transparent',
+                    border: webSearchEnabled ? '1.5px solid #38bdf8' : '1.5px solid transparent',
                     color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
                     display: 'flex',
                     alignItems: 'center',
@@ -243,11 +243,13 @@ export default function ChatView({
                     flexShrink: 0,
                     padding: 0,
                     marginRight: '6px',
-                    boxShadow: webSearchEnabled ? '0 0 10px rgba(56, 189, 248, 0.4)' : 'none'
+                    boxShadow: webSearchEnabled ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none'
                   }}
                   title={webSearchEnabled ? "Web Search Enabled (Click to disable)" : "Web Search Disabled (Click to enable)"}
                 >
-                  <Globe style={{ width: '18px', height: '18px', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                    <Globe style={{ width: '18px', height: '18px', display: 'block', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
+                  </div>
                 </button>
 
                 {/* Dead-Centered Send Button */}
@@ -427,11 +429,11 @@ export default function ChatView({
               type="button"
               onClick={() => setWebSearchEnabled(!webSearchEnabled)}
               style={{
-                width: '34px',
-                height: '34px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
                 background: webSearchEnabled ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-                border: webSearchEnabled ? '1px solid #38bdf8' : '1px solid transparent',
+                border: webSearchEnabled ? '1.5px solid #38bdf8' : '1.5px solid transparent',
                 color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
                 display: 'flex',
                 alignItems: 'center',
@@ -445,7 +447,9 @@ export default function ChatView({
               }}
               title={webSearchEnabled ? "Web Search Enabled (Click to disable)" : "Web Search Disabled (Click to enable)"}
             >
-              <Globe style={{ width: '16px', height: '16px', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                <Globe style={{ width: '17px', height: '17px', display: 'block', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
+              </div>
             </button>
 
             {/* Dead-Centered Send Button */}
