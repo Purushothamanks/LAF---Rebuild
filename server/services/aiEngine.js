@@ -306,7 +306,6 @@ function needsWebSearch(prompt = '') {
     isDeveloperQuery(p) ||
     isLafIdentityQuery(p) ||
     isMediaGenerationQuery(p) ||
-    isTnGovernmentQuery(p) ||
     isGreetingQuery(p) ||
     isProjectIdeaQuery(p) ||
     isPastSessionQuery(p) ||
@@ -583,22 +582,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     return {
       text: handleUserIdentityQuery(username, cleanPrompt),
       provider: 'LAF Core Engine'
-    };
-  }
-
-  // 3. Tamil Nadu Government / CM Query Interception
-  if (isTnGovernmentQuery(cleanPrompt)) {
-    return {
-      text: TN_GOVT_LIVE_TEXT,
-      provider: 'LAF Live Intelligence'
-    };
-  }
-
-  // 3. Current Scenario Interception
-  if (isCurrentScenarioQuery(cleanPrompt)) {
-    return {
-      text: CURRENT_SCENARIO_LIVE_TEXT,
-      provider: 'LAF Live Intelligence'
     };
   }
 
