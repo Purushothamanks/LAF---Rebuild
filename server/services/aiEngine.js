@@ -536,24 +536,9 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
   const clean = prompt.trim();
   const lower = clean.toLowerCase();
 
-  // Memory Capability Query
-  if (isMemoryQuery(clean)) {
-    return LAF_MEMORY_EXPLANATION_TEXT;
-  }
-
-  // Project Idea Query
-  if (isProjectIdeaQuery(clean)) {
-    return PROJECT_IDEAS_TEXT;
-  }
-
-  // Tamil Nadu Leadership Query
-  if (isTnGovernmentQuery(clean)) {
-    return TN_GOVT_LIVE_TEXT;
-  }
-
-  // Current Scenario Query
-  if (isCurrentScenarioQuery(clean)) {
-    return CURRENT_SCENARIO_LIVE_TEXT;
+  // 1. Prioritize Live Web Search Results if Web Search is Enabled
+  if (liveSearchContext && typeof liveSearchContext === 'string' && liveSearchContext.trim()) {
+    return `${liveSearchContext.trim()}\n\n*Direct live web search intelligence compiled for "${clean}".*`;
   }
 
   // If Wikipedia resolved an answer
@@ -561,8 +546,9 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
     return `**${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
   }
 
-  if (liveSearchContext && typeof liveSearchContext === 'string' && liveSearchContext.trim()) {
-    return `### 🌐 Live Web Search Intelligence\n\n${liveSearchContext.trim()}\n\n*Compiled live web search results for "${clean}".*`;
+  // Memory Capability Query
+  if (isMemoryQuery(clean)) {
+    return LAF_MEMORY_EXPLANATION_TEXT;
   }
 
   // Math calculation check
@@ -667,6 +653,13 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
+  // DIRECT LIVE WEB SEARCH: If user enabled web search symbol, send query directly to search engines!
+  let liveSearchContext = '';
+  if (enableWebSearch) {
+    console.log(`[AI-ENGINE] Direct Web Search Active: Querying live search engines for "${cleanPrompt}"...`);
+    liveSearchContext = await performLiveWebSearch(cleanPrompt);
+  }
+
   // 2. Memory Capability Interception
   if (isMemoryQuery(cleanPrompt)) {
     return {
@@ -699,27 +692,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
-  // 5. Greeting Interception
-  if (isGreetingQuery(cleanPrompt)) {
+  // 5. Greeting Interception (Only when web search is OFF)
+  if (!enableWebSearch && isGreetingQuery(cleanPrompt)) {
     return {
       text: `Hello **${username}**! 👋 How can I assist you today?`,
       provider: 'LAF Core Engine'
     };
-  }
-
-  // 3. General AI Concept Query Interception
-  if (isGeneralAiQuery(cleanPrompt)) {
-    return {
-      text: GENERAL_AI_EXPLANATION,
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // DIRECT LIVE WEB SEARCH: If user enabled web search symbol, send query directly to search engines!
-  let liveSearchContext = '';
-  if (enableWebSearch) {
-    console.log(`[AI-ENGINE] Direct Web Search Active: Querying live search engines for "${cleanPrompt}"...`);
-    liveSearchContext = await performLiveWebSearch(cleanPrompt);
   }
 
   // Always Check User Context Memory
