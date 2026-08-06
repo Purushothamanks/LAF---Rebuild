@@ -219,11 +219,36 @@ function isGreetingQuery(prompt = '') {
 }
 
 /**
+ * Analyzes user prompt to determine if real-time web search is needed
+ */
+function needsWebSearch(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p) || isProjectIdeaQuery(p)) {
+    return false;
+  }
+
+  // Factual, informational, entity, or search question triggers
+  const searchTriggers = [
+    'who', 'what', 'where', 'when', 'why', 'how', 'which',
+    'explain', 'tell me', 'describe', 'define', 'search', 'lookup',
+    'info', 'information', 'details', 'meaning', 'history', 'concept',
+    'latest', 'current', 'news', 'update', 'status', 'version',
+    'difference between', 'vs', 'versus', 'list of', 'examples of'
+  ];
+
+  const words = p.split(/\s+/);
+  const isQuestion = p.endsWith('?') || searchTriggers.some(t => p.includes(t));
+  const isMultiWordConcept = words.length >= 2 && !isGenericCodeRequest(p);
+
+  return isQuestion || isMultiWordConcept;
+}
+
+/**
  * Real-time Wikipedia Search Resolver: Resolves any query into verified Wikipedia facts
  */
 async function resolveWikipediaKnowledge(prompt = '') {
   const p = prompt.trim();
-  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p)) {
+  if (!needsWebSearch(p)) {
     return null;
   }
 
