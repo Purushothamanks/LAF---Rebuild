@@ -935,78 +935,17 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
 }
 
 /**
- * High-Speed Direct Passthrough Engine with Ollama Primary Backend & User-Triggered Live Web Search
+ * Pure 100% Direct Passthrough Engine with Single Latest Big Model in Ollama (llama3.3:latest / laf-v2:latest)
  */
-async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
+async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'llama3.3:latest', enableWebSearch = false }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Processing prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
+  console.log(`[AI-ENGINE] Pure Direct Ollama Request for user "${username}": "${cleanPrompt}" | webSearch: ${enableWebSearch}`);
 
-  // 0. Developer Query Interception
-  if (isDeveloperQuery(cleanPrompt)) {
-    return {
-      text: LAF_DEVELOPER_TEXT,
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // 1. Media Generation Query Interception
-  if (isMediaGenerationQuery(cleanPrompt)) {
-    return {
-      text: LAF_MEDIA_UNSUPPORTED_TEXT,
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // DIRECT LIVE WEB SEARCH: Run ONLY if user enabled Web Search symbol AND it's not a meta-conversational question!
+  // 1. LIVE WEB SEARCH: If user enabled Web Search symbol, perform live web search to anchor Ollama
   let liveSearchContext = '';
-  if (enableWebSearch && !isConversationalMetaQuery(cleanPrompt)) {
-    console.log(`[AI-ENGINE] Web Search Enabled by User: Executing live search for "${cleanPrompt}"...`);
+  if (enableWebSearch) {
+    console.log(`[AI-ENGINE] Web Search Enabled: Querying live search engines for "${cleanPrompt}"...`);
     liveSearchContext = await performLiveWebSearch(cleanPrompt);
-  }
-
-  // 1.5 Conversational Meta Question Interception (e.g. "what is this", "is this related to my query", "what are you telling about")
-  if (isConversationalMetaQuery(cleanPrompt)) {
-    return handleConversationalMetaQuery(cleanPrompt, history);
-  }
-
-  // 2. Memory Capability Interception
-  if (isMemoryQuery(cleanPrompt)) {
-    return {
-      text: LAF_MEMORY_EXPLANATION_TEXT,
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // 2.5 Past Session Discussion Interception
-  if (isPastSessionQuery(cleanPrompt)) {
-    return {
-      text: handlePastSessionQuery(username, cleanPrompt),
-      provider: 'LAF Memory Engine'
-    };
-  }
-
-  // 2.6 User Identity & Profile Interception
-  if (isUserIdentityQuery(cleanPrompt)) {
-    return {
-      text: handleUserIdentityQuery(username, cleanPrompt),
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // 4. LAF Identity Interception
-  if (isLafIdentityQuery(cleanPrompt)) {
-    return {
-      text: LAF_REAL_IDENTITY_TEXT,
-      provider: 'LAF Core Engine'
-    };
-  }
-
-  // 5. Greeting Interception (Only when web search is OFF)
-  if (!enableWebSearch && isGreetingQuery(cleanPrompt)) {
-    return {
-      text: `Hello **${username}**! 👋 How can I assist you today?`,
-      provider: 'LAF Core Engine'
-    };
   }
 
   // Always Check User Context Memory
@@ -1017,9 +956,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
       memoryContext = `\n[RECALLED USER CONTEXT MEMORY]:\n` +
         memoryMatches.map(m => `[${m.date} | ${m.role.toUpperCase()}]: ${m.content}`).join('\n');
     }
-  } catch (e) {
-    // Fail-safe memory lookup
-  }
+  } catch (e) {}
 
   // Retrieve Grounded RAG Context Anchors
   let ragContext = '';
@@ -1034,7 +971,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   ];
 
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-2).forEach(h => {
+    history.slice(-4).forEach(h => {
       formattedMessages.push({
         role: h.role === 'user' ? 'user' : 'assistant',
         content: h.content
@@ -1045,7 +982,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // DEDICATED BACKEND MODEL: OLLAMA LOCAL AI ENGINE
+  // SINGLE LATEST BIG MODEL IN OLLAMA (llama3.3:latest / laf-v2:latest)
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
@@ -1054,22 +991,12 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     'http://172.17.0.1:11434/api/chat'
   ];
 
-  const targetOllamaModels = [
-    'laf-v2:latest',
-    'llama3.3:latest',
-    'llama3.2:latest',
-    'llama3.1:latest',
-    'llama3:latest',
-    'qwen2.5:latest',
-    'mistral:latest',
-    'gemma2:latest',
-    'deepseek-r1:latest'
-  ];
+  const targetBigModels = ['llama3.3:latest', 'laf-v2:latest'];
 
   for (const endpoint of ollamaEndpoints) {
-    for (const modelName of targetOllamaModels) {
+    for (const modelName of targetBigModels) {
       try {
-        console.log(`[AI-ENGINE] Routing request to Ollama Dedicated Backend (${endpoint} | ${modelName})...`);
+        console.log(`[AI-ENGINE] Routing request directly to Ollama Big Model (${endpoint} | ${modelName})...`);
         const start = Date.now();
         const ollamaRes = await axios.post(
           endpoint,
@@ -1078,39 +1005,34 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
             messages: formattedMessages,
             stream: false,
             options: {
-              num_ctx: 2048,
-              num_predict: 1024,
-              temperature: 0.2,
-              top_k: 20,
-              top_p: 0.9,
-              num_thread: 4
+              num_ctx: 4096,
+              num_predict: 2048,
+              temperature: 0.7
             }
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 5000
+            timeout: 8000
           }
         );
 
         let content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           const duration = ((Date.now() - start) / 1000).toFixed(2);
-          console.log(`[AI-ENGINE] SUCCESS from Dedicated Ollama Backend (${modelName}) in ${duration}s!`);
+          console.log(`[AI-ENGINE] SUCCESS from Ollama Big Model (${modelName}) in ${duration}s!`);
 
           return {
             text: sanitizeLlmOutput(content.trim()),
-            provider: enableWebSearch ? `Ollama (${modelName}) + Web Search` : `Ollama (${modelName})`
+            provider: enableWebSearch ? `Ollama (${modelName}) + Live Web Search` : `Ollama (${modelName})`
           };
         }
       } catch (e) {
-        // Continue trying Ollama endpoints/models
+        // Try next endpoint / model
       }
     }
   }
 
-  // -------------------------------------------------------------
-  // SECONDARY ENGINE: OMNI ROUTER (Free 70B Model / OpenRouter API)
-  // -------------------------------------------------------------
+  // Backup Free 70B LLM (meta-llama/llama-3.3-70b-instruct:free)
   const primaryModel = 'meta-llama/llama-3.3-70b-instruct:free';
   const omniRes = await callOmniRouter({
     messages: formattedMessages,
@@ -1119,40 +1041,6 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   });
   if (omniRes) return omniRes;
 
-  // -------------------------------------------------------------
-  // TERTIARY BACKEND: GEMINI API
-  // -------------------------------------------------------------
-  const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
-  if (geminiKey && geminiKey.startsWith('AIzaSy')) {
-    try {
-      console.log(`[AI-ENGINE] Attempting Gemini API fallback...`);
-      const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-        {
-          contents: formattedMessages.map(m => ({
-            role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.content }]
-          })),
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-        },
-        { timeout: 10000 }
-      );
-
-      let candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (candidate && candidate.trim().length > 0) {
-        return {
-          text: sanitizeLlmOutput(candidate.trim()),
-          provider: 'Gemini 1.5 Flash'
-        };
-      }
-    } catch (err) {
-      console.error(`[AI-ENGINE] Gemini error: ${err.message}`);
-    }
-  }
-
-  // -------------------------------------------------------------
-  // FALLBACK: INTELLIGENT COMPILER
-  // -------------------------------------------------------------
   return {
     text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveSearchContext, null)),
     provider: liveSearchContext ? 'LAF Live Web Search' : 'LAF Intelligence Engine'
