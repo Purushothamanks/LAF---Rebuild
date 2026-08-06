@@ -220,6 +220,62 @@ function isGreetingQuery(prompt = '') {
 }
 
 /**
+ * Checks if prompt is a conversational meta-question (e.g. "what is this", "is this related to my query", "what are you telling about")
+ */
+function isConversationalMetaQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const patterns = [
+    'what are you telling',
+    'what is this',
+    'what do you mean',
+    'is this related',
+    'why did you say',
+    'explain this',
+    'what are you talking',
+    'what does this mean',
+    'relevance to my query',
+    'irrelevant response',
+    'are you sure',
+    'give me code',
+    'give code'
+  ];
+  return patterns.some(pat => p.includes(pat));
+}
+
+/**
+ * Natively resolves meta-conversational queries with direct, relevant human explanations
+ */
+function handleConversationalMetaQuery(prompt = '', history = []) {
+  const p = prompt.toLowerCase().trim();
+
+  if (p.includes('is this related') || p.includes('relevance') || p.includes('what are you telling')) {
+    return {
+      text: `I apologize if my previous answer seemed disconnected from your query! I am here to assist you with direct, accurate, and relevant solutions. Please let me know what specific code, project, or question you would like to work on right now!`,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  if (p.includes('give me code') || p.includes('give code')) {
+    return {
+      text: `Certainly! Please specify what kind of code or application you need (for example: **"Build an HTML/CSS Portfolio"**, **"Express REST API server"**, **"Binary Search in Python"**, or **"React Counter Component"**) and I will generate the complete, ready-to-run code for you!`,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  if (p.includes('what is this')) {
+    return {
+      text: `I am **LAF AI**, your dedicated assistant for software development, full-stack web engineering, algorithms, system design, and quantitative problem solving. How can I help you build or debug today?`,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  return {
+    text: `I am here to help answer your question clearly. What specific topic or code solution would you like to generate or discuss?`,
+    provider: 'LAF Core Engine'
+  };
+}
+
+/**
  * Checks if prompt is asking about past conversation, previous session, or what was discussed
  */
 function isPastSessionQuery(prompt = '') {
@@ -900,11 +956,16 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
-  // DIRECT LIVE WEB SEARCH: Run ONLY if user enabled Web Search symbol!
+  // DIRECT LIVE WEB SEARCH: Run ONLY if user enabled Web Search symbol AND it's not a meta-conversational question!
   let liveSearchContext = '';
-  if (enableWebSearch) {
+  if (enableWebSearch && !isConversationalMetaQuery(cleanPrompt)) {
     console.log(`[AI-ENGINE] Web Search Enabled by User: Executing live search for "${cleanPrompt}"...`);
     liveSearchContext = await performLiveWebSearch(cleanPrompt);
+  }
+
+  // 1.5 Conversational Meta Question Interception (e.g. "what is this", "is this related to my query", "what are you telling about")
+  if (isConversationalMetaQuery(cleanPrompt)) {
+    return handleConversationalMetaQuery(cleanPrompt, history);
   }
 
   // 2. Memory Capability Interception
