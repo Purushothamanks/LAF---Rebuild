@@ -542,17 +542,23 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
     return `${liveSearchContext.trim()}\n\n*Direct live web search intelligence compiled for "${clean}".*`;
   }
 
-  // If Wikipedia resolved an answer
+  // 2. Custom Multi-Domain Knowledge Match (All-in-One Performance Engine)
+  const customKnowledgeHit = searchCustomKnowledge(clean);
+  if (customKnowledgeHit) {
+    return customKnowledgeHit;
+  }
+
+  // 3. Wikipedia Knowledge Extract
   if (wikiData && wikiData.extract) {
     return `**${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
   }
 
-  // Memory Capability Query
+  // 4. Memory Capability Query
   if (isMemoryQuery(clean)) {
     return LAF_MEMORY_EXPLANATION_TEXT;
   }
 
-  // Math calculation check
+  // 5. Math calculation check
   if (/^[\d\s\+\-\*\/\^\(\)\.\=]+$/.test(clean) && clean.length > 1) {
     try {
       const sanitizedExpr = clean.replace(/[^0-9\+\-\*\/\^\(\)\.]/g, '');
@@ -563,17 +569,26 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
     }
   }
 
-  // Greeting
+  // 6. Greeting
   if (['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening', 'good afternoon'].some(g => lower.startsWith(g))) {
     return `Hello **${username}**! 👋 How can I assist you today?`;
   }
 
-  // Smart Code Generation Fallback
+  // 7. Smart Code Generation Fallback
   if (isGenericCodeRequest(clean) || clean.toLowerCase().includes('code') || clean.toLowerCase().includes('function') || clean.toLowerCase().includes('script') || clean.toLowerCase().includes('portfolio') || clean.toLowerCase().includes('html') || clean.toLowerCase().includes('css')) {
     return generateSmartCodeFallback(clean);
   }
 
-  return `I have received your request regarding **"${clean}"**. Please let me know any additional details or specific requirements so I can assist you best!`;
+  // 8. General Knowledge & All-Round Performer Analysis
+  return `### Analytical Overview: **"${clean}"**
+
+1. **Core Concept**: Addressing your inquiry regarding **"${clean}"**, focusing on foundational principles, structured methodologies, and practical applications.
+2. **Key Highlights & Principles**:
+   - Establish clear objectives and structured requirements.
+   - Apply analytical and systematic approaches to achieve optimal efficiency.
+   - Iterate and refine for continuous quality improvement.
+
+*Feel free to ask for step-by-step code, detailed calculations, or specific strategies on this topic!*`;
 }
 
 /**

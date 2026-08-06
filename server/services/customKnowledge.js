@@ -1,7 +1,7 @@
 /**
- * Comprehensive 70B-Grade Knowledge Base & Custom Trained AI Engine
- * Provides immediate, sub-10ms accurate production solutions for software engineering,
- * full-stack web development, algorithms, APIs, databases, and DevOps configurations.
+ * Comprehensive All-in-One Multi-Domain Knowledge Base & Custom Trained AI Engine
+ * Covers Software Engineering, Web UI, Data Science, General Science, Mathematics,
+ * Business Strategy, Professional Writing, Career Guidance, and Productivity.
  */
 
 const KNOWLEDGE_REPOSITORY = [
@@ -129,308 +129,116 @@ const KNOWLEDGE_REPOSITORY = [
 \`\`\``
   },
 
-  // 3. Admin Dashboard Layout
+  // 3. General Science & Quantum Mechanics
   {
-    keywords: ['admin dashboard', 'dashboard ui', 'dashboard template', 'sidebar layout'],
-    category: 'HTML/CSS UI',
-    response: `Here is a complete **Admin Dashboard HTML & CSS Layout**:
+    keywords: ['quantum mechanics', 'quantum computing', 'theory of relativity', 'physics', 'einstein'],
+    category: 'Science & Physics',
+    response: `### 🔬 Quantum Physics & Advanced Mechanics Breakdown
 
-\`\`\`html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-    body { background: #0f172a; color: #f8fafc; display: flex; min-height: 100vh; }
-    aside { width: 240px; background: #1e293b; padding: 1.5rem; border-right: 1px solid rgba(255,255,255,0.05); }
-    aside h2 { color: #38bdf8; font-size: 1.25rem; margin-bottom: 2rem; }
-    aside nav a { display: block; color: #94a3b8; text-decoration: none; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
-    aside nav a.active, aside nav a:hover { background: #334155; color: #38bdf8; }
-    main { flex: 1; padding: 2rem; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-    .stat-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-    .stat-card h4 { color: #94a3b8; font-size: 0.875rem; }
-    .stat-card p { font-size: 1.8rem; font-weight: 700; color: #38bdf8; margin-top: 0.5rem; }
-  </style>
-</head>
-<body>
-  <aside>
-    <h2>Dashboard</h2>
-    <nav>
-      <a href="#" class="active">Overview</a>
-      <a href="#">Analytics</a>
-      <a href="#">Users</a>
-      <a href="#">Settings</a>
-    </nav>
-  </aside>
-  <main>
-    <h1>Welcome, Admin</h1>
-    <div class="stats">
-      <div class="stat-card"><h4>Total Users</h4><p>12,450</p></div>
-      <div class="stat-card"><h4>Active Requests</h4><p>99.98%</p></div>
-      <div class="stat-card"><h4>Revenue</h4><p>$48,290</p></div>
-    </div>
-  </main>
-</body>
-</html>
+**Quantum Mechanics** is the fundamental theory in physics that describes the physical properties of nature at the atomic and subatomic scale.
+
+#### 1. Core Principles:
+- **Wave-Particle Duality:** Matter and light exhibit behaviors of both continuous waves and discrete particles (photons/electrons).
+- **Superposition:** Quantum states can exist in multiple combinations simultaneously until measured (e.g. $|\psi\\rangle = \\alpha|0\\rangle + \\beta|1\\rangle$).
+- **Quantum Entanglement:** Intertwined particles where the quantum state of one instantly dictates the state of another, regardless of distance.
+- **Heisenberg Uncertainty Principle:** Formulated as $\\Delta x \\cdot \\Delta p \\ge \\frac{\\hbar}{2}$, stating position and momentum cannot be simultaneously measured with arbitrary precision.
+
+#### 2. Applications:
+- **Quantum Computing:** Qubits leverage superposition and entanglement to execute complex factorization and chemical simulation algorithms exponentially faster.
+- **Semiconductors & Lasers:** Modern transistors, CPUs, and optical communications rely on quantum energy band theory.`
+  },
+
+  // 4. Mathematics & Calculus
+  {
+    keywords: ['calculus', 'algebra', 'linear algebra', 'derivative', 'integral', 'probability'],
+    category: 'Mathematics',
+    response: `### 📐 Mathematical Foundations & Analysis
+
+Mathematical reasoning provides the foundation for computer science, quantitative finance, and physical modeling.
+
+#### 1. Differential & Integral Calculus:
+- **Derivatives (Rate of Change):**
+  $$f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$
+- **Fundamental Theorem of Calculus:**
+  $$\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)$$
+
+#### 2. Linear Algebra:
+- **Matrix Multiplication:** For $A \\in \\mathbb{R}^{m \\times n}$ and $B \\in \\mathbb{R}^{n \\times p}$, product $C = AB \\in \\mathbb{R}^{m \\times p}$ where $c_{ij} = \\sum_{k=1}^{n} a_{ik} b_{kj}$.
+- **Eigenvalues & Eigenvectors:** Solves $A v = \\lambda v$, central to PCA dimension reduction and PageRank algorithms.`
+  },
+
+  // 5. Business Strategy & Entrepreneurship
+  {
+    keywords: ['business strategy', 'startup', 'marketing funnel', 'business model', 'entrepreneurship'],
+    category: 'Business & Management',
+    response: `### 💼 High-Growth Startup Strategy & Execution Framework
+
+Building a sustainable, high-growth venture requires aligning product value, customer acquisition channels, and capital efficiency.
+
+#### 1. The 4 Pillars of Product-Market Fit (PMF):
+1. **Value Proposition:** Solving an urgent, high-friction pain point for a distinct target audience.
+2. **Unit Economics:** Ensuring Customer Lifetime Value exceeds Customer Acquisition Cost ($LTV : CAC \\ge 3:1$).
+3. **Distribution Flywheel:** Leveraging organic referral loops, SEO, content marketing, and strategic partnerships.
+4. **Retention Engine:** High daily/weekly active usage ($DAU/MAU$) driving strong expansion MRR.
+
+#### 2. Execution Roadmap:
+- **Phase 1 (MVP):** Launch minimal functional product to validate core retention metrics.
+- **Phase 2 (Growth):** Optimize conversion funnels, onboarding flows, and paid acquisition.
+- **Phase 3 (Scale):** Expand sales capacity, automate operations, and solidify competitive moat.`
+  },
+
+  // 6. Resume & Cover Letter Writing
+  {
+    keywords: ['resume', 'cover letter', 'cold email', 'write resume', 'job application'],
+    category: 'Professional Writing',
+    response: `### 📄 Professional High-Impact Resume & Email Strategy
+
+A high-converting resume uses quantifiable achievements and the Google XYZ Formula (*"Accomplished [X], as measured by [Y], by doing [Z]"*).
+
+#### Sample Executive Resume Summary:
+> **Senior Full-Stack Engineer & Architect** with 5+ years of experience engineering high-throughput microservices and modern web applications. Proven track record of reducing latency by 45% and scaling user bases from 10k to 1M+ active users.
+
+#### High-Converting Cold Email Template:
+\`\`\`text
+Subject: Full-Stack Engineering Inquiry - [Your Name]
+
+Hi [Hiring Manager Name],
+
+I came across [Company Name]'s recent work on [Specific Initiative/Product] and was thoroughly impressed by your engineering approach.
+
+Over the past [X] years, I have specialized in building scalable React and Node.js applications, recently optimizing API throughput by 60% and reducing database load.
+
+I would love to contribute to [Company Name]'s upcoming goals. Are you available for a brief 10-minute chat this week?
+
+Best regards,
+[Your Name]
+[LinkedIn Profile Link] | [Portfolio Link]
 \`\`\``
   },
 
-  // 4. React Functional Component with Hooks
+  // 7. Productivity & Time Management
   {
-    keywords: ['react component', 'react code', 'react hook', 'usestate useeffect', 'react example'],
-    category: 'React / Frontend',
-    response: `Here is a complete **React Functional Component** with State and Effect Hooks:
+    keywords: ['productivity', 'pomodoro', 'time management', 'feynman technique', 'study habits'],
+    category: 'Personal Development',
+    response: `### ⚡ High-Performance Productivity & Study Blueprint
 
-\`\`\`jsx
-import React, { useState, useEffect } from 'react';
+Attaining deep focus and rapid skill acquisition relies on structured cognitive frameworks:
 
-export default function UserList() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+#### 1. The Feynman Technique for Deep Learning:
+1. **Choose a Concept:** Select a topic you want to master.
+2. **Explain it Simply:** Write out an explanation as if teaching a 10-year-old (no complex jargon).
+3. **Identify Knowledge Gaps:** Re-read your explanation; wherever you get stuck, revisit source material.
+4. **Refine & Analogize:** Simplify your wording and create intuitive real-world analogies.
 
-  useEffect(() => {
-    // Fetch data on mount
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then(res => res.json())
-      .then(data => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching users:", err);
-        setLoading(false);
-      });
-  }, []);
-
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h2>User Directory ({filteredUsers.length})</h2>
-      <input
-        type="text"
-        placeholder="Filter by name..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '0.75rem',
-          marginBottom: '1rem',
-          borderRadius: '6px',
-          border: '1px solid #ccc'
-        }}
-      />
-      {loading ? (
-        <p>Loading users...</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {filteredUsers.map(user => (
-            <li key={user.id} style={{ padding: '0.75rem', borderBottom: '1px solid #eee' }}>
-              <strong>{user.name}</strong> ({user.email})
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-\`\`\``
-  },
-
-  // 5. Express REST API Server
-  {
-    keywords: ['express api', 'express server', 'node js rest api', 'express crud', 'backend server'],
-    category: 'Backend Node.js',
-    response: `Here is a production-ready **Node.js Express REST API**:
-
-\`\`\`javascript
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-// Sample database store
-let products = [
-  { id: 1, name: 'Laptop', price: 999.99 },
-  { id: 2, name: 'Smartphone', price: 599.99 }
-];
-
-// GET All
-app.get('/api/products', (req, res) => {
-  res.json({ success: true, count: products.length, data: products });
-});
-
-// GET Single
-app.get('/api/products/:id', (req, res) => {
-  const product = products.find(p => p.id === parseInt(req.params.id));
-  if (!product) return res.status(404).json({ success: false, error: 'Product not found' });
-  res.json({ success: true, data: product });
-});
-
-// POST Create
-app.post('/api/products', (req, res) => {
-  const { name, price } = req.body;
-  if (!name || !price) {
-    return res.status(400).json({ success: false, error: 'Name and price are required' });
-  }
-
-  const newProduct = { id: products.length + 1, name, price: parseFloat(price) };
-  products.push(newProduct);
-  res.status(201).json({ success: true, data: newProduct });
-});
-
-app.listen(PORT, () => console.log(\`API running on http://localhost:\${PORT}\`));
-\`\`\``
-  },
-
-  // 6. Python FastAPI REST Server
-  {
-    keywords: ['fastapi', 'python api', 'python fast api', 'python rest api', 'pydantic'],
-    category: 'Python Backend',
-    response: `Here is a complete **Python FastAPI REST API** with Pydantic schemas:
-
-\`\`\`python
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
-
-app = FastAPI(title="LAF High-Speed API")
-
-class Item(BaseModel):
-    id: Optional[int] = None
-    name: str
-    description: Optional[str] = None
-    price: float
-
-items_db: List[Item] = [
-    Item(id=1, name="Pro License", description="Enterprise Tier", price=199.00)
-]
-
-@app.get("/items", response_model=List[Item])
-def get_items():
-    return items_db
-
-@app.post("/items", response_model=Item, status_code=201)
-def create_item(item: Item):
-    item.id = len(items_db) + 1
-    items_db.append(item)
-    return item
-
-@app.get("/items/{item_id}", response_model=Item)
-def get_item(item_id: int):
-    for item in items_db:
-        if item.id == item_id:
-            return item
-    raise HTTPException(status_code=404, detail="Item not found")
-
-# Run with: uvicorn main:app --reload
-\`\`\``
-  },
-
-  // 7. Binary Search Algorithm
-  {
-    keywords: ['binary search', 'binary search python', 'binary search javascript', 'binary search algorithm'],
-    category: 'Algorithms',
-    response: `Here is an optimized **Binary Search Algorithm** in Python and JavaScript:
-
-### Python Implementation:
-\`\`\`python
-def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid  # Returns index of target
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1  # Target not found
-
-numbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
-print("Index of 23:", binary_search(numbers, 23))
-\`\`\`
-
-### JavaScript Implementation:
-\`\`\`javascript
-function binarySearch(arr, target) {
-  let left = 0;
-  let right = arr.length - 1;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (arr[mid] === target) return mid;
-    if (arr[mid] < target) left = mid + 1;
-    else right = mid - 1;
-  }
-  return -1;
-}
-
-const numbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
-console.log("Index of 23:", binarySearch(numbers, 23));
-\`\`\`
-- Time Complexity: **O(log N)**
-- Space Complexity: **O(1)**`
-  },
-
-  // 8. Dockerfile & Docker Compose Config
-  {
-    keywords: ['dockerfile', 'docker compose', 'docker node', 'dockerize node', 'containerization'],
-    category: 'DevOps / Docker',
-    response: `Here is a production multi-stage **Node.js Dockerfile & Docker Compose** setup:
-
-### Dockerfile:
-\`\`\`dockerfile
-# Stage 1: Build & Dependencies
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production=false
-COPY . .
-RUN npm run build
-
-# Stage 2: Production Execution
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm install --production=true
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server ./server
-
-EXPOSE 3000
-CMD ["node", "server/index.js"]
-\`\`\`
-
-### docker-compose.yml:
-\`\`\`yaml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      - NODE_ENV=production
-    restart: always
-\`\`\``
+#### 2. The 90/20 High-Output Work Cycles:
+- **Block 90 Minutes:** Uninterrupted single-task focus (zero notifications or tab switching).
+- **Take 20 Minutes Recovery:** Complete mental disconnect (walk, hydrate, rest eyes).
+- **Limit to 3 Core Deep Blocks/Day:** Yields 4.5 hours of peak cognitive throughput.`
   }
 ];
 
 /**
- * Searches 70B-grade custom trained knowledge base for matching query keywords
+ * Searches multi-domain knowledge base for matching query keywords
  */
 function searchCustomKnowledge(prompt = '') {
   const p = prompt.toLowerCase().trim();
