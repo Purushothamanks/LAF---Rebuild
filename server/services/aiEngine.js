@@ -338,6 +338,11 @@ function sanitizeLlmOutput(text = '') {
   clean = clean.replace(/Lean Autonomous Future AI/gi, 'Look at The Future AI');
   clean = clean.replace(/Lean Autonomous Future/gi, 'Look at The Future');
 
+  // Strip unwanted header prefixes
+  clean = clean.replace(/### Verified Knowledge: /gi, '');
+  clean = clean.replace(/Verified Knowledge: /gi, '');
+  clean = clean.replace(/### Verified Knowledge Analysis\n/gi, '');
+
   // Past-tense sanitization for active incumbent leaders
   clean = clean.replace(/served as the (eighth|9th|8th|current) chief minister of Tamil Nadu from 2021 to \d+/gi, 'is the current Chief Minister of Tamil Nadu (serving since May 2021)');
   clean = clean.replace(/served as the chief minister of Tamil Nadu from 2021 to \d+/gi, 'is the current Chief Minister of Tamil Nadu (serving since May 2021)');
@@ -390,11 +395,11 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
 
   // If Wikipedia resolved an answer
   if (wikiData && wikiData.extract) {
-    return `### Verified Knowledge: **${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
+    return `**${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
   }
 
   if (liveWikiContext) {
-    return `### Verified Knowledge Analysis\n${liveWikiContext}`;
+    return `${liveWikiContext}`;
   }
 
   // Math calculation check
@@ -493,29 +498,22 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   try {
     wikiData = await resolveWikipediaKnowledge(cleanPrompt);
     if (wikiData) {
-      liveWikiContext = `\n[VERIFIED WIKIPEDIA LIVE KNOWLEDGE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
+      liveWikiContext = `\n[BACKGROUND WIKIPEDIA REFERENCE: "${wikiData.title}"]:\n${wikiData.extract}\nSource: ${wikiData.url}\n`;
     }
   } catch (e) {
     // Fail-safe Wikipedia lookup
   }
 
-  const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, '');
-
-  // 5. Check User Memory Context
+  // 5. Always Check User Context Memory
   let memoryContext = '';
-  if (
-    lower.includes('past conversation') ||
-    lower.includes('last week') ||
-    lower.includes('yesterday') ||
-    lower.includes('previous conversation') ||
-    lower.includes('what did we talk') ||
-    lower.includes('remember when')
-  ) {
+  try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
     if (memoryMatches && memoryMatches.length > 0) {
-      memoryContext = `\n[RECALLED MEMORY]:\n` +
+      memoryContext = `\n[RECALLED USER CONTEXT MEMORY]:\n` +
         memoryMatches.map(m => `[${m.date} | ${m.role.toUpperCase()}]: ${m.content}`).join('\n');
     }
+  } catch (e) {
+    // Fail-safe memory lookup
   }
 
   const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveWikiContext ? '\n' + liveWikiContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
