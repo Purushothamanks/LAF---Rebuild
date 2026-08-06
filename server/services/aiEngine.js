@@ -767,6 +767,38 @@ if __name__ == "__main__":
 \`\`\``;
   }
 
+  // Recursion Explanation & Solution
+  if (p.includes('recursion') || p.includes('recursive')) {
+    return `### 🔄 Recursion in Programming Breakdown
+
+**Recursion** is a programming technique where a function calls itself to break down a problem into smaller instances until it reaches a **base case**.
+
+#### 1. The 2 Mandatory Components of Recursion:
+1. **Base Case**: The stopping condition that prevents infinite recursion.
+2. **Recursive Step**: The function calling itself with a smaller/reduced argument.
+
+#### 2. JavaScript Code Example (Factorial & Fibonacci):
+\`\`\`javascript
+// Factorial calculation: n! = n * (n - 1)!
+function factorial(n) {
+  if (n <= 1) return 1; // Base case
+  return n * factorial(n - 1); // Recursive step
+}
+
+console.log("Factorial of 5:", factorial(5)); // Output: 120
+\`\`\`
+
+#### 3. Python Code Example:
+\`\`\`python
+def factorial(n):
+    if n <= 1:
+        return 1  # Base case
+    return n * factorial(n - 1)  # Recursive step
+
+print("Factorial of 5:", factorial(5))  # Output: 120
+\`\`\``;
+  }
+
   // General JavaScript / Node.js
   return `Here is a complete JavaScript solution for **"${prompt}"**:
 
@@ -846,11 +878,11 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
 }
 
 /**
- * High-Speed Direct Passthrough Engine with Pure Free 70B Model & Direct Live Web Search
+ * High-Speed Direct Passthrough Engine with Ollama Primary Backend & User-Triggered Live Web Search
  */
-async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'meta-llama/llama-3.3-70b-instruct:free', enableWebSearch = false }) {
+async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Fast Processing prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
+  console.log(`[AI-ENGINE] Processing prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
 
   // 0. Developer Query Interception
   if (isDeveloperQuery(cleanPrompt)) {
@@ -868,10 +900,10 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     };
   }
 
-  // DIRECT LIVE WEB SEARCH: If user enabled web search symbol, send query directly to search engines!
+  // DIRECT LIVE WEB SEARCH: Run ONLY if user enabled Web Search symbol!
   let liveSearchContext = '';
   if (enableWebSearch) {
-    console.log(`[AI-ENGINE] Direct Web Search Active: Querying live search engines for "${cleanPrompt}"...`);
+    console.log(`[AI-ENGINE] Web Search Enabled by User: Executing live search for "${cleanPrompt}"...`);
     liveSearchContext = await performLiveWebSearch(cleanPrompt);
   }
 
@@ -945,30 +977,20 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // PRIMARY ENGINE: PURE FREE LLM 70B MODEL (Llama 3.3 70B Instruct Free)
-  // -------------------------------------------------------------
-  const primaryModel = 'meta-llama/llama-3.3-70b-instruct:free';
-  const omniRes = await callOmniRouter({
-    messages: formattedMessages,
-    model: primaryModel,
-    apiKey: customApiKey
-  });
-  if (omniRes) return omniRes;
-
-  // -------------------------------------------------------------
-  // FALLBACK 1: DIRECT PASSTHROUGH TO OLLAMA MODELS
+  // PRIMARY BACKEND MODEL: OLLAMA LOCAL AI MODELS
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
+    'http://localhost:11434/api/chat',
     'http://172.17.0.1:11434/api/chat'
   ];
 
-  const targetModels = ['laf-v2:latest', 'llama3.2:latest'];
+  const targetOllamaModels = ['laf-v2:latest', 'llama3.2:latest', 'llama3:latest', 'qwen2.5:latest', 'mistral:latest'];
 
   for (const endpoint of ollamaEndpoints) {
-    for (const modelName of targetModels) {
+    for (const modelName of targetOllamaModels) {
       try {
-        console.log(`[AI-ENGINE] High-speed call to ${endpoint} (${modelName})...`);
+        console.log(`[AI-ENGINE] Routing request to Ollama Backend (${endpoint} | ${modelName})...`);
         const start = Date.now();
         const ollamaRes = await axios.post(
           endpoint,
@@ -979,7 +1001,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
             options: {
               num_ctx: 2048,
               num_predict: 1024,
-              temperature: 0.6,
+              temperature: 0.7,
               top_k: 20,
               top_p: 0.9,
               num_thread: 4
@@ -987,46 +1009,39 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
           },
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 3500
+            timeout: 1500
           }
         );
 
         let content = ollamaRes.data?.message?.content;
         if (content && content.trim().length > 0) {
           const duration = ((Date.now() - start) / 1000).toFixed(2);
-          console.log(`[AI-ENGINE] SUCCESS from ${modelName} in ${duration}s!`);
-
-          if (isDeveloperQuery(cleanPrompt)) {
-            content = LAF_DEVELOPER_TEXT;
-          } else if (isMediaGenerationQuery(cleanPrompt)) {
-            content = LAF_MEDIA_UNSUPPORTED_TEXT;
-          } else {
-            content = sanitizeLlmOutput(content);
-          }
+          console.log(`[AI-ENGINE] SUCCESS from Ollama Backend (${modelName}) in ${duration}s!`);
 
           return {
-            text: content.trim(),
-            provider: `LAF AI (${modelName})`
+            text: sanitizeLlmOutput(content.trim()),
+            provider: enableWebSearch ? `Ollama (${modelName}) + Web Search` : `Ollama (${modelName})`
           };
         }
       } catch (e) {
-        console.error(`[AI-ENGINE] Ollama error [${endpoint} | ${modelName}]: ${e.message}`);
+        // Continue to next model/endpoint
       }
     }
   }
 
   // -------------------------------------------------------------
-  // 6.5 OMNI ROUTER FALLBACK
+  // SECONDARY ENGINE: OMNI ROUTER (Free 70B Model / OpenRouter API)
   // -------------------------------------------------------------
-  const omniFallback = await callOmniRouter({
+  const primaryModel = 'meta-llama/llama-3.3-70b-instruct:free';
+  const omniRes = await callOmniRouter({
     messages: formattedMessages,
-    model: selectedModel || 'omni/auto',
+    model: primaryModel,
     apiKey: customApiKey
   });
-  if (omniFallback) return omniFallback;
+  if (omniRes) return omniRes;
 
   // -------------------------------------------------------------
-  // 7. Backup: Gemini API
+  // TERTIARY BACKEND: GEMINI API
   // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
@@ -1046,9 +1061,8 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
 
       let candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (candidate && candidate.trim().length > 0) {
-        candidate = sanitizeLlmOutput(candidate);
         return {
-          text: candidate.trim(),
+          text: sanitizeLlmOutput(candidate.trim()),
           provider: 'Gemini 1.5 Flash'
         };
       }
@@ -1058,7 +1072,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   }
 
   // -------------------------------------------------------------
-  // 8. Intelligent Fallback Analysis Response
+  // FALLBACK: INTELLIGENT COMPILER
   // -------------------------------------------------------------
   return {
     text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveSearchContext, null)),
