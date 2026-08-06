@@ -250,11 +250,54 @@ function handlePastSessionQuery(username, prompt) {
 }
 
 /**
+ * Checks if prompt is asking about the user's identity or what LAF knows about the user
+ */
+function isUserIdentityQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  return (
+    p.includes('know about me') ||
+    p.includes('know me') ||
+    p.includes('who am i') ||
+    p.includes('tell me about me') ||
+    p.includes('my profile') ||
+    p.includes('my details') ||
+    p.includes('what you know about me') ||
+    p.includes('what do you know about me') ||
+    p.includes('remember about me')
+  );
+}
+
+function handleUserIdentityQuery(username, prompt) {
+  const memoryMatches = searchUserMemory(username, prompt);
+  let memoryText = '';
+  if (memoryMatches && memoryMatches.length > 0) {
+    memoryText = `\n\n### Recalled Vault Notes & Preferences:\n` +
+      memoryMatches.map(m => `* **${m.date}**: ${m.content}`).join('\n');
+  }
+
+  return `### User Profile Details\n\n` +
+    `* **Name**: **${username || 'Purushothaman K S'}**\n` +
+    `* **Role**: Lead Developer & Creator of **LAF AI Platform**\n` +
+    `* **LinkedIn Profile**: https://www.linkedin.com/in/purushothaman-k-s-158900282/` +
+    memoryText;
+}
+
+/**
  * Analyzes user prompt to determine if real-time web search is needed
  */
 function needsWebSearch(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p) || isProjectIdeaQuery(p) || isPastSessionQuery(p)) {
+  if (
+    !p ||
+    isDeveloperQuery(p) ||
+    isLafIdentityQuery(p) ||
+    isMediaGenerationQuery(p) ||
+    isTnGovernmentQuery(p) ||
+    isGreetingQuery(p) ||
+    isProjectIdeaQuery(p) ||
+    isPastSessionQuery(p) ||
+    isUserIdentityQuery(p)
+  ) {
     return false;
   }
 
@@ -518,6 +561,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     return {
       text: handlePastSessionQuery(username, cleanPrompt),
       provider: 'LAF Memory Engine'
+    };
+  }
+
+  // 2.6 User Identity & Profile Interception
+  if (isUserIdentityQuery(cleanPrompt)) {
+    return {
+      text: handleUserIdentityQuery(username, cleanPrompt),
+      provider: 'LAF Core Engine'
     };
   }
 
