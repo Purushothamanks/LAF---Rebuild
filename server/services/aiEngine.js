@@ -280,10 +280,18 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   });
   if (omniRes) return omniRes;
 
-  // 5. Final Grounded Response
+  // 5. Grounded Knowledge & Web Search Fallback
+  const customHit = searchCustomKnowledge(cleanPrompt);
+  if (customHit) {
+    return {
+      text: customHit,
+      provider: 'LAF Intelligence Engine'
+    };
+  }
+
   return {
-    text: `I have processed your request for **"${cleanPrompt}"**.${liveSearchContext ? '\n\n' + liveSearchContext : ''}\n\nPlease ask any specific follow-up question or detail!`,
-    provider: 'LAF Core Engine'
+    text: liveSearchContext ? `${liveSearchContext}\n\n*Direct live web search compiled for "${cleanPrompt}".*` : `I have received your request regarding **"${cleanPrompt}"**. Please specify any additional details or requirements!`,
+    provider: liveSearchContext ? 'LAF Live Web Search' : 'LAF Core Engine'
   };
 }
 
