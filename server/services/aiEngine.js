@@ -532,7 +532,7 @@ const LAF_MEMORY_EXPLANATION_TEXT = `Yes! **LAF AI has built-in long-term Contex
 /**
  * Intelligent Fallback Analyzer if LLMs are unreachable
  */
-function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = '', wikiData = null) {
+function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext = '', wikiData = null) {
   const clean = prompt.trim();
   const lower = clean.toLowerCase();
 
@@ -561,8 +561,8 @@ function analyzeUserInputFallback(prompt = '', username = '', liveWikiContext = 
     return `**${wikiData.title}**\n\n${wikiData.extract}\n\n*Source: [Wikipedia](${wikiData.url})*`;
   }
 
-  if (liveWikiContext) {
-    return `${liveWikiContext}`;
+  if (liveSearchContext && typeof liveSearchContext === 'string' && liveSearchContext.trim()) {
+    return `### 🌐 Live Web Search Intelligence\n\n${liveSearchContext.trim()}\n\n*Compiled live web search results for "${clean}".*`;
   }
 
   // Math calculation check
@@ -868,14 +868,11 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   // 8. Intelligent Fallback Analysis Response
   // -------------------------------------------------------------
   return {
-    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveWikiContext, wikiData)),
-    provider: 'LAF Intelligence Engine'
+    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username, liveSearchContext, null)),
+    provider: liveSearchContext ? 'LAF Live Web Search' : 'LAF Intelligence Engine'
   };
 }
 
 module.exports = {
   generateResponse
 };
-
-
-
