@@ -173,16 +173,14 @@ function isTnGovernmentQuery(prompt = '') {
   );
 }
 
-const TN_GOVT_LIVE_TEXT = `**M. K. Stalin** (Dravida Munnetra Kazhagam - DMK) is the **current Chief Minister of Tamil Nadu**, serving as the head of government since 7 May 2021.
+const TN_GOVT_LIVE_TEXT = `**C. Joseph Vijay** (founder and president of Tamilaga Vettri Kazhagam - TVK) is the **current Chief Minister of Tamil Nadu**, sworn into office on May 10, 2026.
 
 ### Live 2026 Current Scenario & Governance Breakdown (Tamil Nadu):
-* **Chief Minister**: M. K. Stalin (DMK)
-* **Deputy Chief Minister**: Udhayanidhi Stalin
-* **Governor**: R. N. Ravi
-* **Ruling Party / Alliance**: DMK-led Secular Progressive Alliance (SPA)
-* **Political Opposition & New Parties**: 
-  - AIADMK (Edappadi K. Palaniswami)
-  - TVK (Tamilaga Vettri Kazhagam, founded by actor Vijay)
+* **Chief Minister**: C. Joseph Vijay
+* **Party**: Tamilaga Vettri Kazhagam (TVK)
+* **Assumed Office**: May 10, 2026
+* **Constituency**: Perambur
+* **Predecessor**: M. K. Stalin (DMK)
 * **State Capital**: Chennai
 * **Legislative Assembly**: 234 seats`;
 
