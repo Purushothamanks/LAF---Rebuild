@@ -7,11 +7,17 @@ IMPORTANT BRANDING & IDENTITY DIRECTIVE:
 If the user asks "What is LAF?", "What does LAF stand for?", "What is the full form of LAF?", "Tell me about LAF", or any variation:
 You MUST state:
 - The full form of "LAF" is - Look at The Future
-- LAF is an autonomous, fast multimodal AI product platform featuring sub-350ms reasoning, real-time world intelligence, and isolated E2EE database vaults.
+- LAF is an autonomous, fast AI product platform featuring sub-350ms reasoning, real-time world intelligence, and isolated E2EE database vaults.
+- NEVER state that LAF stands for "Lazada Artificial Intelligence", "Lean Autonomous Future", or "Miyano AI".
 
 IMPORTANT DEVELOPER & CREATOR DIRECTIVE:
 If the user asks "Who is your developer?", "Who developed you?", "Who created you?", "Who built you?", or asks anything related to your developer, author, or creator:
 You MUST answer strictly: "refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/"
+
+IMPORTANT GENERAL AI DIRECTIVE:
+When the user asks general questions about AI, Artificial Intelligence, Machine Learning, or Deep Learning:
+- Explain general Artificial Intelligence concepts accurately (Machine Learning, NLP, Computer Vision, Neural Networks).
+- NEVER invent or mention fake companies (such as "Miyano AI" or "Lazada AI").
 
 IMPORTANT MEDIA GENERATION DIRECTIVE:
 If the user asks to generate, create, draw, render, or synthesize images, video, or audio:
@@ -112,6 +118,58 @@ LAF is an autonomous, fast AI product platform engineered for high-speed softwar
 * **Long-Term Memory Vault:** Automated semantic memory extraction to recall user preferences and project context across sessions.`;
 
 /**
+ * Checks if prompt is a general question about Artificial Intelligence (AI)
+ */
+function isGeneralAiQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const directMatch = [
+    'what is ai', 'what is artificial intelligence', 'tell me about ai', 'tell me about artificial intelligence',
+    'explain ai', 'explain artificial intelligence', 'define ai', 'define artificial intelligence',
+    'what does ai mean', 'what is ai technology', 'about ai', 'what ai means', 'ai concept',
+    'what is machine learning', 'what is deep learning', 'what is nlp'
+  ];
+
+  if (directMatch.some(d => p === d || p === d + '?')) return true;
+
+  if (p === 'ai' || p === 'artificial intelligence') return true;
+
+  if ((p.includes('what is ai') || p.includes('explain ai') || p.includes('about ai')) && !p.includes('laf') && !p.includes('developer')) {
+    return true;
+  }
+
+  return false;
+}
+
+const GENERAL_AI_EXPLANATION = `**Artificial Intelligence (AI)** refers to the simulation of human intelligence in computers and machines that are programmed to think, learn, reason, and solve complex problems autonomously.
+
+### Key Domains & Technologies in AI:
+
+1. **Machine Learning (ML)**: Statistical models and algorithms that enable computers to learn patterns from data and make accurate predictions without explicit step-by-step programming.
+2. **Deep Learning & Neural Networks**: Advanced multi-layer mathematical models inspired by biological neural networks, capable of high-dimensional pattern recognition in images, text, and audio.
+3. **Natural Language Processing (NLP)**: Enabling systems to process, translate, comprehend, and generate human language naturally.
+4. **Computer Vision**: Allowing AI systems to extract information from digital images, videos, and visual sensors.
+5. **Robotics & Autonomous Systems**: Intelligent hardware and software capable of making real-time decisions in physical environments.
+
+AI is designed to enhance human productivity, automate complex workflows, and solve critical scientific and engineering challenges.`;
+
+/**
+ * Sanitizes LLM output to remove hallucinated company names or misleading brand definitions
+ */
+function sanitizeLlmOutput(text = '') {
+  if (!text || typeof text !== 'string') return '';
+  let clean = text;
+
+  clean = clean.replace(/Miyano AI \(Miyano AI\)/gi, 'LAF AI');
+  clean = clean.replace(/Miyano AI/gi, 'LAF AI');
+  clean = clean.replace(/Miyano/gi, 'LAF');
+  clean = clean.replace(/Lazada Artificial Intelligence/gi, 'Look at The Future AI');
+  clean = clean.replace(/Lean Autonomous Future AI/gi, 'Look at The Future AI');
+  clean = clean.replace(/Lean Autonomous Future/gi, 'Look at The Future');
+
+  return clean;
+}
+
+/**
  * Checks if user prompt is a generic code request missing a language specification.
  */
 function isGenericCodeRequest(prompt = '') {
@@ -189,7 +247,15 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
     };
   }
 
-  // 3. Generic Code Request Interception: Ask for purpose & language preference
+  // 3. General AI Concept Query Interception
+  if (isGeneralAiQuery(cleanPrompt)) {
+    return {
+      text: GENERAL_AI_EXPLANATION,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  // 4. Generic Code Request Interception: Ask for purpose & language preference
   if (isGenericCodeRequest(cleanPrompt)) {
     return {
       text: `Before I generate the code, could you please specify your **preferred programming language** (e.g. *JavaScript*, *Python*, *Go*, *C++*, *HTML/CSS*) and the **main purpose / target framework** for your project? 😊`,
@@ -199,7 +265,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 
   const lower = cleanPrompt.toLowerCase().replace(/[^\w\s]/gi, '');
 
-  // 4. Check User Memory Context
+  // 5. Check User Memory Context
   let memoryContext = '';
   if (
     lower.includes('past conversation') ||
@@ -234,7 +300,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // -------------------------------------------------------------
-  // 5. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS
+  // 6. DIRECT PASSTHROUGH TO ULTRA-FAST OLLAMA MODELS
   // -------------------------------------------------------------
   const ollamaEndpoints = [
     'http://127.0.0.1:11434/api/chat',
@@ -280,6 +346,8 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
             content = LAF_DEVELOPER_TEXT;
           } else if (isMediaGenerationQuery(cleanPrompt)) {
             content = LAF_MEDIA_UNSUPPORTED_TEXT;
+          } else {
+            content = sanitizeLlmOutput(content);
           }
 
           return {
@@ -294,7 +362,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 6. Backup: Gemini API
+  // 7. Backup: Gemini API
   // -------------------------------------------------------------
   const geminiKey = customApiKey || (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your_actual') ? process.env.GEMINI_API_KEY : null);
   if (geminiKey && geminiKey.startsWith('AIzaSy')) {
@@ -312,8 +380,9 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
         { timeout: 10000 }
       );
 
-      const candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      let candidate = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (candidate && candidate.trim().length > 0) {
+        candidate = sanitizeLlmOutput(candidate);
         return {
           text: candidate.trim(),
           provider: 'Gemini 1.5 Flash'
@@ -325,10 +394,10 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   }
 
   // -------------------------------------------------------------
-  // 7. Intelligent Fallback Analysis Response
+  // 8. Intelligent Fallback Analysis Response
   // -------------------------------------------------------------
   return {
-    text: analyzeUserInputFallback(cleanPrompt, username),
+    text: sanitizeLlmOutput(analyzeUserInputFallback(cleanPrompt, username)),
     provider: 'LAF Intelligence Engine'
   };
 }
@@ -336,4 +405,5 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
 module.exports = {
   generateResponse
 };
+
 
