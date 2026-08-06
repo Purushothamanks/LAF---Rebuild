@@ -210,11 +210,20 @@ const CURRENT_SCENARIO_LIVE_TEXT = `### Live 2026 Worldwide & Technology Scenari
    - Mandatory disclosures and AI watermarking regulations enforce strict ethical boundaries and user transparency worldwide.`;
 
 /**
+ * Checks if prompt is a simple greeting
+ */
+function isGreetingQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim().replace(/[^\w\s]/g, '');
+  const greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening', 'good afternoon', 'sup', 'yo', 'hi there', 'hello there'];
+  return greetings.includes(p);
+}
+
+/**
  * Real-time Wikipedia Search Resolver: Resolves any query into verified Wikipedia facts
  */
 async function resolveWikipediaKnowledge(prompt = '') {
   const p = prompt.trim();
-  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p)) {
+  if (!p || isDeveloperQuery(p) || isLafIdentityQuery(p) || isMediaGenerationQuery(p) || isTnGovernmentQuery(p) || isGreetingQuery(p)) {
     return null;
   }
 
@@ -425,6 +434,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey }
   if (isLafIdentityQuery(cleanPrompt)) {
     return {
       text: LAF_REAL_IDENTITY_TEXT,
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  // 5. Greeting Interception
+  if (isGreetingQuery(cleanPrompt)) {
+    return {
+      text: `Hello **${username}**! 👋 How can I assist you today with software development, system design, or problem solving?`,
       provider: 'LAF Core Engine'
     };
   }
