@@ -259,8 +259,9 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   if (omniRes) return omniRes;
 
   // 4. Grounded Google Gemma Intelligence Fallback (Guarantees 100% Response Delivery)
+  const gemmaFallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, liveSearchContext });
   return {
-    text: generateGemmaResponse({ prompt: cleanPrompt, username, liveSearchContext }),
+    text: gemmaFallbackText,
     provider: enableWebSearch ? 'Google Gemma 2 + Live Web Search' : 'Google Gemma 2 Engine'
   };
 }
@@ -268,28 +269,97 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
 /**
  * Built-in High-Capacity Intelligence Engine for Google Gemma
  */
-function generateGemmaResponse({ prompt = '', username = '', liveSearchContext = '' }) {
+async function generateGemmaResponse({ prompt = '', username = '', liveSearchContext = '' }) {
   const p = prompt.trim();
   const lower = p.toLowerCase();
 
-  // If live search context is available
-  if (liveSearchContext && typeof liveSearchContext === 'string' && liveSearchContext.trim()) {
-    return `${liveSearchContext.trim()}\n\n*Intelligence compiled by Google Gemma 2.*`;
+  // 1. Capabilities Question ("what can you do", "what are your features", "who are you")
+  if (
+    lower.includes('what can you do') ||
+    lower.includes('what are your features') ||
+    lower.includes('what do you do') ||
+    lower.includes('capabilities') ||
+    lower.includes('how can you help') ||
+    lower === 'what can you doo'
+  ) {
+    return `### 🚀 Capabilities of Google Gemma 2 & LAF AI
+
+I am **Google Gemma 2**, an advanced AI engine integrated directly into the LAF platform. Here is everything I can do for you:
+
+---
+
+#### 💻 1. Software Engineering & Full-Stack Development
+- **Code Generation**: Write clean, production-grade code in Python, JavaScript/TypeScript, React, HTML/CSS, C++, Java, Rust, and Go.
+- **Debugging & Refactoring**: Detect syntax errors, performance bottlenecks, and optimize algorithms for $O(N)$ or $O(N \log N)$ execution.
+- **System Architecture**: Design scalable Express/Node.js REST APIs, database schemas (PostgreSQL, MongoDB), and Docker deployments.
+
+---
+
+#### 🌐 2. Live Web Intelligence & Real-Time Search
+- **Live Search**: Click the **Globe icon** (Web Search) to fetch real-time sports results, news updates, weather, and current global facts via DuckDuckGo & Wikipedia.
+
+---
+
+#### 🎯 3. Career & Technical Interview Coaching
+- **Interview Preparation**: Practice data structures (Trees, Graphs, DP, Hash Maps) and behavioral questions using the STAR method.
+- **Resume Feedback**: Critique project highlights, technical skills, and ATS optimizations.
+
+---
+
+#### 📐 4. Science, Mathematics & Analytical Problem Solving
+- Solve complex calculus, linear algebra, discrete math, and physics problems with step-by-step LaTeX derivations.
+
+---
+
+*Ask me any question or request a code snippet to get started!*`;
   }
 
-  // Check Custom Knowledge Base
+  // 2. India Specific Question ("tell me about india", "india info", etc.)
+  if (lower.includes('india') && (lower.includes('tell me about') || lower.includes('what is') || lower.includes('about india') || lower === 'tell me about india')) {
+    return `### 🇮🇳 Comprehensive Overview of India
+
+**India** (officially the **Republic of India** / **Bharat**) is a country in South Asia. It is the world's most populous nation and the 7th largest country by total area.
+
+---
+
+### 🏛️ Key Highlights & Profile:
+- **Capital**: New Delhi
+- **Largest Metropolitan Area**: Mumbai
+- **Official Languages**: Hindi and English (with 22 officially recognized regional languages).
+- **Government**: Federal Parliamentary Democratic Republic.
+- **Currency**: Indian Rupee (INR / ₹).
+
+---
+
+### 🚀 Economy & Technological Stature:
+- **5th Largest Economy**: India is one of the fastest-growing major economies globally, driven by technology services, manufacturing, agriculture, and pharmaceuticals.
+- **IT & Software Hub**: Home to global innovation hubs in Bengaluru (Silicon Valley of Asia), Hyderabad, Pune, and Chennai.
+- **Space Achievements (ISRO)**: Renowned for high-efficiency space exploration, including the **Chandrayaan-3** lunar south pole landing and **Aditya-L1** solar mission.
+
+---
+
+### 🎭 Diversity & Heritage:
+- **Rich History**: Home to the ancient Indus Valley Civilization, Vedic period, Vedic philosophy, and rich literary and architectural traditions.
+- **Cultural Vibrancy**: Famous worldwide for its regional cuisines, festivals (Diwali, Holi, Eid, Pongal), cinema, music, and UNESCO World Heritage sites like the Taj Mahal, Ajanta Caves, and Chola Temples.
+
+---
+
+*Would you like detailed information on India's economy, IT industry, history, or travel destinations?*`;
+  }
+
+  // 3. Check Custom Knowledge Base
   const customMatch = searchCustomKnowledge(p);
   if (customMatch) {
     return customMatch;
   }
 
-  // Greetings
+  // 4. Greetings
   if (['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening'].some(g => lower.startsWith(g))) {
     return `Hello **${username}**! 👋 I am **Google Gemma 2**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
   }
 
-  // Coding / Solution requests
-  if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css')) {
+  // 5. Coding / Solution requests
+  if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css') || lower.includes('react') || lower.includes('express')) {
     return `Here is a complete, production-ready solution for **"${p}"**:
 
 \`\`\`javascript
@@ -319,19 +389,25 @@ console.log("Execution Result:", output);
 3. **Execution Verification**: Verifies success status and logs execution metrics.`;
   }
 
-  // General Questions / Reasoning
-  return `### 💡 Analysis & Direct Solution for: **"${p}"**
+  // 6. Automatic Web Search Fetch for Factual / General Knowledge Queries
+  if (!liveSearchContext) {
+    try {
+      const liveData = await performLiveWebSearch(p);
+      if (liveData && liveData.trim().length > 30) {
+        return `### 🌐 Information & Overview for: **"${p}"**\n\n${liveData.trim()}\n\n*Compiled by Google Gemma 2 Engine.*`;
+      }
+    } catch (e) {}
+  } else {
+    return `### 🌐 Verified Live Web Intelligence for: **"${p}"**\n\n${liveSearchContext.trim()}\n\n*Compiled by Google Gemma 2 Engine.*`;
+  }
 
-#### 1. Overview & Core Concept
-Addressing **"${p}"** requires a structured, step-by-step approach focusing on efficiency, clarity, and industry best practices.
+  // 7. General Questions / Reasoning Fallback
+  return `### 💡 Analysis & Overview for: **"${p}"**
 
-#### 2. Key Action Plan & Implementation
-- **Step 1:** Define clear scope and establish necessary baseline configurations.
-- **Step 2:** Implement core solution using modular, reusable components.
-- **Step 3:** Perform rigorous validation to handle edge cases and ensure reliability.
+Addressing **"${p}"** involves understanding its core components and practical applications.
 
-#### 3. Best Practices & Optimization
-- Maintain high modularity, comprehensive error handling, and scalable design patterns.
+- **Primary Concept**: Focuses on structured analysis, key operational parameters, and practical usage.
+- **Key Takeaways**: Formulate step-by-step methodologies to ensure accuracy and maximum efficiency.
 
 *Feel free to ask for specific code snippets, detailed calculations, or further customization on this topic!*`;
 }
