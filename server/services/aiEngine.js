@@ -231,7 +231,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     'http://172.17.0.1:11434/api/chat'
   ];
 
-  const targetOllamaModels = ['laf-v2:latest', 'llama3.3:latest', 'llama3.2:latest', 'llama3:latest', 'qwen2.5:latest', 'mistral:latest'];
+  const targetOllamaModels = ['laf-v2:latest', 'gemma2:latest', 'gemma:latest', 'llama3.3:latest', 'llama3.2:latest', 'llama3:latest', 'qwen2.5:latest', 'mistral:latest'];
 
   for (const endpoint of ollamaEndpoints) {
     for (const modelName of targetOllamaModels) {
@@ -272,7 +272,14 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     }
   }
 
-  // 4. Secondary Cloud Fallback (OpenRouter / OmniRouter Pure Free 70B Model)
+  // 4. Secondary Cloud Fallback (Google Gemma 2 & Free 70B Models)
+  const gemmaRes = await callOmniRouter({
+    messages: formattedMessages,
+    model: 'google/gemma-2-9b-it:free',
+    apiKey: customApiKey
+  });
+  if (gemmaRes) return gemmaRes;
+
   const omniRes = await callOmniRouter({
     messages: formattedMessages,
     model: 'meta-llama/llama-3.3-70b-instruct:free',
