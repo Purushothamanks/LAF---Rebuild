@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { fetchWikiSummary } = require('./trendEngine');
+const { searchCustomKnowledge } = require('./customKnowledge');
 
 const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for high-performance software engineering, visual diagnostics, mathematical reasoning, and structured advice.
 
@@ -579,6 +580,11 @@ function analyzeUserInputFallback(prompt = '', username = '', liveSearchContext 
  * Generates actual production-ready code solutions for code requests (HTML, CSS, Portfolio, Python, JS)
  */
 function generateSmartCodeFallback(prompt = '') {
+  const customHit = searchCustomKnowledge(prompt);
+  if (customHit) {
+    return customHit;
+  }
+
   const p = prompt.toLowerCase();
 
   // Portfolio Website HTML/CSS
