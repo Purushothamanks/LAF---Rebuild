@@ -81,11 +81,11 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
           keep_alive: -1,
           options: {
             temperature: 0.6,
-            num_predict: 300,
+            num_predict: 180,
             num_ctx: 2048
           }
         },
-        { timeout: 35000 }
+        { timeout: 120000 }
       );
 
       const content = res.data?.message?.content;
