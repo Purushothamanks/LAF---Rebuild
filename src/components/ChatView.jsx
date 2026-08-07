@@ -81,13 +81,14 @@ export default function ChatView({
         const fullContent = data.response.content || '';
         const providerName = data.response.provider || 'LAF AI';
 
-        setLoading(false);
-
-        // Accelerated fluid typewriter animation
-        const tokens = fullContent.match(/(\s+|\S+)/g) || [fullContent];
-        let currentText = '';
-        let tokenIndex = 0;
-        const chunkSize = tokens.length > 200 ? 5 : (tokens.length > 80 ? 3 : 1);
+        if (fullContent.includes('![')) {
+          setMessages(prev => [
+            ...prev,
+            { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
+          ]);
+          fetchConversations();
+          return;
+        }
 
         // Add empty assistant placeholder message
         setMessages(prev => [

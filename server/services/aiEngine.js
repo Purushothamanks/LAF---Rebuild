@@ -19,15 +19,44 @@ function isDeveloperQuery(prompt = '') {
   return devKeywords.some(k => p.includes(k));
 }
 
-function isMediaGenerationQuery(prompt = '') {
+function isImageGenerationQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
   const directTriggers = [
     'generate image', 'create image', 'make image', 'draw image', 'render image',
-    'generate video', 'create video', 'make video', 'render video',
-    'generate audio', 'create audio', 'make audio', 'text to speech', 'tts',
-    'speech generation', 'image generation', 'video generation', 'audio generation'
+    'generate picture', 'create picture', 'make picture', 'draw picture',
+    'generate photo', 'create photo', 'make photo', 'take photo',
+    'image generation', 'picture of', 'photo of', 'drawing of', 'painting of',
+    'image of', 'generate a', 'create a photo', 'draw a', 'paint a'
   ];
   return directTriggers.some(t => p.includes(t));
+}
+
+function cleanImagePrompt(userPrompt = '') {
+  let cleaned = userPrompt
+    .replace(/^please\s+/i, '')
+    .replace(/^can you\s+/i, '')
+    .replace(/^(generate|create|draw|render|make)\s+(an?\s+)?(image|picture|photo|illustration|drawing)\s+(of|about|showing|with)?\s*/i, '')
+    .replace(/^(image|picture|photo)\s+(of|about|showing)\s*/i, '')
+    .trim();
+
+  if (!cleaned) cleaned = userPrompt;
+  return `${cleaned}, 8k resolution, photorealistic, highly detailed, masterclass lighting`;
+}
+
+function generateImageUrl(promptText) {
+  const seed = Math.floor(Math.random() * 1000000);
+  const encodedPrompt = encodeURIComponent(promptText);
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
+}
+
+function isUnsupportedMediaQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const unsupported = [
+    'generate video', 'create video', 'make video', 'render video',
+    'generate audio', 'create audio', 'make audio', 'text to speech', 'tts',
+    'video generation', 'audio generation'
+  ];
+  return unsupported.some(u => p.includes(u));
 }
 
 function isLafIdentityQuery(prompt = '') {
@@ -103,7 +132,7 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 }
 
 /**
- * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform
+ * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform + FLUX.1 Image Engine
  */
 async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2' }) {
   const cleanPrompt = (prompt || '').trim();
@@ -112,8 +141,19 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   if (isDeveloperQuery(cleanPrompt)) {
     return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
   }
-  if (isMediaGenerationQuery(cleanPrompt)) {
-    return { text: LAF_MEDIA_UNSUPPORTED_TEXT, provider: 'LAF Core Engine' };
+  if (isImageGenerationQuery(cleanPrompt)) {
+    const formattedPrompt = cleanImagePrompt(cleanPrompt);
+    const imageUrl = generateImageUrl(formattedPrompt);
+    
+    const responseMarkdown = `### 🎨 LAF Image Generation\n\n![${cleanPrompt}](${imageUrl})\n\n**Prompt:** \`${cleanPrompt}\`\n**Resolution:** \`1024x1024 (HD Photorealistic)\`\n**Engine:** \`FLUX.1 Neural Diffusion\`\n\n[📥 Direct Download Image](${imageUrl})`;
+
+    return {
+      text: responseMarkdown,
+      provider: 'LAF FLUX Neural Engine'
+    };
+  }
+  if (isUnsupportedMediaQuery(cleanPrompt)) {
+    return { text: 'LAF currently supports text reasoning, code generation, and 1024x1024 photorealistic image generation.', provider: 'LAF Core Engine' };
   }
   if (isLafIdentityQuery(cleanPrompt)) {
     return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
