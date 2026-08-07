@@ -98,22 +98,33 @@ export default function ChatView({
     setMessages(newHistory);
     setLoading(true);
 
-    try {
-      const res = await fetch('/api/chat/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          prompt: userMsgText,
-          conversationId: activeConvId,
-          history: messages,
-          customApiKey,
-          selectedModel
-        })
-      });
+    const sendFetch = async (retries = 1) => {
+      try {
+        return await fetch('/api/chat/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            prompt: userMsgText,
+            conversationId: activeConvId,
+            history: messages,
+            customApiKey,
+            selectedModel
+          })
+        });
+      } catch (err) {
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+          return sendFetch(retries - 1);
+        }
+        throw err;
+      }
+    };
 
+    try {
+      const res = await sendFetch(1);
       const data = await res.json();
       if (res.ok && data.success) {
         setActiveConvId(data.conversationId);

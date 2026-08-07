@@ -72,10 +72,14 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`  LAF ("Look At Future") AI Product Platform Online`);
   console.log(`  Server running on http://0.0.0.0:${PORT}`);
   console.log(`  End-to-End Encryption & User DB Partitioning: ACTIVE`);
   console.log(`=======================================================`);
 });
+
+// Configure long keep-alive timeouts to prevent browser socket disconnects
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 125000;
