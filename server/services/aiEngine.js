@@ -19,14 +19,26 @@ function isDeveloperQuery(prompt = '') {
   return devKeywords.some(k => p.includes(k));
 }
 
+function isImageCapabilityQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const capKeywords = [
+    'can you generate image', 'can you generate images', 'can you create image', 'can you create images',
+    'can you draw', 'can you make image', 'can you make images', 'do you generate image', 'do you generate images',
+    'do you support image', 'can you generate photo', 'can you generate photos', 'can you generate picture',
+    'can you generate pictures', 'are you able to generate'
+  ];
+  return capKeywords.some(k => p.includes(k)) || (p.startsWith('can you') && p.includes('image') && !p.includes(' of '));
+}
+
 function isImageGenerationQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
   const directTriggers = [
-    'generate image', 'create image', 'make image', 'draw image', 'render image',
-    'generate picture', 'create picture', 'make picture', 'draw picture',
-    'generate photo', 'create photo', 'make photo', 'take photo',
-    'image generation', 'picture of', 'photo of', 'drawing of', 'painting of',
-    'image of', 'generate a', 'create a photo', 'draw a', 'paint a'
+    'generate image of', 'create image of', 'make image of', 'draw image of', 'render image of',
+    'generate picture of', 'create picture of', 'make picture of', 'draw picture of',
+    'generate photo of', 'create photo of', 'make photo of',
+    'picture of', 'photo of', 'drawing of', 'painting of', 'image of',
+    'generate an image', 'create an image', 'make an image', 'draw an image',
+    'generate a photo', 'create a photo', 'draw a ', 'paint a '
   ];
   return directTriggers.some(t => p.includes(t));
 }
@@ -141,11 +153,18 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   if (isDeveloperQuery(cleanPrompt)) {
     return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
   }
+  if (isImageCapabilityQuery(cleanPrompt)) {
+    return {
+      text: 'Yes! I can generate high-resolution photorealistic images. Just describe what you would like me to create (e.g., *"generate an image of a majestic lion in golden hour"* or *"draw a futuristic floating city"*).',
+      provider: 'LAF Core Engine'
+    };
+  }
   if (isImageGenerationQuery(cleanPrompt)) {
     const formattedPrompt = cleanImagePrompt(cleanPrompt);
     const imageUrl = generateImageUrl(formattedPrompt);
     
-    const responseMarkdown = `### 🎨 LAF Image Generation\n\n![${cleanPrompt}](${imageUrl})\n\n**Prompt:** \`${cleanPrompt}\`\n**Resolution:** \`1024x1024 (HD Photorealistic)\`\n**Engine:** \`FLUX.1 Neural Diffusion\`\n\n[📥 Direct Download Image](${imageUrl})`;
+    // Pure clean Markdown image tag without extra prompt text or download text
+    const responseMarkdown = `![${cleanPrompt}](${imageUrl})`;
 
     return {
       text: responseMarkdown,
