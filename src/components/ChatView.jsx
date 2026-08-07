@@ -121,8 +121,9 @@ export default function ChatView({
         const fullContent = data.response.content || '';
         const providerName = data.response.provider || 'LAF AI';
 
+        setLoading(false);
+
         if (fullContent.includes('![')) {
-          setLoading(false);
           setMessages(prev => [
             ...prev,
             { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
@@ -130,6 +131,11 @@ export default function ChatView({
           fetchConversations();
           return;
         }
+
+        const tokens = fullContent.match(/(\s+|\S+)/g) || [fullContent];
+        let currentText = '';
+        let tokenIndex = 0;
+        const chunkSize = tokens.length > 200 ? 5 : (tokens.length > 80 ? 3 : 1);
 
         // Add empty assistant placeholder message
         setMessages(prev => [
@@ -170,17 +176,19 @@ export default function ChatView({
           }
         }, 5);
       } else {
+        setLoading(false);
         setMessages(prev => [
           ...prev,
           { role: 'assistant', content: `Error: ${data.error || 'Failed to process request'}`, provider: 'System Error' }
         ]);
-        setLoading(false);
       }
     } catch (err) {
+      setLoading(false);
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: 'Connection error with LAF AI cluster.', provider: 'Offline' }
+        { role: 'assistant', content: `Network Error: ${err.message}`, provider: 'System Error' }
       ]);
+    } finally {
       setLoading(false);
     }
   };
