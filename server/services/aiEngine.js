@@ -69,105 +69,6 @@ function sanitizeLlmOutput(text = '') {
 }
 
 /**
- * Direct Live Web Search Scraper (DuckDuckGo + Wikipedia in parallel)
- */
-async function performLiveWebSearch(query = '') {
-  const cleanQuery = query.trim();
-  if (!cleanQuery) return '';
-
-  const webResults = [];
-
-  const ddgPromise = axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanQuery)}`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    },
-    timeout: 2200
-  }).then(res => {
-    const regex = /class="result__snippet[^"]*"[^>]*>(.*?)<\/a>/gs;
-    let match;
-    let count = 0;
-    while ((match = regex.exec(res.data)) !== null && count < 3) {
-      const snippet = match[1].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
-      if (snippet.length > 20) {
-        count++;
-        webResults.push(`[LIVE WEB SNIPPET #${count}]: ${snippet}`);
-      }
-    }
-  }).catch(() => {});
-
-  const wikiPromise = axios.get(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&limit=1&format=json`, {
-    headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
-    timeout: 2000
-  }).then(async res => {
-    const hits = res.data?.query?.search || [];
-    if (hits.length > 0) {
-      const title = hits[0].title;
-      const sumRes = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {
-        headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
-        timeout: 2000
-      });
-      if (sumRes.data && sumRes.data.extract) {
-        webResults.push(`[VERIFIED WIKIPEDIA FACTS for "${sumRes.data.title}"]:\n${sumRes.data.extract}`);
-      }
-    }
-  }).catch(() => {});
-
-  await Promise.allSettled([ddgPromise, wikiPromise]);
-
-  if (webResults.length > 0) {
-    return `\n[VERIFIED LIVE WEB SEARCH CONTEXT FOR "${cleanQuery}"]:\n${webResults.join('\n\n')}\n`;
-  }
-
-  return '';
-}
-
-/**
- * Omni Router Cloud API (Free 70B Foundation Model)
- */
-async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-instruct:free', apiKey }) {
-  try {
-    let targetModel = model || 'meta-llama/llama-3.3-70b-instruct:free';
-    if (targetModel.includes('auto') || targetModel.includes('laf-v2')) {
-      targetModel = 'meta-llama/llama-3.3-70b-instruct:free';
-    }
-
-    const keyToUse = apiKey || process.env.OPENROUTER_API_KEY || process.env.OMNI_ROUTER_API_KEY || '';
-    const headers = {
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:5173',
-      'X-Title': 'LAF AI Platform'
-    };
-    if (keyToUse) {
-      headers['Authorization'] = `Bearer ${keyToUse}`;
-    }
-
-    console.log(`[AI-ENGINE] Sending request to OmniRouter Cloud Model (${targetModel})...`);
-
-    const res = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        model: targetModel,
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 1000
-      },
-      { headers, timeout: 5000 }
-    );
-
-    const content = res.data?.choices?.[0]?.message?.content;
-    if (content && content.trim()) {
-      return {
-        text: sanitizeLlmOutput(content.trim()),
-        provider: `LAF Cloud AI (${targetModel})`
-      };
-    }
-  } catch (err) {
-    console.error(`[AI-ENGINE] OmniRouter error: ${err.message}`);
-  }
-  return null;
-}
-
-/**
  * Direct Connection to Local Ollama AI Server (Primary 24/7 Engine)
  */
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
@@ -216,30 +117,23 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 }
 
 /**
- * Rebuilt Clean AI Engine: Direct Passthrough to Ollama Backend
+ * Rebuilt Clean AI Engine: Direct Passthrough to Local Ollama Backend
  */
-async function generateResponse({ username, prompt, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false }) {
+async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2' }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel} | webSearch: ${enableWebSearch}`);
+  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
 
   if (isDeveloperQuery(cleanPrompt)) {
-    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
+    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Local Engine' };
   }
   if (isMediaGenerationQuery(cleanPrompt)) {
-    return { text: LAF_MEDIA_UNSUPPORTED_TEXT, provider: 'LAF Core Engine' };
+    return { text: LAF_MEDIA_UNSUPPORTED_TEXT, provider: 'LAF Local Engine' };
   }
   if (isLafIdentityQuery(cleanPrompt)) {
-    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
+    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Local Engine' };
   }
 
-  // 1. Live Web Search Integration
-  let liveSearchContext = '';
-  if (enableWebSearch) {
-    console.log(`[AI-ENGINE] Web Search Enabled: Querying live web sources for "${cleanPrompt}"...`);
-    liveSearchContext = await performLiveWebSearch(cleanPrompt);
-  }
-
-  // 2. User Context Memory Recall
+  // 1. User Context Memory Recall
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -249,7 +143,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
     }
   } catch (e) {}
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${liveSearchContext ? '\n' + liveSearchContext : ''}${memoryContext ? '\n' + memoryContext : ''}`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }
@@ -266,7 +160,7 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // 3. Primary 24/7 Engine: Direct Call to Local Ollama Server
+  // 2. Primary 24/7 Engine: Direct Call to Local Ollama Server
   const ollamaRes = await callOllamaLocal({
     messages: formattedMessages,
     model: selectedModel || 'laf-v2'
@@ -274,43 +168,22 @@ async function generateResponse({ username, prompt, history = [], customApiKey, 
   if (ollamaRes) {
     return {
       text: ollamaRes.text,
-      provider: enableWebSearch ? `${ollamaRes.provider} + Live Web Search` : ollamaRes.provider
+      provider: ollamaRes.provider
     };
   }
 
-  // Backup 1: OmniRouter Cloud API (Gemma 9B)
-  const gemmaRes = await callOmniRouter({
-    messages: formattedMessages,
-    model: 'google/gemma-2-9b-it:free',
-    apiKey: customApiKey
-  });
-  if (gemmaRes) {
-    return {
-      text: gemmaRes.text,
-      provider: enableWebSearch ? 'Google Gemma 2 (Free) + Web Search' : 'Google Gemma 2 (Free)'
-    };
-  }
-
-  // Backup 2: OmniRouter Cloud API (Llama 3.3 70B)
-  const omniRes = await callOmniRouter({
-    messages: formattedMessages,
-    model: 'meta-llama/llama-3.3-70b-instruct:free',
-    apiKey: customApiKey
-  });
-  if (omniRes) return omniRes;
-
-  // Backup 3: Grounded Fallback Engine
-  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, liveSearchContext });
+  // 3. Built-in Grounded Local Knowledge Fallback Engine
+  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username });
   return {
     text: fallbackText,
-    provider: enableWebSearch ? 'LAF Engine + Live Web Search' : 'LAF Core Engine'
+    provider: 'LAF Local Intelligence Engine'
   };
 }
 
 /**
- * Built-in High-Capacity Intelligence Engine for Google Gemma
+ * Built-in High-Capacity Intelligence Engine
  */
-async function generateGemmaResponse({ prompt = '', username = '', liveSearchContext = '' }) {
+async function generateGemmaResponse({ prompt = '', username = '' }) {
   const p = prompt.trim();
   const lower = p.toLowerCase();
 
@@ -325,17 +198,14 @@ async function generateGemmaResponse({ prompt = '', username = '', liveSearchCon
   ) {
     return `### LAF AI Capabilities
 
-LAF (Look At The Future) is an autonomous, high-performance AI product platform designed for software engineering, system architecture, analytical reasoning, and live intelligence.
+LAF (Look At The Future) is an autonomous, high-performance local AI product platform designed for software engineering, system architecture, analytical reasoning, and data processing.
 
 #### 1. Software Engineering & Full-Stack Development
 - **Code Generation**: Clean, production-ready code in Python, JavaScript/TypeScript, React, C++, Java, Rust, and Go.
 - **Debugging & Refactoring**: Syntax diagnostic, algorithm optimization, and runtime profiling.
 - **System Architecture**: Scalable REST APIs, microservices, database schemas, and containerized deployments.
 
-#### 2. Live Web Intelligence & Real-Time Search
-- **Live Search**: Fetch real-time news, documentation, technical specifications, and web information.
-
-#### 3. Mathematics & Technical Problem Solving
+#### 2. Mathematics & Technical Problem Solving
 - Detailed derivations, algorithmic analysis, and structured step-by-step problem solving.`;
   }
 
@@ -380,7 +250,7 @@ LAF (Look At The Future) is an autonomous, high-performance AI product platform 
 
   // 4. Greetings
   if (['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening'].some(g => lower.startsWith(g))) {
-    return `Hello **${username}**! 👋 I am **Google Gemma 2**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
+    return `Hello **${username}**! 👋 I am **LAF AI**, your dedicated local AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
   }
 
   // 5. Coding / Solution requests
@@ -414,19 +284,7 @@ console.log("Execution Result:", output);
 3. **Execution Verification**: Verifies success status and logs execution metrics.`;
   }
 
-  // 6. Automatic Web Search Fetch for Factual / General Knowledge Queries
-  if (!liveSearchContext) {
-    try {
-      const liveData = await performLiveWebSearch(p);
-      if (liveData && liveData.trim().length > 30) {
-        return liveData.trim();
-      }
-    } catch (e) {}
-  } else {
-    return liveSearchContext.trim();
-  }
-
-  // 7. General Questions / Reasoning Fallback
+  // 6. General Questions / Reasoning Fallback
   return `Regarding **${p}**:
 
 - **Core Analysis**: Requires structured evaluation of key principles, architecture, and operational parameters.
@@ -434,7 +292,5 @@ console.log("Execution Result:", output);
 }
 
 module.exports = {
-  generateResponse,
-  performLiveWebSearch,
-  callOmniRouter
+  generateResponse
 };
