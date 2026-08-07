@@ -75,10 +75,10 @@ function sanitizeLlmOutput(text = '') {
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
   const ollamaEndpoints = Array.from(new Set([
     process.env.OLLAMA_URL,
-    'http://host.docker.internal:11434',
     'http://172.17.0.1:11434',
+    'http://127.0.0.1:11434',
     'http://localhost:11434',
-    'http://127.0.0.1:11434'
+    'http://host.docker.internal:11434'
   ].filter(Boolean)));
 
   let targetModel = model || 'laf-v2';
