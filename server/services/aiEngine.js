@@ -121,8 +121,8 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
           stream: false,
           keep_alive: -1,
           options: {
-            temperature: 0.6,
-            num_predict: 180,
+            temperature: 0.5,
+            num_predict: 140,
             num_ctx: 2048
           }
         },
@@ -195,11 +195,14 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   ];
 
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-4).forEach(h => {
-      formattedMessages.push({
-        role: h.role === 'user' ? 'user' : 'assistant',
-        content: h.content
-      });
+    history.slice(-2).forEach(h => {
+      const textSnippet = (h.content || '').substring(0, 140);
+      if (textSnippet.trim()) {
+        formattedMessages.push({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: textSnippet
+        });
+      }
     });
   }
 
