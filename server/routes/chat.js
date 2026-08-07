@@ -26,7 +26,7 @@ function authMiddleware(req, res, next) {
  */
 router.post('/send', authMiddleware, async (req, res) => {
   try {
-    const { prompt, conversationId, history = [], selectedModel = 'laf-v2' } = req.body;
+    const { prompt, conversationId, history = [], customApiKey, selectedModel = 'laf-v2', enableWebSearch = false, concisenessMode = 'short' } = req.body;
     const cleanPrompt = sanitizeInput(prompt);
 
     if (!cleanPrompt) {
@@ -42,7 +42,10 @@ router.post('/send', authMiddleware, async (req, res) => {
       username: req.username,
       prompt: cleanPrompt,
       history,
-      selectedModel
+      customApiKey,
+      selectedModel,
+      enableWebSearch,
+      concisenessMode
     });
 
     // Update conversation in user's isolated DB
@@ -74,7 +77,9 @@ router.post('/send', authMiddleware, async (req, res) => {
         username: req.username,
         prompt: req.body.prompt || '',
         history: req.body.history || [],
-        selectedModel: 'laf-v2'
+        customApiKey: req.body.customApiKey,
+        selectedModel: 'google/gemma-2-9b-it:free',
+        enableWebSearch: req.body.enableWebSearch
       });
       return res.json({
         success: true,
@@ -103,7 +108,7 @@ router.post('/send', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/chat/models
- * Returns available local AI models (Local Ollama)
+ * Returns available AI models (Local Ollama & Omni Router 250+ Models)
  */
 router.get('/models', authMiddleware, (req, res) => {
   res.json({
@@ -111,7 +116,10 @@ router.get('/models', authMiddleware, (req, res) => {
     models: [
       { id: 'laf-v2', name: 'Ollama LAF v2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Primary 24/7 fast local model' },
       { id: 'llama3.2', name: 'Ollama Llama 3.2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Meta Llama 3.2 local model' },
-      { id: 'laf-model', name: 'Ollama LAF Model (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Custom LAF model' }
+      { id: 'laf-model', name: 'Ollama LAF Model (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Custom LAF model' },
+      { id: 'google/gemma-2-9b-it:free', name: 'Google Gemma 2 (Cloud)', provider: 'Google AI', desc: 'High-speed reasoning & coding model' },
+      { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Cloud)', provider: 'Meta AI', desc: 'Meta open-weight 70B model' },
+      { id: 'openrouter/deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', desc: 'Advanced math, logic & deep reasoning' }
     ]
   });
 });
