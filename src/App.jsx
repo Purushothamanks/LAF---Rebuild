@@ -120,6 +120,10 @@ export default function App() {
   };
 
   const handleLogin = (userData, sessionToken) => {
+    localStorage.setItem('laf_token', sessionToken);
+    if (userData?.username) {
+      localStorage.setItem('laf_username', userData.username);
+    }
     setUser(userData);
     setToken(sessionToken);
     fetchConversations(sessionToken);
