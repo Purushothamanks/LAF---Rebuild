@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Globe, Cpu } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -42,7 +42,6 @@ export default function ChatView({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [selectedModel, setSelectedModel] = useState('laf-v2');
 
   const messagesEndRef = useRef(null);
@@ -71,8 +70,7 @@ export default function ChatView({
           conversationId: activeConvId,
           history: messages,
           customApiKey,
-          selectedModel,
-          enableWebSearch: webSearchEnabled
+          selectedModel
         })
       });
 
@@ -226,34 +224,6 @@ export default function ChatView({
                     maxHeight: '160px'
                   }}
                 />
-
-                {/* Web Search Symbol Toggle Button (Near Send Button) */}
-                <button
-                  type="button"
-                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    background: webSearchEnabled ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-                    border: webSearchEnabled ? '1.5px solid #38bdf8' : '1.5px solid transparent',
-                    color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justify: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    flexShrink: 0,
-                    padding: 0,
-                    marginRight: '6px',
-                    boxShadow: webSearchEnabled ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none'
-                  }}
-                  title={webSearchEnabled ? "Web Search Enabled (Click to disable)" : "Web Search Disabled (Click to enable)"}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                    <Globe style={{ width: '18px', height: '18px', display: 'block', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
-                  </div>
-                </button>
 
                 {/* Dead-Centered Send Button */}
                 <button
@@ -426,34 +396,6 @@ export default function ChatView({
                 maxHeight: '120px'
               }}
             />
-
-            {/* Web Search Symbol Toggle Button (Near Send Button) */}
-            <button
-              type="button"
-              onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: webSearchEnabled ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-                border: webSearchEnabled ? '1.5px solid #38bdf8' : '1.5px solid transparent',
-                color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                flexShrink: 0,
-                padding: 0,
-                marginRight: '6px',
-                boxShadow: webSearchEnabled ? '0 0 10px rgba(56, 189, 248, 0.4)' : 'none'
-              }}
-              title={webSearchEnabled ? "Web Search Enabled (Click to disable)" : "Web Search Disabled (Click to enable)"}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                <Globe style={{ width: '17px', height: '17px', display: 'block', color: webSearchEnabled ? '#38bdf8' : 'var(--ds-text-muted)' }} />
-              </div>
-            </button>
 
             {/* Dead-Centered Send Button */}
             <button
