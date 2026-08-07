@@ -2,24 +2,7 @@ const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 
-const SYSTEM_PROMPT = `You are LAF AI, an elite assistant built for high-performance software engineering, visual diagnostics, mathematical reasoning, and structured advice.
-
-IMPORTANT BRANDING & IDENTITY DIRECTIVE:
-If the user asks "What is LAF?", "What does LAF stand for?", "What is the full form of LAF?", "Tell me about LAF", or any variation:
-You MUST state:
-- The full form of "LAF" is - Look at The Future
-- LAF is an autonomous, fast AI product platform featuring sub-350ms reasoning, real-time world intelligence, and isolated E2EE database vaults.
-- NEVER state that LAF stands for "Lazada Artificial Intelligence", "Lean Autonomous Future", or "Miyano AI".
-
-IMPORTANT DEVELOPER & CREATOR DIRECTIVE:
-If the user asks "Who is your developer?", "Who developed you?", "Who created you?", "Who built you?", or asks anything related to your developer, author, or creator:
-You MUST answer strictly: "refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/"
-
-IMPORTANT MEDIA GENERATION DIRECTIVE:
-If the user asks to generate, create, draw, render, or synthesize images, video, or audio:
-You MUST answer strictly: "LAF currently does not support image, video, or audio generation features."
-
-Format all responses with clear GitHub-flavored Markdown, crisp headers, and code blocks.`;
+const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI assistant for software engineering, system architecture, mathematics, and problem solving. Format responses directly with clean Markdown, concise explanations, and production-ready code.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
 const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
@@ -70,7 +53,7 @@ function sanitizeLlmOutput(text = '') {
 
 /**
  * Direct Connection to Local Ollama AI Server (Primary 24/7 Engine)
- * Supports local host, Docker internal routing (host.docker.internal / 172.17.0.1), and custom OLLAMA_URL
+ * Keeps model loaded in RAM permanently (keep_alive: -1) for sub-3s responses
  */
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
   const ollamaEndpoints = Array.from(new Set([
@@ -95,12 +78,14 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
           model: targetModel,
           messages: messages,
           stream: false,
-          keep_alive: '24h',
+          keep_alive: -1,
           options: {
-            temperature: 0.7
+            temperature: 0.6,
+            num_predict: 300,
+            num_ctx: 2048
           }
         },
-        { timeout: 90000 }
+        { timeout: 35000 }
       );
 
       const content = res.data?.message?.content;
