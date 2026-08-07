@@ -3,7 +3,32 @@ import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu } from 'lucide-react
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-// Custom Marked renderer for sleek code blocks and image cards with download icon
+if (typeof window !== 'undefined' && !window.downloadLafImage) {
+  window.downloadLafImage = async function (url, filename) {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'laf_image.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || 'laf_image.jpg';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+}
+
+// Custom Marked renderer for sleek code blocks and image cards with direct download button
 const renderer = new marked.Renderer();
 
 renderer.code = function ({ text, lang }) {
@@ -24,15 +49,16 @@ renderer.code = function ({ text, lang }) {
 
 renderer.image = function ({ href, title, text }) {
   const altText = text || 'LAF AI Image';
+  const encodedHref = encodeURIComponent(href);
   return `<div class="laf-image-card">
     <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" />
-    <a href="${href}" download="laf_image.jpg" target="_blank" rel="noreferrer" class="laf-img-download-icon" title="Download Image">
+    <button onclick="window.downloadLafImage(decodeURIComponent('${encodedHref}'), 'laf_ai_image.jpg')" class="laf-img-download-icon" title="Download Image" type="button">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y3="3"/>
       </svg>
-    </a>
+    </button>
   </div>`;
 };
 
@@ -96,6 +122,7 @@ export default function ChatView({
         const providerName = data.response.provider || 'LAF AI';
 
         if (fullContent.includes('![')) {
+          setLoading(false);
           setMessages(prev => [
             ...prev,
             { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
