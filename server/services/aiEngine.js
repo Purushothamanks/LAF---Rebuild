@@ -69,7 +69,7 @@ function sanitizeLlmOutput(text = '') {
 }
 
 /**
- * Direct Live Web Search Scraper (DuckDuckGo + Wikipedia)
+ * Direct Live Web Search Scraper (DuckDuckGo + Wikipedia in parallel)
  */
 async function performLiveWebSearch(query = '') {
   const cleanQuery = query.trim();
@@ -77,48 +77,42 @@ async function performLiveWebSearch(query = '') {
 
   const webResults = [];
 
-  try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanQuery)}`;
-    const ddgRes = await axios.get(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      timeout: 5000
-    });
-
+  const ddgPromise = axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(cleanQuery)}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    },
+    timeout: 2200
+  }).then(res => {
     const regex = /class="result__snippet[^"]*"[^>]*>(.*?)<\/a>/gs;
     let match;
     let count = 0;
-    while ((match = regex.exec(ddgRes.data)) !== null && count < 4) {
+    while ((match = regex.exec(res.data)) !== null && count < 3) {
       const snippet = match[1].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
       if (snippet.length > 20) {
         count++;
         webResults.push(`[LIVE WEB SNIPPET #${count}]: ${snippet}`);
       }
     }
-  } catch (err) {
-    console.error('[WEB-SEARCH] DuckDuckGo search error:', err.message);
-  }
+  }).catch(() => {});
 
-  try {
-    const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&limit=1&format=json`;
-    const wikiRes = await axios.get(wikiUrl, {
-      headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
-      timeout: 4000
-    });
-    const hits = wikiRes.data?.query?.search || [];
+  const wikiPromise = axios.get(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&limit=1&format=json`, {
+    headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
+    timeout: 2000
+  }).then(async res => {
+    const hits = res.data?.query?.search || [];
     if (hits.length > 0) {
       const title = hits[0].title;
-      const sumUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-      const sumRes = await axios.get(sumUrl, {
+      const sumRes = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`, {
         headers: { 'User-Agent': 'LAF-AI-Platform/1.2 (contact@laf.ai)' },
-        timeout: 4000
+        timeout: 2000
       });
       if (sumRes.data && sumRes.data.extract) {
         webResults.push(`[VERIFIED WIKIPEDIA FACTS for "${sumRes.data.title}"]:\n${sumRes.data.extract}`);
       }
     }
-  } catch (e) {}
+  }).catch(() => {});
+
+  await Promise.allSettled([ddgPromise, wikiPromise]);
 
   if (webResults.length > 0) {
     return `\n[VERIFIED LIVE WEB SEARCH CONTEXT FOR "${cleanQuery}"]:\n${webResults.join('\n\n')}\n`;
@@ -147,7 +141,7 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
       headers['Authorization'] = `Bearer ${keyToUse}`;
     }
 
-    console.log(`[AI-ENGINE] Sending request to OmniRouter Free 70B Cloud Model (${targetModel})...`);
+    console.log(`[AI-ENGINE] Sending request to OmniRouter Cloud Model (${targetModel})...`);
 
     const res = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
@@ -155,9 +149,9 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
         model: targetModel,
         messages: messages,
         temperature: 0.7,
-        max_tokens: 1500
+        max_tokens: 1000
       },
-      { headers, timeout: 12000 }
+      { headers, timeout: 5000 }
     );
 
     const content = res.data?.choices?.[0]?.message?.content;
@@ -179,9 +173,7 @@ async function callOmniRouter({ messages, model = 'meta-llama/llama-3.3-70b-inst
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
   const ollamaEndpoints = [
     process.env.OLLAMA_URL,
-    'http://localhost:11434',
-    'http://host.docker.internal:11434',
-    'http://172.17.0.1:11434'
+    'http://localhost:11434'
   ].filter(Boolean);
 
   let targetModel = model || 'laf-v2';
@@ -191,7 +183,10 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 
   for (const baseUrl of ollamaEndpoints) {
     try {
-      console.log(`[AI-ENGINE] Connecting to 24/7 Ollama Server (${baseUrl}) with model "${targetModel}"...`);
+      // Quick 400ms availability check before sending full payload
+      await axios.get(`${baseUrl}/api/tags`, { timeout: 400 });
+
+      console.log(`[AI-ENGINE] Connecting to Ollama Server (${baseUrl}) with model "${targetModel}"...`);
       const res = await axios.post(
         `${baseUrl}/api/chat`,
         {
@@ -203,7 +198,7 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
             temperature: 0.7
           }
         },
-        { timeout: 120000 }
+        { timeout: 8000 }
       );
 
       const content = res.data?.message?.content;
@@ -214,7 +209,7 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
         };
       }
     } catch (err) {
-      console.log(`[AI-ENGINE] Ollama endpoint ${baseUrl} note: ${err.message}`);
+      console.log(`[AI-ENGINE] Ollama endpoint ${baseUrl} unavailable: ${err.message}`);
     }
   }
   return null;

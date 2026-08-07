@@ -85,10 +85,11 @@ export default function ChatView({
 
         setLoading(false);
 
-        // Word-by-word typewriter animation
+        // Accelerated fluid typewriter animation
         const tokens = fullContent.match(/(\s+|\S+)/g) || [fullContent];
         let currentText = '';
         let tokenIndex = 0;
+        const chunkSize = tokens.length > 200 ? 5 : (tokens.length > 80 ? 3 : 1);
 
         // Add empty assistant placeholder message
         setMessages(prev => [
@@ -98,8 +99,10 @@ export default function ChatView({
 
         const timer = setInterval(() => {
           if (tokenIndex < tokens.length) {
-            currentText += tokens[tokenIndex];
-            tokenIndex++;
+            for (let i = 0; i < chunkSize && tokenIndex < tokens.length; i++) {
+              currentText += tokens[tokenIndex];
+              tokenIndex++;
+            }
             setMessages(prev => {
               const updated = [...prev];
               if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
@@ -125,7 +128,7 @@ export default function ChatView({
             });
             fetchConversations();
           }
-        }, 18);
+        }, 5);
       } else {
         setMessages(prev => [
           ...prev,
