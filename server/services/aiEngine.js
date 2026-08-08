@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
+const { searchWebGrounding } = require('./webSearch');
 
 const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform operating in 2026.
 
@@ -286,7 +287,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
   }
 
-  // 1. User Context Memory Recall
+  // 1. User Context Memory Recall & Live Web Grounding
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -296,7 +297,15 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     }
   } catch (e) {}
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}`;
+  let webGroundingContext = '';
+  try {
+    const webSnippet = await searchWebGrounding(cleanPrompt);
+    if (webSnippet) {
+      webGroundingContext = `\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n${webSnippet}`;
+    }
+  } catch (e) {}
+
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }

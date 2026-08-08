@@ -433,6 +433,37 @@ A **centimeter** (symbol: **cm**) is a unit of length in the International Syste
 - **Common Usage**: Used globally for measuring dimensions, height, geometry, and engineering specifications.`
   },
 
+  // 12. History of Artificial Intelligence & 2026 Modern AI Trends
+  {
+    keywords: ['year ai was introduced', 'when was ai introduced', 'when was ai created', 'history of ai', 'when did ai start', 'who invented ai', 'ai origin', 'origin of artificial intelligence', 'ai introduced'],
+    category: 'Artificial Intelligence & History',
+    response: `### 🤖 History & Evolution of Artificial Intelligence (1956 – 2026)
+
+Artificial Intelligence (AI) has evolved through key historic breakthroughs:
+
+---
+
+### 🏛️ 1. Official Coining & Origin (1956)
+- **Year Introduced**: **1956** at the historic **Dartmouth Workshop** organized by **John McCarthy**, **Marvin Minsky**, **Nathaniel Rochester**, and **Claude Shannon**.
+- **Significance**: This conference officially introduced and established "Artificial Intelligence" as a formal academic and scientific discipline.
+
+---
+
+### ⚡ 2. The Deep Learning Renaissance (2012)
+- **AlexNet Breakthrough**: Geoff Hinton, Alex Krizhevsky, and Ilya Sutskever demonstrated that Deep Convolutional Neural Networks (CNNs) trained on GPUs dramatically outperformed classical algorithms.
+
+---
+
+### 🚀 3. The Transformer & Large Model Era (2017 – 2024)
+- **2017**: Google researchers published *"Attention Is All You Need"*, introducing the **Transformer architecture**.
+- **2020 – 2024**: Large Language Models (GPT-3/4, LLaMA, Gemini) popularized generative text synthesis and reasoning.
+
+---
+
+### 🌐 4. 2026 Modern Frontier: Multimodal & Autonomous AI
+- **2026 Present Day**: AI has expanded into sub-3s local autonomous agents, multimodal neural systems (real-time vision, code generation, FLUX photorealistic synthesis), and sovereign edge AI products like **LAF AI**.`
+  },
+
   // 11. Global Wars & Ongoing Conflicts
   {
     keywords: ['war details', 'ongoing wars', 'war', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],
