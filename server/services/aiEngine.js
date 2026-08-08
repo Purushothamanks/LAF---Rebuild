@@ -2,16 +2,66 @@ const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 
-const SYSTEM_PROMPT = `You are LAF (Look At Future), a state-of-the-art AI product platform equipped with comprehensive, up-to-date real-world knowledge:
-1. Current World Affairs & Politics: Up-to-date Chief Ministers of all Indian states (e.g., Tamil Nadu CM: C. Joseph Vijay - TVK, Andhra Pradesh CM: N. Chandrababu Naidu - TDP, Karnataka: D. K. Shivakumar, Maharashtra: Devendra Fadnavis, Bihar: Samrat Choudhary, West Bengal: Suvendu Adhikari, Kerala: V. D. Satheesan, UP: Yogi Adityanath, etc.).
-2. Geopolitics & Ongoing Conflicts: Russia-Ukraine War, Israel-Hamas/Gaza & Middle East crisis, Sudan civil war, Red Sea crisis, Taiwan Strait security.
-3. Economics & Global Finance: Real GDP growth rates (India ~6.5-7.0%, US ~2.4%, China ~4.8%, Germany, UK, Japan) and global financial trends.
-4. Programming Mastery: Advanced capability in all programming languages (Python, JS, TS, Rust, Go, C, C++, Java, Kotlin, Swift, Haskell, Zig, Elixir, PHP, SQL, Shell, etc.).
-5. Multilingual Fluency: Native proficiency in all spoken languages (English, Tamil, Hindi, Spanish, French, German, Japanese, Mandarin, Telugu, Malayalam, Kannada, Bengali, Arabic, etc.). Always respond in the language requested by the user. Format responses directly with clean Markdown, concise explanations, and production-ready code.`;
+const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform.
+
+BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
+1. FILTER & ANALYZE: Carefully analyze the user's intent. If the user's query is ambiguous or has multiple interpretations, present clear options using the format [CHOICE: Option Label].
+2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states like TN CM C. Joseph Vijay - TVK, AP CM N. Chandrababu Naidu, KA CM D. K. Shivakumar, etc., global conflicts/wars, real GDP growth rates, programming paradigms, and world languages).
+3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
 const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
 const LAF_REAL_IDENTITY_TEXT = `The full form of **LAF** is - **Look at The Future**.\n\nLAF is an autonomous AI product platform engineered for high-speed software development, system design, algorithm optimization, and multi-domain problem solving.`;
+
+function checkAmbiguousQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  
+  // Ambiguous Language Query
+  if (
+    p === 'what are the languages you know' ||
+    p === 'what languages do you know' ||
+    p === 'languages you know' ||
+    p === 'what languages' ||
+    p === 'languages' ||
+    p === 'which languages do you know' ||
+    p === 'tell me about languages' ||
+    p === 'supported languages' ||
+    p === 'languages you speak'
+  ) {
+    return `I can provide detailed information for both **Programming Languages** and **Human / Spoken World Languages**.
+
+Which type of language would you like to explore?
+
+[CHOICE: 💻 Programming Languages]
+[CHOICE: 🌍 Human / Spoken Languages]`;
+  }
+
+  // Ambiguous Python Query
+  if (p === 'python' || p === 'what is python') {
+    return `Would you like information on the **Python Programming Language** or the **Python Snake (Reptile species)**?
+
+[CHOICE: 💻 Python Programming Language]
+[CHOICE: 🐍 Python Snake (Biology)]`;
+  }
+
+  // Ambiguous Java Query
+  if (p === 'java' || p === 'what is java') {
+    return `Would you like information on the **Java Programming Language** or **Java Island (Indonesia)**?
+
+[CHOICE: ☕ Java Programming Language]
+[CHOICE: 🏝️ Java Island (Geography)]`;
+  }
+
+  // Ambiguous Apple Query
+  if (p === 'apple' || p === 'what is apple') {
+    return `Would you like information on **Apple Inc. (Technology Company)** or **Apple (Fruit)**?
+
+[CHOICE: 🍏 Apple Inc Technology]
+[CHOICE: 🍎 Apple Fruit]`;
+  }
+
+  return null;
+}
 
 function isDeveloperQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
@@ -155,6 +205,11 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2' }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
+
+  const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
+  if (ambiguousResult) {
+    return { text: ambiguousResult, provider: 'LAF Reasoner' };
+  }
 
   if (isDeveloperQuery(cleanPrompt)) {
     return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
