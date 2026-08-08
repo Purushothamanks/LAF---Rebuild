@@ -26,19 +26,37 @@ export default function MediaStudio({ token }) {
   // Image Generation
   const handleGenerateImage = async (e) => {
     e.preventDefault();
-    alert('LAF currently does not support image, video, or audio generation features.');
+    if (!imgPrompt.trim()) return;
+    setImgLoading(true);
+    try {
+      const seed = Math.floor(Math.random() * 1000000);
+      const encodedPrompt = encodeURIComponent(imgPrompt.trim() + ', 8k resolution, photorealistic, masterclass');
+      const [w, h] = aspectRatio.split('x');
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w || 1024}&height=${h || 1024}&seed=${seed}&model=${imgModel || 'flux'}&nologo=true&enhance=true`;
+      
+      setImgResult({
+        url: imageUrl,
+        prompt: imgPrompt,
+        seed,
+        model: imgModel
+      });
+    } catch (err) {
+      alert('Failed to generate image: ' + err.message);
+    } finally {
+      setImgLoading(false);
+    }
   };
 
   // Audio Generation
   const handleGenerateAudio = async (e) => {
     e.preventDefault();
-    alert('LAF currently does not support image, video, or audio generation features.');
+    alert('Audio generation is coming soon in the next update.');
   };
 
   // Video Generation
   const handleGenerateVideo = async (e) => {
     e.preventDefault();
-    alert('LAF currently does not support image, video, or audio generation features.');
+    alert('Video motion engine is coming soon in the next update.');
   };
 
   return (
@@ -49,18 +67,9 @@ export default function MediaStudio({ token }) {
         <h1 className="text-glow" style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '6px' }}>
           LAF Multimodal Creation Studio
         </h1>
-        <div style={{
-          padding: '12px 16px',
-          background: 'rgba(239, 68, 68, 0.12)',
-          border: '1px solid rgba(239, 68, 68, 0.4)',
-          borderRadius: '8px',
-          color: '#f87171',
-          fontSize: '0.92rem',
-          fontWeight: '600',
-          marginTop: '8px'
-        }}>
-          ⚠️ Notice: LAF currently does not support image, video, or audio generation features.
-        </div>
+        <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.94rem' }}>
+          Synthesize high-resolution photorealistic images, voice audio, and AI video motion.
+        </p>
       </div>
 
       {/* Sub-Tab Navigation Bar */}
@@ -199,9 +208,14 @@ export default function MediaStudio({ token }) {
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
                     Model: {imgResult.model} • Seed: {imgResult.seed}
                   </span>
-                  <a href={imgResult.url} target="_blank" rel="noreferrer" className="btn-cyber" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => window.downloadLafImage && window.downloadLafImage(imgResult.url, `laf_${imgResult.model}_image.jpg`)}
+                    className="btn-cyber"
+                    style={{ padding: '6px 12px', fontSize: '0.78rem', cursor: 'pointer' }}
+                  >
                     <Download style={{ width: '14px' }} /> Download
-                  </a>
+                  </button>
                 </div>
               </div>
             ) : (

@@ -1,29 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-if (typeof window !== 'undefined' && !window.downloadLafImage) {
-  window.downloadLafImage = async function (url, filename) {
+if (typeof window !== 'undefined') {
+  window.downloadLafImage = function (url, filename) {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      const proxyUrl = `/api/media/download-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'laf_ai_image.jpg')}`;
       const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename || 'laf_image.jpg';
+      link.href = proxyUrl;
+      link.download = filename || 'laf_ai_image.jpg';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename || 'laf_image.jpg';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      console.error('Image download error:', err);
+      window.open(url, '_blank');
     }
   };
 }
@@ -83,12 +75,77 @@ export default function ChatView({
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
   const [selectedModel, setSelectedModel] = useState('laf-v2');
+  const [isListening, setIsListening] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const toggleVoiceTyping = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice typing is not supported in your current browser. Please try Google Chrome, Microsoft Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = navigator.language || 'en-US';
+
+      let initialPrompt = inputPrompt;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        const spoken = finalTranscript || interimTranscript;
+        setInputPrompt(initialPrompt ? `${initialPrompt} ${spoken}` : spoken);
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition notice:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('Speech recognition error:', err);
+      setIsListening(false);
+    }
+  };
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
     if (!inputPrompt.trim() || loading) return;
+
+    if (isListening && recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      setIsListening(false);
+    }
 
     const userMsgText = inputPrompt.trim();
     setInputPrompt('');
@@ -262,7 +319,7 @@ export default function ChatView({
               </p>
 
               {/* Floating Centered Oval Input Box */}
-              <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
+              <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)', position: 'relative' }}>
                 <textarea
                   value={inputPrompt}
                   onChange={(e) => setInputPrompt(e.target.value)}
@@ -272,7 +329,7 @@ export default function ChatView({
                       handleSend();
                     }
                   }}
-                  placeholder="Message LAF..."
+                  placeholder={isListening ? "Listening... speak now..." : "Message LAF..."}
                   rows={2}
                   style={{
                     flex: 1,
@@ -285,6 +342,30 @@ export default function ChatView({
                     maxHeight: '160px'
                   }}
                 />
+
+                {/* Voice Typing Button */}
+                <button
+                  type="button"
+                  onClick={toggleVoiceTyping}
+                  title={isListening ? "Stop Voice Typing" : "Voice Typing"}
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
+                    border: 'none',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
+                    animation: isListening ? 'micPulse 1.5s infinite' : 'none'
+                  }}
+                >
+                  {isListening ? <MicOff style={{ width: '17px', height: '17px' }} /> : <Mic style={{ width: '17px', height: '17px', color: 'var(--ds-blue)' }} />}
+                </button>
 
                 {/* Dead-Centered Send Button */}
                 <button
@@ -447,7 +528,7 @@ export default function ChatView({
                   handleSend();
                 }
               }}
-              placeholder="Message LAF..."
+              placeholder={isListening ? "Listening... speak now..." : "Message LAF..."}
               rows={1}
               style={{
                 flex: 1,
@@ -460,6 +541,30 @@ export default function ChatView({
                 maxHeight: '120px'
               }}
             />
+
+            {/* Voice Typing Button */}
+            <button
+              type="button"
+              onClick={toggleVoiceTyping}
+              title={isListening ? "Stop Voice Typing" : "Voice Typing"}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
+                border: 'none',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justify: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                flexShrink: 0,
+                animation: isListening ? 'micPulse 1.5s infinite' : 'none'
+              }}
+            >
+              {isListening ? <MicOff style={{ width: '16px', height: '16px' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />}
+            </button>
 
             {/* Dead-Centered Send Button */}
             <button
@@ -493,3 +598,4 @@ export default function ChatView({
     </div>
   );
 }
+

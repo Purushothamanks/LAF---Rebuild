@@ -358,6 +358,200 @@ Attaining deep focus and rapid skill acquisition relies on structured cognitive 
 - **Block 90 Minutes:** Uninterrupted single-task focus (zero notifications or tab switching).
 - **Take 20 Minutes Recovery:** Complete mental disconnect (walk, hydrate, rest eyes).
 - **Limit to 3 Core Deep Blocks/Day:** Yields 4.5 hours of peak cognitive throughput.`
+  },
+
+  // 10. Chief Ministers of All States & Union Territories of India (2026 Latest Update)
+  {
+    keywords: ['chief minister', 'chief ministers', 'cm of', 'cms of all state', 'chief minister of', 'indian chief ministers', 'cm list', 'list of cm', 'who is the cm', 'state cms', 'tamil nadu cm', 'cm of tamilnadu', 'vijay cm'],
+    category: 'Government & Current Affairs',
+    response: `### 🏛️ Complete & Up-to-Date List of Chief Ministers of India (2026)
+
+Below is the verified list of Chief Ministers across all Indian States and Union Territories:
+
+| State / Union Territory | Chief Minister | Party | Term Start / Joined Date |
+| :--- | :--- | :--- | :--- |
+| **Andhra Pradesh** | N. Chandrababu Naidu | TDP | June 12, 2024 |
+| **Arunachal Pradesh** | Pema Khandu | BJP | July 16, 2016 |
+| **Assam** | Himanta Biswa Sarma | BJP | May 12, 2021 |
+| **Bihar** | Samrat Choudhary | BJP | April 15, 2026 |
+| **Chhattisgarh** | Vishnu Deo Sai | BJP | December 13, 2023 |
+| **Delhi (UT)** | Rekha Gupta | BJP | 2025 / 2026 |
+| **Goa** | Pramod Sawant | BJP | March 19, 2019 |
+| **Gujarat** | Bhupendrabhai Patel | BJP | September 13, 2021 |
+| **Haryana** | Nayab Singh Saini | BJP | March 12, 2024 |
+| **Himachal Pradesh** | Sukhvinder Singh Sukhu | INC | December 11, 2022 |
+| **Jammu and Kashmir (UT)** | Omar Abdullah | JKNC | October 2024 |
+| **Jharkhand** | Hemant Soren | JMM | July 4, 2024 |
+| **Karnataka** | D. K. Shivakumar | INC | May 2026 |
+| **Kerala** | V. D. Satheesan | INC | May 18, 2026 |
+| **Madhya Pradesh** | Mohan Yadav | BJP | December 13, 2023 |
+| **Maharashtra** | Devendra Fadnavis | BJP | December 5, 2024 |
+| **Manipur** | Yumnam Khemchand Singh | BJP | Early 2026 |
+| **Meghalaya** | Conrad Kongkal Sangma | NPP | March 6, 2018 |
+| **Mizoram** | P. U. Lalduhoma | ZPM | December 8, 2023 |
+| **Nagaland** | Neiphiu Rio | NDPP | March 8, 2018 |
+| **Odisha** | Mohan Charan Majhi | BJP | June 12, 2024 |
+| **Puducherry (UT)** | N. Rangaswamy | AINRC | May 13, 2021 |
+| **Punjab** | Bhagwant Singh Mann | AAP | March 16, 2022 |
+| **Rajasthan** | Bhajan Lal Sharma | BJP | December 15, 2023 |
+| **Sikkim** | Prem Singh Tamang / P. S. Golay | SKM | May 27, 2019 |
+| **Tamil Nadu** | C. Joseph Vijay | TVK | May 10, 2026 |
+| **Telangana** | A. Revanth Reddy | INC | December 7, 2023 |
+| **Tripura** | Manik Saha | BJP | May 15, 2022 |
+| **Uttar Pradesh** | Yogi Adityanath | BJP | March 19, 2017 |
+| **Uttarakhand** | Pushkar Singh Dhami | BJP | July 4, 2021 |
+| **West Bengal** | Suvendu Adhikari | BJP | May 9, 2026 |`
+  },
+
+  // 11. Global Wars & Ongoing Conflicts
+  {
+    keywords: ['war details', 'ongoing wars', 'war', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],
+    category: 'Global Affairs & Geopolitics',
+    response: `### 🌍 Comprehensive Overview of Ongoing Global Conflicts & War Details
+
+Here is the strategic breakdown of major active wars, geopolitics, and international conflicts:
+
+---
+
+### 1. Russia-Ukraine War
+- **Status**: High-intensity war along Eastern and Southern fronts (Donbas, Zaporizhzhia, Kursk border regions).
+- **Core Dynamics**: Drones (FPV, reconnaissance), heavy artillery, missile strikes, electronic warfare, and fortified defense lines.
+- **Global Impact**: Western sanctions on Russian energy, NATO expansion (Finland & Sweden membership), energy market realignments, and global grain supply chain security.
+
+---
+
+### 2. Israel-Hamas / Gaza & Middle East Conflict
+- **Status**: Active conflict across the Gaza Strip, Southern Lebanon border, and broader regional proxy clashes.
+- **Key Dimensions**: Urban warfare, tunnel operations, hostage negotiations, cross-border missile/drone exchanges involving Hezbollah and Houthi forces.
+- **Global Impact**: Red Sea maritime shipping disruptions (Bab-el-Mandeb Strait), international humanitarian initiatives, and regional diplomatic mediation (US, Qatar, Egypt).
+
+---
+
+### 3. Sudan Civil War (SAF vs RSF)
+- **Status**: Devastating armed conflict between the Sudanese Armed Forces (SAF) and the Rapid Support Forces (RSF) since April 2023.
+- **Key Dynamics**: Clashes centered around Khartoum, Darfur, and Kordofan regions.
+- **Humanitarian Situation**: Severe civilian displacement (over 10 million internally displaced), acute famine risks, and international aid appeals.
+
+---
+
+### 4. Red Sea & Maritime Security Crisis
+- **Status**: Asymmetric attacks targeting international commercial vessels passing through the Bab-el-Mandeb Strait.
+- **Impact**: Commercial ships re-routed around the Cape of Good Hope, adding 10-14 transit days and increasing global freight costs.
+
+---
+
+### 5. Taiwan Strait & Indo-Pacific Security
+- **Status**: Heightened military patrols, naval exercises, and geopolitical deterrence initiatives (AUKUS, Quad).`
+  },
+
+  // 12. Real GDP Growth Rates & World Economic Statistics
+  {
+    keywords: ['real gdp', 'gdp rate', 'real gdp rate', 'gdp growth', 'world gdp', 'india gdp', 'us gdp', 'china gdp', 'gdp of countries', 'economic growth rate', 'gdp statistics'],
+    category: 'Economics & Global Finance',
+    response: `### 📈 Global Real GDP Growth Rates & Economic Data
+
+Real Gross Domestic Product (GDP) measures economic output adjusted for inflation. Below are key figures for major world economies:
+
+---
+
+| Country / Region | Real GDP Growth Rate (Annual) | Nominal GDP (USD) | Primary Economic Drivers |
+| :--- | :--- | :--- | :--- |
+| 🇮🇳 **India** | **6.5% - 7.0%** (Fastest Major Economy) | ~$3.95 Trillion | IT Services, Infrastructure, Domestic Consumption, Manufacturing |
+| 🇺🇸 **United States** | **2.2% - 2.6%** | ~$28.7 Trillion | Technology, Consumer Spending, Energy, Financial Services |
+| 🇨🇳 **China** | **4.8% - 5.0%** | ~$18.5 Trillion | EV Export, Electronics, High-Tech Manufacturing, Clean Energy |
+| 🇩🇪 **Germany (Eurozone)** | **0.2% - 0.8%** | ~$4.5 Trillion | Automotive, Industrial Engineering, Precision Machinery |
+| 🇯🇵 **Japan** | **0.8% - 1.1%** | ~$4.2 Trillion | Robotics, Automotive, Advanced Materials, Electronics |
+| 🇬🇧 **United Kingdom** | **1.0% - 1.3%** | ~$3.4 Trillion | Financial Services, Fintech, Creative Industries, BioPharma |
+
+---
+
+### 💡 Key Global Macroeconomic Trends:
+1. **Global Inflation Moderation**: Central banks (US Federal Reserve, ECB, RBI) easing interest rates following inflation stabilization.
+2. **AI & High-Tech Capital Expenditure**: Trillions invested globally in data center infrastructure, GPU compute clusters, and clean energy power grids.
+3. **Supply Chain Diversification**: Accelerating "China + 1" strategies benefiting India, Vietnam, and Mexico.`
+  },
+
+  // 13. Training LAF on All Programming Languages
+  {
+    keywords: ['programming languages', 'languages you know', 'train programming', 'coding languages', 'supported programming languages', 'python js rust cpp', 'know all programming languages'],
+    category: 'Software Engineering',
+    response: `### 💻 Full Programming Languages Knowledge Matrix
+
+LAF is trained to understand, write, optimize, and debug code across **all major programming languages and paradigms**:
+
+---
+
+### 1. High-Level & General Purpose:
+- **Python**: Asyncio, Django/FastAPI, Data Science (Pandas, NumPy, PyTorch/TensorFlow).
+- **JavaScript / TypeScript**: Node.js, Express, React, Next.js, Vue, Angular, Bun, WebSockets.
+- **Java / Kotlin**: Spring Boot, Android Development, JVM Internals, Microservices.
+- **C# (.NET)**: ASP.NET Core, Unity Engine, Enterprise Services.
+
+---
+
+### 2. Systems & High-Performance:
+- **C & C++**: C11/C++20, Memory Management, Pointers, Multi-threading, Embedded Systems, CUDA.
+- **Rust**: Memory Safety Without Garbage Collection, Async Tokio, WebAssembly (Wasm), Systems Code.
+- **Go (Golang)**: Goroutines, Channels, High-Throughput Microservices, Docker/K8s Internals.
+- **Zig**: Direct C Interop, Low-Level Memory Allocators, Next-Gen Native Toolchains.
+
+---
+
+### 3. Functional Programming:
+- **Haskell**: Pure Functions, Monads, Type Classes, Category Theory.
+- **Elixir / Erlang**: BEAM Virtual Machine, Actor Model, Fault-Tolerant Distributed Systems.
+- **Scala / Clojure**: Concurrent Functional Architectures on JVM.
+
+---
+
+### 4. Web, Mobile & Scripting:
+- **Swift**: iOS / macOS Native UI with SwiftUI & Combine.
+- **PHP**: Modern PHP 8.x, Laravel Framework, Composer Ecosystem.
+- **Ruby**: Ruby on Rails, Scripting & Automation.
+- **Shell / Bash / PowerShell**: System Automation, Linux Tooling, CI/CD Pipelines.
+- **SQL / NoSQL**: PostgreSQL, MySQL, SQLite, Redis, MongoDB, Cassandra.
+
+---
+
+### 5. Domain-Specific Languages (DSLs):
+- **HTML5 & CSS3**: Flexbox, CSS Grid, Custom Properties, Animations, Responsive Design.
+- **R & Julia**: Scientific Computing, Statistical Modeling, High-Performance Mathematics.
+- **Assembly (x86_64 / ARM)**: Registers, Memory Layout, Reverse Engineering.`
+  },
+
+  // 14. World Spoken Languages & Multilingual Intelligence
+  {
+    keywords: ['languages speaking in world', 'spoken languages', 'multilingual', 'english spanish tamil hindi', 'tamil hindi', 'foreign languages', 'world languages', 'speak in tamil', 'speak in hindi'],
+    category: 'Multilingual & Linguistics',
+    response: `### 🌍 Spoken World Languages & Multilingual Intelligence
+
+LAF features native understanding and generation across **global spoken languages**:
+
+---
+
+| Language | Local Name | Region / Primary Usage |
+| :--- | :--- | :--- |
+| **English** | English | Global Business, Science, & Technology |
+| **Tamil** | தமிழ் | Tamil Nadu, Puducherry, Sri Lanka, Singapore, Malaysia |
+| **Hindi** | हिंदी | India (North, Central, Western Regions) |
+| **Spanish** | Español | Spain, Latin America, United States |
+| **French** | Français | France, Canada, Western & Central Africa |
+| **German** | Deutsch | Germany, Austria, Switzerland |
+| **Japanese** | 日本語 | Japan (Nihongo) |
+| **Mandarin Chinese** | 中文 / 漢語 | China, Taiwan, Singapore |
+| **Telugu** | తెలుగు | Andhra Pradesh, Telangana |
+| **Malayalam** | മലയാളം | Kerala, Lakshadweep |
+| **Kannada** | ಕನ್ನಡ | Karnataka |
+| **Bengali** | বাংলা | West Bengal, Bangladesh |
+| **Arabic** | العربية | Middle East & North Africa |
+| **Russian** | Русский | Russia, Eastern Europe, Central Asia |
+| **Portuguese** | Português | Brazil, Portugal, Angola, Mozambique |
+| **Italian** | Italiano | Italy, Switzerland |
+| **Korean** | 한국어 | South Korea, North Korea |
+
+---
+
+*Feel free to talk to LAF in Tamil, Hindi, Spanish, French, German, or any preferred language!*`
   }
 ];
 
@@ -381,3 +575,4 @@ module.exports = {
   KNOWLEDGE_REPOSITORY,
   searchCustomKnowledge
 };
+
