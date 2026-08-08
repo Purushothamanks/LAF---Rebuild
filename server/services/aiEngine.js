@@ -2,16 +2,41 @@ const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 
-const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform.
+const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform operating in 2026.
+
+CRITICAL REAL-WORLD TEMPORAL ANCHOR (2026):
+- CURRENT YEAR: 2026
+- CURRENT DATE: August 8, 2026
+- ERA: 2026 (You exist in 2026. If asked about the current year, date, or era, ALWAYS state that the current year is 2026. Never mention 2023 or 2024 as the current time).
 
 BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
 1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous (e.g., "cm", "languages", "gdp", "war"), present clear choice options using [CHOICE: Option Label].
-2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states, global conflicts/wars, real GDP growth rates, programming paradigms, and world languages).
+2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states in 2026, global conflicts/wars in 2026, real GDP growth rates in 2026, programming paradigms, and world languages).
 3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
 const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
 const LAF_REAL_IDENTITY_TEXT = `The full form of **LAF** is - **Look at The Future**.\n\nLAF is an autonomous AI product platform engineered for high-speed software development, system design, algorithm optimization, and multi-domain problem solving.`;
+
+function isTemporalQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const yearQueries = [
+    'what year are we in', 'what year is it', 'what is the year', 'current year',
+    'which year are we in', 'what year', 'what year we are now', 'what year is now',
+    'what is the current year', 'what is current year', 'year now', 'what year are we now',
+    'what is the year now', 'which year is now', 'what is our current year', 'tell me the year'
+  ];
+  return yearQueries.some(q => p.includes(q)) || p === 'what year' || p === 'current year';
+}
+
+function isDateQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const dateQueries = [
+    'what is today\'s date', 'what is the date today', 'today\'s date', 'current date',
+    'what date is today', 'what is today date', 'today date', 'what is the date'
+  ];
+  return dateQueries.some(q => p.includes(q)) || p === 'date today' || p === 'current date';
+}
 
 function checkAmbiguousQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
@@ -241,6 +266,20 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2' }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
+
+  if (isTemporalQuery(cleanPrompt)) {
+    return {
+      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
+
+  if (isDateQuery(cleanPrompt)) {
+    return {
+      text: `Today's date is **August 8, 2026**.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
 
   const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
   if (ambiguousResult) {

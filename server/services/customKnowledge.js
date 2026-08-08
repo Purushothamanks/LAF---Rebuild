@@ -5,6 +5,12 @@
  */
 
 const KNOWLEDGE_REPOSITORY = [
+  // 0. 2026 Temporal Grounding & Model Information
+  {
+    keywords: ['what year are we in', 'what year is it', 'current year', 'what year', 'which year', 'what year we are now', 'what year is now', 'what year are we now', 'what is the current year', 'current date', 'today date'],
+    category: 'Temporal Grounding & System Info',
+    response: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`
+  },
   // Palindrome & Strings
   {
     keywords: ['palindrome', 'check palindrome', 'string palindrome', 'palindrome python'],
