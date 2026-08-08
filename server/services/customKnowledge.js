@@ -362,7 +362,7 @@ Attaining deep focus and rapid skill acquisition relies on structured cognitive 
 
   // 10. Chief Ministers of All States & Union Territories of India (2026 Latest Update)
   {
-    keywords: ['chief minister', 'chief ministers', 'cm of', 'cms of all state', 'chief minister of', 'indian chief ministers', 'cm list', 'list of cm', 'who is the cm', 'state cms', 'tamil nadu cm', 'cm of tamilnadu', 'vijay cm'],
+    keywords: ['chief ministers of indian states', 'chief ministers of states', 'all indian states cm list', 'chief ministers', 'cms of all state', 'indian chief ministers', 'cm list', 'list of cm', 'state cms', 'all cm list'],
     category: 'Government & Current Affairs',
     response: `### 🏛️ Complete & Up-to-Date List of Chief Ministers of India (2026)
 
@@ -401,6 +401,30 @@ Below is the verified list of Chief Ministers across all Indian States and Union
 | **Uttar Pradesh** | Yogi Adityanath | BJP | March 19, 2017 |
 | **Uttarakhand** | Pushkar Singh Dhami | BJP | July 4, 2021 |
 | **West Bengal** | Suvendu Adhikari | BJP | May 9, 2026 |`
+  },
+
+  // Tamil Nadu Chief Minister Specific
+  {
+    keywords: ['tamil nadu cm', 'cm of tamil nadu', 'cm of tamilnadu', 'tamilnadu cm', 'who is the cm of tamil nadu', 'who is tamilnadu cm', 'vijay cm'],
+    category: 'Government & Current Affairs',
+    response: `### 🏛️ Chief Minister of Tamil Nadu (2026)
+
+**Current Chief Minister**: **C. Joseph Vijay** (**TVK** — Tamilaga Vettri Kazhagam)
+- **Joined / Assumption of Office**: May 10, 2026
+- **State**: Tamil Nadu`
+  },
+
+  // Centimeter Unit of Measurement
+  {
+    keywords: ['centimeter', 'centimeters', 'centimeter unit of length', 'centimeter unit', 'what is centimeter'],
+    category: 'Science & Measurement',
+    response: `### 📏 Centimeter (cm) — Unit of Length
+
+A **centimeter** (symbol: **cm**) is a unit of length in the International System of Units (SI) metric system.
+
+- **Metric Conversion**: 1 cm = $10^{-2}$ meters = 10 millimeters.
+- **Imperial Conversion**: 1 inch $\\approx$ 2.54 centimeters (1 cm $\\approx$ 0.3937 inches).
+- **Common Usage**: Used globally for measuring dimensions, height, geometry, and engineering specifications.`
   },
 
   // 11. Global Wars & Ongoing Conflicts

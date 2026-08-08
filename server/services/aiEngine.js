@@ -5,8 +5,8 @@ const { searchCustomKnowledge } = require('./customKnowledge');
 const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform.
 
 BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
-1. FILTER & ANALYZE: Carefully analyze the user's intent. If the user's query is ambiguous or has multiple interpretations, present clear options using the format [CHOICE: Option Label].
-2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states like TN CM C. Joseph Vijay - TVK, AP CM N. Chandrababu Naidu, KA CM D. K. Shivakumar, etc., global conflicts/wars, real GDP growth rates, programming paradigms, and world languages).
+1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous (e.g., "cm", "languages", "gdp", "war"), present clear choice options using [CHOICE: Option Label].
+2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states, global conflicts/wars, real GDP growth rates, programming paradigms, and world languages).
 3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
@@ -16,6 +16,24 @@ const LAF_REAL_IDENTITY_TEXT = `The full form of **LAF** is - **Look at The Futu
 function checkAmbiguousQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
   
+  // Ambiguous CM / Chief Minister Query
+  if (
+    p === 'cm' ||
+    p === 'what is cm' ||
+    p === 'cm meaning' ||
+    p === 'chief minister' ||
+    p === 'tell me about cm' ||
+    p === 'about cm'
+  ) {
+    return `Did you mean **Chief Ministers of States** or **Centimeter (Unit of Length)**?
+
+Which topic would you like to explore?
+
+[CHOICE: 🏛️ Chief Ministers of Indian States]
+[CHOICE: 📏 Centimeter (Unit of Length)]
+[CHOICE: 💼 Chief Manager / Corporate Title]`;
+  }
+
   // Ambiguous Language Query
   if (
     p === 'what are the languages you know' ||
@@ -34,6 +52,24 @@ Which type of language would you like to explore?
 
 [CHOICE: 💻 Programming Languages]
 [CHOICE: 🌍 Human / Spoken Languages]`;
+  }
+
+  // Ambiguous GDP Query
+  if (p === 'gdp' || p === 'what is gdp' || p === 'gdp rate' || p === 'real gdp') {
+    return `Would you like the **Real GDP Growth Rates of World Economies** or an explanation of **What GDP is & How it is Calculated**?
+
+[CHOICE: 📈 Real GDP Growth Rates of World Economies]
+[CHOICE: 📚 What is GDP & How it is Calculated]`;
+  }
+
+  // Ambiguous War Query
+  if (p === 'war' || p === 'wars' || p === 'war details' || p === 'ongoing wars') {
+    return `Which active global conflict would you like details on, or would you like an overview of **All Major Active Global Conflicts**?
+
+[CHOICE: 🌍 Overview of All Active Global Conflicts]
+[CHOICE: 🪖 Russia-Ukraine War]
+[CHOICE: ⚔️ Israel-Hamas & Middle East Conflict]
+[CHOICE: 🇸🇩 Sudan Civil Conflict]`;
   }
 
   // Ambiguous Python Query
