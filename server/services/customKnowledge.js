@@ -480,6 +480,34 @@ Artificial Intelligence (AI) has evolved through key historic breakthroughs:
 - **Cultural & Visual Details**: Features authentic Chola architecture (Brihadisvara Temple inspirations), traditional Tamil weaponry (Silambam, Vaal sword fighting), and rich Tamil voiceovers and soundtracks.`
   },
 
+  // 14. National Leadership Matrix of India (2026 Grounded Knowledge)
+  {
+    keywords: ['prime minister of india', 'pm of india', 'who is prime minister of india', 'who is pm of india', 'current prime minister of india', 'narendra modi', 'president of india', 'who is president of india', 'who is the president of india', 'tell me who is the president of india', 'current president of india', 'droupadi murmu', 'vice president of india', 'who is vice president of india'],
+    category: 'Government & Leadership',
+    response: `### 🇮🇳 National Constitutional Leadership of India (2026)
+
+---
+
+### 🏛️ 1. Prime Minister of India
+- **Current Prime Minister**: **Shri Narendra Modi**
+- **Tenure**: In office continuously since **May 26, 2014** (Serving in **2026**).
+- **Role**: Head of Government and leader of the Union Cabinet.
+
+---
+
+### 🇮🇳 2. President of India
+- **Current President**: **Smt. Droupadi Murmu**
+- **Tenure**: In office since **July 25, 2022** (15th President of India, serving in **2026**).
+- **Role**: Head of State and Supreme Commander of the Indian Armed Forces.
+
+---
+
+### 📜 3. Vice President of India
+- **Current Vice President**: **Shri Jagdeep Dhankhar**
+- **Tenure**: In office since **August 11, 2022** (14th Vice President of India).
+- **Role**: Ex-officio Chairman of the Rajya Sabha (Upper House of Parliament).`
+  },
+
   // 11. Global Wars & Ongoing Conflicts
   {
     keywords: ['war details', 'ongoing wars', 'war', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],

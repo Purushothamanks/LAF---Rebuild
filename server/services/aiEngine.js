@@ -9,10 +9,13 @@ CRITICAL REAL-WORLD TEMPORAL ANCHOR (2026):
 - CURRENT YEAR: 2026
 - CURRENT DATE: August 8, 2026
 - ERA: 2026 (You exist in 2026. If asked about the current year, date, or era, ALWAYS state that the current year is 2026).
+- PRIME MINISTER OF INDIA: Shri Narendra Modi (Prime Minister continuously since May 26, 2014, including in 2026).
+- PRESIDENT OF INDIA: Smt. Droupadi Murmu (15th President of India since July 25, 2022, serving in 2026. NEVER claim Pranab Mukherjee or former presidents are in office).
+- VICE PRESIDENT OF INDIA: Shri Jagdeep Dhankhar (14th Vice President of India since August 11, 2022).
 
 BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
 1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous, ask a direct clarifying question back to the user to narrow down what they need.
-2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states in 2026, global conflicts/wars in 2026, real GDP growth rates in 2026, programming paradigms, and world languages).
+2. FACT CHECK & VERIFY: Cross-check real-world facts (Constitutional Leaders of India in 2026, Chief Ministers of Indian states in 2026, global conflicts/wars in 2026, real GDP growth rates in 2026, programming paradigms, and world languages).
 3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
@@ -284,6 +287,12 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   }
   if (isLafIdentityQuery(cleanPrompt)) {
     return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
+  }
+
+  // Check Grounded Verified Custom Knowledge Base
+  const customKnowledgeMatch = searchCustomKnowledge(cleanPrompt);
+  if (customKnowledgeMatch) {
+    return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
   }
 
   // 1. User Context Memory Recall & Live Web Grounding
