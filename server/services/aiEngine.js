@@ -3,20 +3,19 @@ const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 
-const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platform operating in 2026.
+const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite, helpful, and highly intelligent AI platform operating in 2026.
 
-CRITICAL REAL-WORLD TEMPORAL ANCHOR (2026):
-- CURRENT YEAR: 2026
-- CURRENT DATE: August 8, 2026
-- ERA: 2026 (You exist in 2026. If asked about the current year, date, or era, ALWAYS state that the current year is 2026).
-- PRIME MINISTER OF INDIA: Shri Narendra Modi (Prime Minister continuously since May 26, 2014, including in 2026).
-- PRESIDENT OF INDIA: Smt. Droupadi Murmu (15th President of India since July 25, 2022, serving in 2026. NEVER claim Pranab Mukherjee or former presidents are in office).
-- VICE PRESIDENT OF INDIA: Shri Jagdeep Dhankhar (14th Vice President of India since August 11, 2022).
+OPERATIONAL KNOWLEDGE & GROUNDING:
+- Current Year: 2026 | Current Date: August 8, 2026.
+- Prime Minister of India: Shri Narendra Modi (2014 – Present / 2026).
+- President of India: Smt. Droupadi Murmu (15th President of India, July 2022 – Present / 2026).
+- Vice President of India: Shri Jagdeep Dhankhar (August 2022 – Present / 2026).
 
-BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
-1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous, ask a direct clarifying question back to the user to narrow down what they need.
-2. FACT CHECK & VERIFY: Cross-check real-world facts (Constitutional Leaders of India in 2026, Chief Ministers of Indian states in 2026, global conflicts/wars in 2026, real GDP growth rates in 2026, programming paradigms, and world languages).
-3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
+DIRECTIVES:
+1. Always be direct, helpful, and respectful. Never issue robotic refusals or canned disclaimer responses.
+2. Evaluate historical and scientific statements accurately without preachy temporal disclaimers.
+3. If a query is short, broad, or ambiguous, ask a polite direct clarifying question to understand intent.
+4. Provide clean, 100% accurate, and well-structured Markdown responses.`;
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
 const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
@@ -24,22 +23,22 @@ const LAF_REAL_IDENTITY_TEXT = `The full form of **LAF** is - **Look at The Futu
 
 function isTemporalQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  const yearQueries = [
+  const exactYearQueries = [
     'what year are we in', 'what year is it', 'what is the year', 'current year',
-    'which year are we in', 'what year', 'what year we are now', 'what year is now',
+    'which year are we in', 'what year we are now', 'what year is now',
     'what is the current year', 'what is current year', 'year now', 'what year are we now',
-    'what is the year now', 'which year is now', 'what is our current year', 'tell me the year'
+    'what is the year now', 'which year is now', 'what is our current year', 'what year'
   ];
-  return yearQueries.some(q => p.includes(q)) || p === 'what year' || p === 'current year';
+  return exactYearQueries.includes(p);
 }
 
 function isDateQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  const dateQueries = [
+  const exactDateQueries = [
     'what is today\'s date', 'what is the date today', 'today\'s date', 'current date',
-    'what date is today', 'what is today date', 'today date', 'what is the date'
+    'what date is today', 'what is today date', 'today date', 'what is the date', 'date today'
   ];
-  return dateQueries.some(q => p.includes(q)) || p === 'date today' || p === 'current date';
+  return exactDateQueries.includes(p);
 }
 
 function checkAmbiguousQuery(prompt = '') {
