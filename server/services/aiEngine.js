@@ -99,13 +99,12 @@ function checkAmbiguousQuery(prompt = '') {
 
 function isDeveloperQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  const devKeywords = [
-    'developer', 'creator', 'author', 'who created', 'who developed',
-    'who built', 'who made', 'who programmed', 'who designed', 'who founded',
-    'built you', 'made you', 'created you', 'developed you', 'behind laf',
-    'whose project', 'who wrote', 'who is your dev', 'dev profile', 'developer profile'
+  const devPhrases = [
+    'who is your developer', 'who is the developer', 'who developed laf', 'who created laf',
+    'who built laf', 'who made laf', 'who is your creator', 'who created you', 'who developed you',
+    'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf'
   ];
-  return devKeywords.some(k => p.includes(k));
+  return devPhrases.some(phrase => p.includes(phrase));
 }
 
 function isImageCapabilityQuery(prompt = '') {

@@ -464,6 +464,22 @@ Artificial Intelligence (AI) has evolved through key historic breakthroughs:
 - **2026 Present Day**: AI has expanded into sub-3s local autonomous agents, multimodal neural systems (real-time vision, code generation, FLUX photorealistic synthesis), and sovereign edge AI products like **LAF AI**.`
   },
 
+  // 13. Son of Thanjai (Tamil Historic Action/RPG Game)
+  {
+    keywords: ['son of thanjai', 'son of thanjai game', 'son of thanjai video game', 'thanjai game', 'son of tanjore', 'son of thanjai release date'],
+    category: 'Gaming & Tamil Culture',
+    response: `### 🎮 Son of Thanjai (Game Overview)
+
+**Son of Thanjai** is an ambitious historical action-adventure / RPG video game set in the glorious era of the **Chola Dynasty** (centered around the historic city of Thanjavur / Tanjore, Tamil Nadu).
+
+---
+
+### 🗡️ Key Gameplay & Narrative Highlights:
+- **Historical Era**: Takes place during the golden age of Chola naval supremacy, temple architecture, and martial warfare under emperors like Raja Raja Chola I & Rajendra Chola I.
+- **Protagonist & Combat**: Players step into the shoes of a Chola warrior navigating stealth, swordplay, archery, and tactical battles across ancient South Indian landscapes.
+- **Cultural & Visual Details**: Features authentic Chola architecture (Brihadisvara Temple inspirations), traditional Tamil weaponry (Silambam, Vaal sword fighting), and rich Tamil voiceovers and soundtracks.`
+  },
+
   // 11. Global Wars & Ongoing Conflicts
   {
     keywords: ['war details', 'ongoing wars', 'war', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],
