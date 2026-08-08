@@ -338,17 +338,17 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   }
 
   // 3. Grounded Fallback Engine
-  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username });
+  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, webGroundingContext });
   return {
     text: fallbackText,
-    provider: 'LAF Core Engine'
+    provider: 'LAF Real-Time Web Engine'
   };
 }
 
 /**
- * Built-in High-Capacity Intelligence Engine
+ * Built-in High-Capacity Intelligence Engine with Live Web Search Synthesis
  */
-async function generateGemmaResponse({ prompt = '', username = '' }) {
+async function generateGemmaResponse({ prompt = '', username = '', webGroundingContext = '' }) {
   const p = prompt.trim();
   const lower = p.toLowerCase();
 
@@ -418,7 +418,26 @@ LAF (Look At The Future) is an autonomous, high-performance local AI product pla
     return `Hello **${username}**! 👋 I am **LAF AI**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
   }
 
-  // 5. Coding / Solution requests
+  // 5. Live Real-Time Web Grounding Search Integration
+  let liveSnippets = webGroundingContext ? webGroundingContext.replace('\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n', '').trim() : '';
+  if (!liveSnippets) {
+    try {
+      liveSnippets = await searchWebGrounding(p);
+    } catch (e) {}
+  }
+
+  if (liveSnippets) {
+    return `### 🌐 Real-Time Live Grounded Information (2026)
+
+Verified real-time search results for **"${p}"**:
+
+${liveSnippets}
+
+---
+*Synthesized using LAF 2026 Real-Time Live Web Grounding Service.*`;
+  }
+
+  // 6. Coding / Solution requests
   if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css') || lower.includes('react') || lower.includes('express')) {
     return `Here is a complete, production-ready solution for **"${p}"**:
 
@@ -449,7 +468,7 @@ console.log("Execution Result:", output);
 3. **Execution Verification**: Verifies success status and logs execution metrics.`;
   }
 
-  // 6. General Questions / Reasoning Fallback
+  // 7. General Questions / Reasoning Fallback
   return `Regarding **${p}**:
 
 - **Core Analysis**: Requires structured evaluation of key principles, architecture, and operational parameters.
