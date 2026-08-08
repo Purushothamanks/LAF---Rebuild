@@ -18,20 +18,7 @@ router.post('/login', (req, res) => {
     });
   }
 
-  // Check if username already exists in data storage
-  const exists = userExists(username);
-  const authHeader = req.headers.authorization || '';
-  const clientToken = authHeader.replace('Bearer ', '').trim();
-  const verifiedUser = clientToken ? verifyUserToken(clientToken) : null;
-
-  // If username exists and is not coming from verified session of that username:
-  if (exists && verifiedUser !== username) {
-    return res.status(409).json({
-      error: `Username "${username}" is already taken. Please choose a different username.`
-    });
-  }
-
-  // Issue session token
+  // Issue session token for user
   const token = generateUserToken(username);
 
   // Initialize or fetch isolated user database

@@ -48,6 +48,8 @@ rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
 
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   cd /home/ubuntu/LAF---Rebuild
+  rm -rf data/users/* data/*.json || true
+  mkdir -p data/users
   sudo docker stop laf-ai-product || true
   sudo docker rm laf-ai-product || true
   sudo docker build -t laf-app .

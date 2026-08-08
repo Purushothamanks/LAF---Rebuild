@@ -12,8 +12,11 @@ import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('laf_token') || '');
+  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
+  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('laf_token') : null;
+
+  const [user, setUser] = useState(storedUser ? { username: storedUser } : null);
+  const [token, setToken] = useState(storedToken || '');
   const [activeTab, setActiveTab] = useState('chat');
   const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('laf_custom_api_key') || '');
   
@@ -41,7 +44,7 @@ export default function App() {
     localStorage.setItem('laf_theme', theme);
   }, [theme]);
 
-  // Validate session token on mount
+  // Validate session token on mount while maintaining permanent logged-in username
   useEffect(() => {
     if (token) {
       fetch('/api/auth/me', {
@@ -52,12 +55,22 @@ export default function App() {
           if (data.success && data.user) {
             setUser(data.user);
             fetchConversations(token);
-          } else {
-            handleLogout();
+          } else if (storedUser) {
+            // Keep permanent user logged in with active token
+            setUser({ username: storedUser });
+            fetchConversations(token);
           }
         })
-        .catch(() => handleLogout())
+        .catch(err => {
+          console.warn('Session check note:', err);
+          if (storedUser) {
+            setUser({ username: storedUser });
+          }
+        })
         .finally(() => setLoadingSession(false));
+    } else if (storedUser) {
+      setUser({ username: storedUser });
+      setLoadingSession(false);
     } else {
       setLoadingSession(false);
     }
