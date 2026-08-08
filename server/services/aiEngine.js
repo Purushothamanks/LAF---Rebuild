@@ -7,10 +7,10 @@ const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite AI product platfor
 CRITICAL REAL-WORLD TEMPORAL ANCHOR (2026):
 - CURRENT YEAR: 2026
 - CURRENT DATE: August 8, 2026
-- ERA: 2026 (You exist in 2026. If asked about the current year, date, or era, ALWAYS state that the current year is 2026. Never mention 2023 or 2024 as the current time).
+- ERA: 2026 (You exist in 2026. If asked about the current year, date, or era, ALWAYS state that the current year is 2026).
 
 BEFORE RESPONDING, EXECUTE MULTI-STEP VERIFICATION:
-1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous (e.g., "cm", "languages", "gdp", "war"), present clear choice options using [CHOICE: Option Label].
+1. FILTER & ANALYZE: Carefully analyze the user's intent. If the query is short, broad, or ambiguous, ask a direct clarifying question back to the user to narrow down what they need.
 2. FACT CHECK & VERIFY: Cross-check real-world facts (Chief Ministers of Indian states in 2026, global conflicts/wars in 2026, real GDP growth rates in 2026, programming paradigms, and world languages).
 3. DOUBLE-CHECK ACCURACY: Ensure responses are 100% accurate, concise, factual, and free from hallucinations. Always respond in the language requested by the user.`;
 
@@ -50,13 +50,7 @@ function checkAmbiguousQuery(prompt = '') {
     p === 'tell me about cm' ||
     p === 'about cm'
   ) {
-    return `Did you mean **Chief Ministers of States** or **Centimeter (Unit of Length)**?
-
-Which topic would you like to explore?
-
-[CHOICE: 🏛️ Chief Ministers of Indian States]
-[CHOICE: 📏 Centimeter (Unit of Length)]
-[CHOICE: 💼 Chief Manager / Corporate Title]`;
+    return `Are you asking about the **Chief Ministers of Indian States** or the unit of measurement **Centimeter (cm)**? Please specify what you would like to know!`;
   }
 
   // Ambiguous Language Query
@@ -71,54 +65,32 @@ Which topic would you like to explore?
     p === 'supported languages' ||
     p === 'languages you speak'
   ) {
-    return `I can provide detailed information for both **Programming Languages** and **Human / Spoken World Languages**.
-
-Which type of language would you like to explore?
-
-[CHOICE: 💻 Programming Languages]
-[CHOICE: 🌍 Human / Spoken Languages]`;
+    return `Are you interested in exploring **Programming Languages** (such as Python, JavaScript, Rust, C++) or **Human Spoken Languages** (such as English, Spanish, Tamil, Hindi)? Let me know which one you need!`;
   }
 
   // Ambiguous GDP Query
   if (p === 'gdp' || p === 'what is gdp' || p === 'gdp rate' || p === 'real gdp') {
-    return `Would you like the **Real GDP Growth Rates of World Economies** or an explanation of **What GDP is & How it is Calculated**?
-
-[CHOICE: 📈 Real GDP Growth Rates of World Economies]
-[CHOICE: 📚 What is GDP & How it is Calculated]`;
+    return `Would you like to see the **Real GDP Growth Rates of major world economies**, or are you looking for an explanation of **how GDP is defined and calculated**?`;
   }
 
   // Ambiguous War Query
   if (p === 'war' || p === 'wars' || p === 'war details' || p === 'ongoing wars') {
-    return `Which active global conflict would you like details on, or would you like an overview of **All Major Active Global Conflicts**?
-
-[CHOICE: 🌍 Overview of All Active Global Conflicts]
-[CHOICE: 🪖 Russia-Ukraine War]
-[CHOICE: ⚔️ Israel-Hamas & Middle East Conflict]
-[CHOICE: 🇸🇩 Sudan Civil Conflict]`;
+    return `Which active conflict would you like details on (such as Russia-Ukraine, Israel-Hamas/Gaza, or Sudan), or would you like an overview of all major ongoing global conflicts?`;
   }
 
   // Ambiguous Python Query
   if (p === 'python' || p === 'what is python') {
-    return `Would you like information on the **Python Programming Language** or the **Python Snake (Reptile species)**?
-
-[CHOICE: 💻 Python Programming Language]
-[CHOICE: 🐍 Python Snake (Biology)]`;
+    return `Are you looking for information on the **Python Programming Language** or the **Python Snake species**?`;
   }
 
   // Ambiguous Java Query
   if (p === 'java' || p === 'what is java') {
-    return `Would you like information on the **Java Programming Language** or **Java Island (Indonesia)**?
-
-[CHOICE: ☕ Java Programming Language]
-[CHOICE: 🏝️ Java Island (Geography)]`;
+    return `Are you looking for information on the **Java Programming Language** or **Java Island in Indonesia**?`;
   }
 
   // Ambiguous Apple Query
   if (p === 'apple' || p === 'what is apple') {
-    return `Would you like information on **Apple Inc. (Technology Company)** or **Apple (Fruit)**?
-
-[CHOICE: 🍏 Apple Inc Technology]
-[CHOICE: 🍎 Apple Fruit]`;
+    return `Are you asking about **Apple Inc. (the technology company)** or **Apple (the fruit)**?`;
   }
 
   return null;

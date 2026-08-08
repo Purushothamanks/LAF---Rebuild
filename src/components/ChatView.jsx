@@ -60,22 +60,6 @@ marked.setOptions({
   gfm: true
 });
 
-function extractChoiceOptions(content = '') {
-  if (!content) return [];
-  const regex = /\[CHOICE:\s*([^\]]+)\]/gi;
-  const choices = [];
-  let match;
-  while ((match = regex.exec(content)) !== null) {
-    choices.push(match[1].trim());
-  }
-  return choices;
-}
-
-function cleanMessageForRendering(content = '') {
-  if (!content) return '';
-  return content.replace(/\[CHOICE:\s*([^\]]+)\]/gi, '').trim();
-}
-
 export default function ChatView({
   user,
   token,
@@ -426,9 +410,6 @@ export default function ChatView({
             /* Active Conversation Messages List */
             messages.map((m, idx) => {
               const isUser = m.role === 'user';
-              const rawContent = m.content || '';
-              const choices = !isUser ? extractChoiceOptions(rawContent) : [];
-              const displayContent = !isUser ? cleanMessageForRendering(rawContent) : rawContent;
 
               return (
                 <div
@@ -481,50 +462,12 @@ export default function ChatView({
                         textAlign: isUser ? 'right' : 'left'
                       }}
                       dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(marked.parse(displayContent), {
+                        __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
                           ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
                           ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
                         })
                       }}
                     />
-
-                    {/* Render Interactive Choice Option Pill Buttons */}
-                    {choices.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', marginBottom: '8px' }}>
-                        {choices.map((choiceLabel, cIdx) => (
-                          <button
-                            key={cIdx}
-                            type="button"
-                            onClick={() => {
-                              const cleanChoice = choiceLabel.replace(/^[^\w\s]+/, '').trim();
-                              handleSend(null, cleanChoice || choiceLabel);
-                            }}
-                            style={{
-                              background: 'rgba(79, 117, 255, 0.15)',
-                              border: '1px solid var(--ds-blue)',
-                              borderRadius: '9999px',
-                              color: '#ffffff',
-                              padding: '8px 16px',
-                              fontSize: '0.86rem',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              boxShadow: '0 0 12px rgba(79, 117, 255, 0.25)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'var(--ds-blue)';
-                              e.currentTarget.style.boxShadow = '0 0 16px rgba(79, 117, 255, 0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(79, 117, 255, 0.15)';
-                              e.currentTarget.style.boxShadow = '0 0 12px rgba(79, 117, 255, 0.25)';
-                            }}
-                          >
-                            {choiceLabel}
-                          </button>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Voice, Copy & Edit Options Under Messages */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
@@ -545,7 +488,7 @@ export default function ChatView({
                         </button>
                       )}
                       <button
-                        onClick={() => handleSpeak(displayContent, idx)}
+                        onClick={() => handleSpeak(m.content, idx)}
                         style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
                         title="Read Aloud"
                       >
@@ -553,7 +496,7 @@ export default function ChatView({
                         <span>Speak</span>
                       </button>
                       <button
-                        onClick={() => handleCopy(displayContent, idx)}
+                        onClick={() => handleCopy(m.content, idx)}
                         style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? '#10b981' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
                         title="Copy text"
                       >
