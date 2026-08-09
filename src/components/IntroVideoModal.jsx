@@ -24,6 +24,9 @@ export default function IntroVideoModal({ onComplete }) {
       minHeight: '100dvh',
       zIndex: 999999,
       background: '#000000',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
       overflow: 'hidden',
       touchAction: 'none'
     }}>
@@ -38,8 +41,9 @@ export default function IntroVideoModal({ onComplete }) {
         style={{
           width: '100%',
           height: '100%',
-          minHeight: '100dvh',
-          objectFit: 'cover',
+          maxWidth: '100vw',
+          maxHeight: '100dvh',
+          objectFit: 'contain',
           objectPosition: 'center',
           background: '#000000',
           display: 'block'
