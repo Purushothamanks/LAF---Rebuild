@@ -153,6 +153,11 @@ export default function App() {
     setToken('');
   };
 
+  // Intro video comes 1st on app launch
+  if (showIntro) {
+    return <IntroVideoModal onComplete={() => setShowIntro(false)} />;
+  }
+
   if (loadingSession) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0e1117', color: '#4f75ff' }}>
@@ -170,9 +175,6 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {/* Intro Video Overlay on App Open */}
-      {showIntro && <IntroVideoModal onComplete={() => setShowIntro(false)} />}
-
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
