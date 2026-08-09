@@ -10,6 +10,7 @@ import LoginModal from './components/LoginModal';
 import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
+import IntroVideoModal from './components/IntroVideoModal';
 
 export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
@@ -19,6 +20,9 @@ export default function App() {
   const [token, setToken] = useState(storedToken || '');
   const [activeTab, setActiveTab] = useState('chat');
   const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('laf_custom_api_key') || '');
+  
+  // Intro video state
+  const [showIntro, setShowIntro] = useState(true);
   
   // Theme state ('dark', 'cyber', 'light')
   const [theme, setTheme] = useState(localStorage.getItem('laf_theme') || 'dark');
@@ -166,6 +170,9 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      {/* Intro Video Overlay on App Open */}
+      {showIntro && <IntroVideoModal onComplete={() => setShowIntro(false)} />}
+
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
