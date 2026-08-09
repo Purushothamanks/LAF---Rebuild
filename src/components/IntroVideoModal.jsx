@@ -2,7 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 
 export default function IntroVideoModal({ onComplete }) {
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const videoSrc = "/Yellow%20and%20Black%20Simple%20intro%20Video.mp4";
+  const audioSrc = "/intro-audio.mp3";
+
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
@@ -11,14 +14,49 @@ export default function IntroVideoModal({ onComplete }) {
     };
     window.addEventListener('resize', handleResize);
 
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        onComplete();
-      });
-    }
+    const playMedia = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.play();
+        } catch (e) {
+          onComplete();
+          return;
+        }
+      }
 
-    return () => window.removeEventListener('resize', handleResize);
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => {
+          console.warn('Autoplay audio notice:', err);
+        });
+      }
+    };
+
+    playMedia();
+
+    // Enable audio on user interaction if autoplay was restricted
+    const handleUserInteraction = () => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    window.addEventListener('click', handleUserInteraction, { once: true });
+    window.addEventListener('touchstart', handleUserInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('touchstart', handleUserInteraction);
+    };
   }, []);
+
+  const handleEnded = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    onComplete();
+  };
 
   return (
     <div style={{
@@ -57,14 +95,18 @@ export default function IntroVideoModal({ onComplete }) {
         }
       `}</style>
 
+      {/* Synchronized Logo Sound FX */}
+      <audio ref={audioRef} src={audioSrc} preload="auto" />
+
+      {/* Intro Video Element */}
       <video
         ref={videoRef}
         src={videoSrc}
         autoPlay
         playsInline
         muted
-        onEnded={onComplete}
-        onError={onComplete}
+        onEnded={handleEnded}
+        onError={handleEnded}
         className={isMobile ? 'laf-intro-video-mobile' : 'laf-intro-video-desktop'}
       />
     </div>
