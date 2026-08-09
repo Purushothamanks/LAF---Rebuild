@@ -14,7 +14,7 @@ export default function IntroVideoModal({ onComplete }) {
     };
     window.addEventListener('resize', handleResize);
 
-    const playMedia = async () => {
+    const startPlayback = async () => {
       if (videoRef.current) {
         try {
           await videoRef.current.play();
@@ -27,14 +27,14 @@ export default function IntroVideoModal({ onComplete }) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(err => {
-          console.warn('Autoplay audio notice:', err);
+          console.warn('Autoplay audio notification:', err);
         });
       }
     };
 
-    playMedia();
+    startPlayback();
 
-    // Enable audio on user interaction if autoplay was restricted
+    // Enable audio on user interaction if autoplay was restricted by browser policy
     const handleUserInteraction = () => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().catch(() => {});
