@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const { verifyUserToken } = require('../security/encryption');
 const { sanitizeInput, detectThreats } = require('../security/sanitize');
 const { generateResponse } = require('../services/aiEngine');
@@ -155,6 +156,20 @@ router.delete('/conversation/:id', authMiddleware, (req, res) => {
     res.json({ success: true, message: 'Conversation deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete conversation' });
+  }
+});
+
+/**
+ * GET /api/chat/memory-search
+ * Search isolated conversation memory logs
+ */
+router.get('/memory-search', authMiddleware, (req, res) => {
+  try {
+    const query = req.query.q || '';
+    const memoryResults = searchUserMemory(req.username, query);
+    res.json({ success: true, memoryResults });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to search memory logs' });
   }
 });
 

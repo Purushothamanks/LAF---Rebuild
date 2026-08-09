@@ -57,7 +57,7 @@ router.get('/download-proxy', async (req, res) => {
  */
 router.post('/image', authMiddleware, async (req, res) => {
   const result = await generateImage(req.body);
-  res.status(400).json(result);
+  res.json(result);
 });
 
 /**
@@ -65,7 +65,7 @@ router.post('/image', authMiddleware, async (req, res) => {
  */
 router.post('/audio', authMiddleware, async (req, res) => {
   const result = await generateAudio(req.body);
-  res.status(400).json(result);
+  res.json(result);
 });
 
 /**
@@ -73,7 +73,7 @@ router.post('/audio', authMiddleware, async (req, res) => {
  */
 router.post('/video', authMiddleware, async (req, res) => {
   const result = await generateVideo(req.body);
-  res.status(400).json(result);
+  res.json(result);
 });
 
 module.exports = router;
