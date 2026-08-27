@@ -212,8 +212,8 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
           keep_alive: -1,
           options: {
             temperature: 0.5,
-            num_predict: -1,
-            num_ctx: 2048,
+            num_predict: 4096,
+            num_ctx: 8192,
             num_thread: 4
           }
         },
@@ -272,7 +272,9 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
         {
           model: ep.model,
           messages: messages,
-          temperature: 0.5
+          temperature: 0.5,
+          max_tokens: 4096,
+          max_completion_tokens: 4096
         },
         {
           headers: {
@@ -281,7 +283,7 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
             'HTTP-Referer': 'https://laf.ai',
             'X-Title': 'LAF AI Platform'
           },
-          timeout: 25000
+          timeout: 120000
         }
       );
 

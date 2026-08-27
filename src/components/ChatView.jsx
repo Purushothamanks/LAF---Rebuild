@@ -197,58 +197,11 @@ export default function ChatView({
 
         setLoading(false);
 
-        if (fullContent.includes('![')) {
-          setMessages(prev => [
-            ...prev,
-            { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
-          ]);
-          fetchConversations();
-          return;
-        }
-
-        const tokens = fullContent.match(/(\s+|\S+)/g) || [fullContent];
-        let currentText = '';
-        let tokenIndex = 0;
-        const chunkSize = tokens.length > 200 ? 5 : (tokens.length > 80 ? 3 : 1);
-
-        // Add empty assistant placeholder message
         setMessages(prev => [
           ...prev,
-          { role: 'assistant', content: '', provider: providerName, isTyping: true }
+          { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
         ]);
-
-        const timer = setInterval(() => {
-          if (tokenIndex < tokens.length) {
-            for (let i = 0; i < chunkSize && tokenIndex < tokens.length; i++) {
-              currentText += tokens[tokenIndex];
-              tokenIndex++;
-            }
-            setMessages(prev => {
-              const updated = [...prev];
-              if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
-                updated[updated.length - 1] = {
-                  ...updated[updated.length - 1],
-                  content: currentText
-                };
-              }
-              return updated;
-            });
-          } else {
-            clearInterval(timer);
-            setMessages(prev => {
-              const updated = [...prev];
-              if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
-                updated[updated.length - 1] = {
-                  ...updated[updated.length - 1],
-                  content: fullContent,
-                  isTyping: false
-                };
-              }
-              return updated;
-            });
-            fetchConversations();
-          }
-        }, 5);
+        fetchConversations();
       } else {
         setLoading(false);
         setMessages(prev => [
