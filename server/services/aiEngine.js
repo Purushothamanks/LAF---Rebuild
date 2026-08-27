@@ -294,6 +294,15 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
   }
 
+function isWebSearchNeeded(prompt = '') {
+  const p = prompt.toLowerCase().trim();
+  const searchTriggers = [
+    'news', 'latest', 'recent', 'today', 'current', 'live', 'real-time', 'realtime',
+    'weather', 'stock', 'price', 'who won', 'score', 'trending', 'what happened', 'breaking'
+  ];
+  return searchTriggers.some(t => new RegExp(`\\b${t}\\b`, 'i').test(p));
+}
+
   // 1. User Context Memory Recall & Live Web Grounding
   let memoryContext = '';
   try {
@@ -305,12 +314,14 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   } catch (e) {}
 
   let webGroundingContext = '';
-  try {
-    const webSnippet = await searchWebGrounding(cleanPrompt);
-    if (webSnippet) {
-      webGroundingContext = `\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n${webSnippet}`;
-    }
-  } catch (e) {}
+  if (isWebSearchNeeded(cleanPrompt)) {
+    try {
+      const webSnippet = await searchWebGrounding(cleanPrompt);
+      if (webSnippet) {
+        webGroundingContext = `\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n${webSnippet}`;
+      }
+    } catch (e) {}
+  }
 
   const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}`;
 
@@ -425,27 +436,8 @@ LAF (Look At The Future) is an autonomous, high-performance local AI product pla
     return `Hello **${username}**! 👋 I am **LAF AI**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
   }
 
-  // 5. Live Real-Time Web Grounding Search Integration
-  let liveSnippets = webGroundingContext ? webGroundingContext.replace('\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n', '').trim() : '';
-  if (!liveSnippets) {
-    try {
-      liveSnippets = await searchWebGrounding(p);
-    } catch (e) {}
-  }
-
-  if (liveSnippets) {
-    return `### 🌐 Real-Time Live Grounded Information (2026)
-
-Verified real-time search results for **"${p}"**:
-
-${liveSnippets}
-
----
-*Synthesized using LAF 2026 Real-Time Live Web Grounding Service.*`;
-  }
-
-  // 6. Coding / Solution requests
-  if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css') || lower.includes('react') || lower.includes('express')) {
+  // 5. Coding / Solution requests
+  if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css') || lower.includes('react') || lower.includes('express') || lower.includes('software') || lower.includes('build') || lower.includes('create')) {
     return `Here is a complete, production-ready solution for **"${p}"**:
 
 \`\`\`javascript
@@ -473,6 +465,25 @@ console.log("Execution Result:", output);
 1. **Input Validation**: Ensures valid structured input is passed before processing.
 2. **Core Logic**: Executes high-throughput processing and returns a formatted JSON payload.
 3. **Execution Verification**: Verifies success status and logs execution metrics.`;
+  }
+
+  // 6. Live Real-Time Web Grounding Search Integration (Only for explicit search requests)
+  let liveSnippets = webGroundingContext ? webGroundingContext.replace('\n[REAL-TIME LIVE GROUNDED KNOWLEDGE (2026)]:\n', '').trim() : '';
+  if (!liveSnippets && isWebSearchNeeded(p)) {
+    try {
+      liveSnippets = await searchWebGrounding(p);
+    } catch (e) {}
+  }
+
+  if (liveSnippets) {
+    return `### 🌐 Real-Time Live Grounded Information (2026)
+
+Verified real-time search results for **"${p}"**:
+
+${liveSnippets}
+
+---
+*Synthesized using LAF 2026 Real-Time Live Web Grounding Service.*`;
   }
 
   // 7. General Questions / Reasoning Fallback

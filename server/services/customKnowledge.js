@@ -7,7 +7,7 @@
 const KNOWLEDGE_REPOSITORY = [
   // 0. 2026 Temporal Grounding & Model Information
   {
-    keywords: ['what year are we in', 'what year is it', 'current year', 'what year', 'which year', 'what year we are now', 'what year is now', 'what year are we now', 'what is the current year', 'current date', 'today date'],
+    keywords: ['what year are we in', 'what year is it', 'what is the current year', 'current year now', 'what year we are now', 'what year is now', 'what year are we now', 'today date'],
     category: 'Temporal Grounding & System Info',
     response: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`
   },
@@ -507,7 +507,7 @@ Artificial Intelligence was **not** created in 2026, nor is it a single recent i
 
   // 11. Global Wars & Ongoing Conflicts
   {
-    keywords: ['war details', 'ongoing wars', 'war', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],
+    keywords: ['war details', 'ongoing wars', 'russia ukraine war', 'israel hamas war', 'gaza war', 'middle east conflict', 'sudan war', 'global conflicts', 'current wars'],
     category: 'Global Affairs & Geopolitics',
     response: `### 🌍 Comprehensive Overview of Ongoing Global Conflicts & War Details
 
@@ -657,16 +657,26 @@ LAF features native understanding and generation across **global spoken language
   }
 ];
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
- * Searches multi-domain knowledge base for matching query keywords
+ * Searches multi-domain knowledge base for matching query keywords using strict word boundaries
  */
 function searchCustomKnowledge(prompt = '') {
   const p = prompt.toLowerCase().trim();
   if (!p) return null;
 
   for (const item of KNOWLEDGE_REPOSITORY) {
-    if (item.keywords.some(k => p.includes(k))) {
-      return item.response;
+    for (const kw of item.keywords) {
+      const cleanKw = kw.toLowerCase().trim();
+      if (!cleanKw) continue;
+
+      const regex = new RegExp(`\\b${escapeRegExp(cleanKw)}\\b`, 'i');
+      if (regex.test(p)) {
+        return item.response;
+      }
     }
   }
 

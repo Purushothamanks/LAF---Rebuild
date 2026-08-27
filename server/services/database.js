@@ -131,6 +131,10 @@ function deleteConversation(username, conversationId) {
   return true;
 }
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Search user's historical conversations for memory recall
  */
@@ -141,6 +145,15 @@ function searchUserMemory(username, query) {
   }
   
   const q = (query || '').toLowerCase().trim();
+  if (!q) return [];
+
+  const isExplicitMemoryQuery = 
+    q.includes('last week') || 
+    q.includes('yesterday') || 
+    q.includes('previous conversation') || 
+    q.includes('do you remember') || 
+    q.includes('what did we talk');
+
   const matchedMessages = [];
   
   db.conversations.forEach(conv => {
@@ -148,7 +161,20 @@ function searchUserMemory(username, query) {
     conv.messages.forEach(msg => {
       if (!msg.content) return;
       const contentLower = msg.content.toLowerCase();
-      if (!q || contentLower.includes(q) || q.includes('last week') || q.includes('yesterday') || q.includes('speak') || q.includes('previous') || q.includes('talked')) {
+      
+      let isMatch = false;
+      if (isExplicitMemoryQuery) {
+        isMatch = true;
+      } else if (q.length >= 4) {
+        try {
+          const regex = new RegExp(`\\b${escapeRegExp(q)}\\b`, 'i');
+          isMatch = regex.test(contentLower);
+        } catch (e) {
+          isMatch = contentLower.includes(q);
+        }
+      }
+
+      if (isMatch) {
         matchedMessages.push({
           conversationId: conv.id,
           conversationTitle: conv.title,
@@ -160,7 +186,7 @@ function searchUserMemory(username, query) {
     });
   });
   
-  return matchedMessages.slice(0, 15);
+  return matchedMessages.slice(0, 10);
 }
 
 /**
