@@ -300,66 +300,6 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
   return null;
 }
 
-/**
- * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform + FLUX.1 Image Engine
- */
-async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2', customApiKey = '' }) {
-  const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
-
-  if (isTemporalQuery(cleanPrompt)) {
-    return {
-      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
-  }
-
-  if (isDateQuery(cleanPrompt)) {
-    return {
-      text: `Today's date is **August 8, 2026**.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
-  }
-
-  const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
-  if (ambiguousResult) {
-    return { text: ambiguousResult, provider: 'LAF Reasoner' };
-  }
-
-  if (isDeveloperQuery(cleanPrompt)) {
-    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
-  }
-  if (isImageCapabilityQuery(cleanPrompt)) {
-    return {
-      text: 'Yes! I can generate high-resolution photorealistic images. Just describe what you would like me to create (e.g., *"generate an image of a majestic lion in golden hour"* or *"draw a futuristic floating city"*).',
-      provider: 'LAF Core Engine'
-    };
-  }
-  if (isImageGenerationQuery(cleanPrompt)) {
-    const formattedPrompt = cleanImagePrompt(cleanPrompt);
-    const imageUrl = generateImageUrl(formattedPrompt);
-    
-    // Pure clean Markdown image tag without extra prompt text or download text
-    const responseMarkdown = `![${cleanPrompt}](${imageUrl})`;
-
-    return {
-      text: responseMarkdown,
-      provider: 'LAF FLUX Neural Engine'
-    };
-  }
-  if (isUnsupportedMediaQuery(cleanPrompt)) {
-    return { text: 'LAF currently supports text reasoning, code generation, and 1024x1024 photorealistic image generation.', provider: 'LAF Core Engine' };
-  }
-  if (isLafIdentityQuery(cleanPrompt)) {
-    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
-  }
-
-  // Check Grounded Verified Custom Knowledge Base
-  const customKnowledgeMatch = searchCustomKnowledge(cleanPrompt);
-  if (customKnowledgeMatch) {
-    return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
-  }
-
 function isWebSearchNeeded(prompt = '') {
   const p = prompt.toLowerCase().trim();
   const searchTriggers = [
@@ -369,7 +309,24 @@ function isWebSearchNeeded(prompt = '') {
   return searchTriggers.some(t => new RegExp(`\\b${t}\\b`, 'i').test(p));
 }
 
-  // 1. User Context Memory Recall & Live Web Grounding
+/**
+ * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform + FLUX.1 Image Engine
+ */
+async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2', customApiKey = '' }) {
+  const cleanPrompt = (prompt || '').trim();
+  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
+
+  // Image Generation Handler
+  if (isImageGenerationQuery(cleanPrompt)) {
+    const formattedPrompt = cleanImagePrompt(cleanPrompt);
+    const imageUrl = generateImageUrl(formattedPrompt);
+    return {
+      text: `![${cleanPrompt}](${imageUrl})`,
+      provider: 'LAF FLUX Neural Engine'
+    };
+  }
+
+  // 1. User Context Memory Recall & Live Web Grounding Context Build
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -407,7 +364,9 @@ function isWebSearchNeeded(prompt = '') {
     });
   }
 
-  // 2. Cloud LLM Engine: Dispatch via custom API key or environment key
+  formattedMessages.push({ role: 'user', content: cleanPrompt });
+
+  // ⭐ HIGHEST PRIORITY 1: DISPATCH DIRECTLY TO API KEY ENGINE
   const activeApiKey = customApiKey || process.env.LAF_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
   if (activeApiKey) {
     const cloudRes = await callCloudLLM({
@@ -418,6 +377,48 @@ function isWebSearchNeeded(prompt = '') {
     if (cloudRes) {
       return cloudRes;
     }
+  }
+
+  // SECONDARY FALLBACKS (Only if API Key is not set or API call fails):
+  if (isTemporalQuery(cleanPrompt)) {
+    return {
+      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
+
+  if (isDateQuery(cleanPrompt)) {
+    return {
+      text: `Today's date is **August 8, 2026**.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
+
+  const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
+  if (ambiguousResult) {
+    return { text: ambiguousResult, provider: 'LAF Reasoner' };
+  }
+
+  if (isDeveloperQuery(cleanPrompt)) {
+    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
+  }
+  if (isImageCapabilityQuery(cleanPrompt)) {
+    return {
+      text: 'Yes! I can generate high-resolution photorealistic images. Just describe what you would like me to create (e.g., *"generate an image of a majestic lion in golden hour"* or *"draw a futuristic floating city"*).',
+      provider: 'LAF Core Engine'
+    };
+  }
+  if (isUnsupportedMediaQuery(cleanPrompt)) {
+    return { text: 'LAF currently supports text reasoning, code generation, and 1024x1024 photorealistic image generation.', provider: 'LAF Core Engine' };
+  }
+  if (isLafIdentityQuery(cleanPrompt)) {
+    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
+  }
+
+  // Check Custom Knowledge Base
+  const customKnowledgeMatch = searchCustomKnowledge(cleanPrompt);
+  if (customKnowledgeMatch) {
+    return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
   }
 
   // 3. Primary 24/7 Engine: Direct Call to Local Ollama Server
@@ -432,7 +433,7 @@ function isWebSearchNeeded(prompt = '') {
     };
   }
 
-  // 3. Grounded Fallback Engine
+  // 4. Grounded Fallback Engine
   const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, webGroundingContext });
   return {
     text: fallbackText,
