@@ -27,7 +27,7 @@ function authMiddleware(req, res, next) {
  */
 router.post('/send', authMiddleware, async (req, res) => {
   try {
-    const { prompt, conversationId, history = [], selectedModel = 'laf-v2' } = req.body;
+    const { prompt, conversationId, history = [], selectedModel = 'gpt-4o-mini' } = req.body;
     const cleanPrompt = sanitizeInput(prompt);
 
     if (!cleanPrompt) {
@@ -105,15 +105,15 @@ router.post('/send', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/chat/models
- * Returns available local AI models (Local 24/7 Ollama Engine)
+ * Returns available AI models (Cloud Engine & Local Ollama Engine)
  */
 router.get('/models', authMiddleware, (req, res) => {
   res.json({
     success: true,
     models: [
-      { id: 'laf-v2', name: 'Ollama LAF v2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Primary 24/7 fast local model' },
-      { id: 'llama3.2', name: 'Ollama Llama 3.2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Meta Llama 3.2 local model' },
-      { id: 'laf-model', name: 'Ollama LAF Model (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Custom LAF model' }
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (All-Rounder #1)', provider: 'Cloud API Key Engine', desc: 'Best overall model for speed, code, and reasoning' },
+      { id: 'deepseek-chat', name: 'DeepSeek V3 (Deep Logic & Math)', provider: 'Cloud API Key Engine', desc: 'Exceptional for deep math and complex code' },
+      { id: 'laf-v2', name: 'Ollama LAF v2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Primary 24/7 fast local model' }
     ]
   });
 });

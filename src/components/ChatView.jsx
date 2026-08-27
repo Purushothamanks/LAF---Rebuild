@@ -74,7 +74,7 @@ export default function ChatView({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [selectedModel, setSelectedModel] = useState('laf-v2');
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [isListening, setIsListening] = useState(false);
 
   const messagesEndRef = useRef(null);
