@@ -43,7 +43,8 @@ router.post('/send', authMiddleware, async (req, res) => {
       username: req.username,
       prompt: cleanPrompt,
       history,
-      selectedModel
+      selectedModel,
+      customApiKey: req.body.customApiKey || process.env.LAF_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY
     });
 
     // Update conversation in user's isolated DB

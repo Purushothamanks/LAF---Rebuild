@@ -53,7 +53,7 @@ ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   sudo docker stop laf-ai-product || true
   sudo docker rm laf-ai-product || true
   sudo docker build -t laf-app .
-  sudo docker run -d --name laf-ai-product --restart always --add-host=host.docker.internal:host-gateway -e OLLAMA_URL=http://172.17.0.1:11434 -p 3000:3000 -v $(pwd)/data:/app/data laf-app
+  sudo docker run -d --name laf-ai-product --restart always --add-host=host.docker.internal:host-gateway -e OLLAMA_URL=http://172.17.0.1:11434 -e LAF_API_KEY=sk-VxsIAi0YwNN4KtS3ZPnb7h273DBLkaii4F6VQYOrRf0Hz6fC -p 3000:3000 -v $(pwd)/data:/app/data laf-app
   sudo systemctl reload nginx
 EOF
 

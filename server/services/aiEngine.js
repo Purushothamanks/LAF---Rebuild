@@ -235,9 +235,75 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
 }
 
 /**
+ * Connection to Cloud LLM Endpoints (using User Custom API Key or Server API Key)
+ */
+async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
+  if (!apiKey || !apiKey.trim()) return null;
+  const cleanKey = apiKey.trim();
+
+  const endpoints = [
+    {
+      name: 'OpenAI Cloud AI',
+      url: 'https://api.openai.com/v1/chat/completions',
+      model: model && model.includes('gpt') ? model : 'gpt-4o-mini'
+    },
+    {
+      name: 'OpenRouter AI',
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      model: model && model.includes('/') ? model : 'google/gemini-2.5-flash-lite'
+    },
+    {
+      name: 'Groq Fast Engine',
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      model: model && model.includes('llama') ? model : 'llama-3.3-70b-versatile'
+    },
+    {
+      name: 'DeepSeek Reasoner Engine',
+      url: 'https://api.deepseek.com/chat/completions',
+      model: 'deepseek-chat'
+    }
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      console.log(`[AI-ENGINE] Connecting to Cloud API (${ep.name}) with API key...`);
+      const res = await axios.post(
+        ep.url,
+        {
+          model: ep.model,
+          messages: messages,
+          temperature: 0.5
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${cleanKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://laf.ai',
+            'X-Title': 'LAF AI Platform'
+          },
+          timeout: 25000
+        }
+      );
+
+      const content = res.data?.choices?.[0]?.message?.content;
+      if (content && content.trim()) {
+        return {
+          text: sanitizeLlmOutput(content.trim()),
+          provider: `${ep.name} (${res.data.model || ep.model})`
+        };
+      }
+    } catch (err) {
+      console.log(`[AI-ENGINE] Cloud API ${ep.name} notice: ${err.response?.status || err.message}`);
+    }
+  }
+
+  return null;
+}
+
+/**
  * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform + FLUX.1 Image Engine
  */
-async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2' }) {
+async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2', customApiKey = '' }) {
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
 
@@ -341,9 +407,20 @@ function isWebSearchNeeded(prompt = '') {
     });
   }
 
-  formattedMessages.push({ role: 'user', content: cleanPrompt });
+  // 2. Cloud LLM Engine: Dispatch via custom API key or environment key
+  const activeApiKey = customApiKey || process.env.LAF_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+  if (activeApiKey) {
+    const cloudRes = await callCloudLLM({
+      messages: formattedMessages,
+      apiKey: activeApiKey,
+      model: selectedModel
+    });
+    if (cloudRes) {
+      return cloudRes;
+    }
+  }
 
-  // 2. Primary 24/7 Engine: Direct Call to Local Ollama Server
+  // 3. Primary 24/7 Engine: Direct Call to Local Ollama Server
   const ollamaRes = await callOllamaLocal({
     messages: formattedMessages,
     model: selectedModel || 'laf-v2'
