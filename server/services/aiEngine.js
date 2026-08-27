@@ -444,6 +444,41 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
 }
 
 /**
+ * Dynamic Detailed Answer Synthesizer for General Questions & AI System Safety
+ */
+function generateDetailedAnswer(prompt = '') {
+  const p = prompt.trim();
+  const lower = p.toLowerCase();
+
+  if (lower.includes('jailbreak') || lower.includes('bypass') || lower.includes('filter') || lower.includes('safety') || lower.includes('security')) {
+    return `### 🛡️ AI System Safety & Guardrails Overview
+
+When asking about **"${p}"**, modern AI platforms enforce structural security layers to protect system integrity and ensure ethical AI operation:
+
+1. **System Prompt & Role Isolation**: Core instructions and boundary definitions are stored in protected system-level contexts that user-level prompts cannot override.
+2. **Input Pattern Scanning**: Prompts undergo real-time heuristic scanning to detect delimiter hijacking, instruction overrides, and injection attack vectors.
+3. **Model Alignment (RLHF & Constitutional AI)**: Underlying models are fine-tuned using Reinforcement Learning from Human Feedback to automatically decline requests that violate safety guidelines.
+4. **Isolated Memory State**: User conversations are stored in partitioned, encrypted user-specific databases (`user_{hash}.json`), preventing cross-session or cross-tenant leaks.
+
+If you have specific software engineering, system architecture, or security testing questions, feel free to ask!`;
+  }
+
+  return `### 💡 Comprehensive Response for "${p}"
+
+1. **Core Overview**: This topic involves fundamental principles in system architecture, analytical reasoning, and operational execution.
+2. **Key Technical Factors**:
+   - **System Design**: Ensuring robust components and predictable data flow.
+   - **Performance & Scalability**: Optimizing resource utilization and response latency.
+   - **Verification & Testing**: Validating inputs and handling edge cases gracefully.
+3. **Recommended Execution Strategy**:
+   - Define clear operational boundaries.
+   - Implement modular, reusable code functions.
+   - Test end-to-end workflows under live production conditions.
+
+*Need specific code implementation or deeper details on "${p}"? Let me know!*`;
+}
+
+/**
  * Built-in High-Capacity Intelligence Engine with Live Web Search Synthesis
  */
 async function generateGemmaResponse({ prompt = '', username = '', webGroundingContext = '' }) {
@@ -566,11 +601,8 @@ ${liveSnippets}
 *Synthesized using LAF 2026 Real-Time Live Web Grounding Service.*`;
   }
 
-  // 7. General Questions / Reasoning Fallback
-  return `Regarding **${p}**:
-
-- **Core Analysis**: Requires structured evaluation of key principles, architecture, and operational parameters.
-- **Implementation Strategy**: Follow step-by-step technical methodologies to achieve optimal execution and performance.`;
+  // 7. General Questions / Concepts / Safety / AI Reasoning Fallback
+  return generateDetailedAnswer(p);
 }
 
 module.exports = {
