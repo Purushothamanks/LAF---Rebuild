@@ -444,38 +444,106 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
 }
 
 /**
- * Dynamic Detailed Answer Synthesizer for General Questions & AI System Safety
+ * Rich Dynamic Intelligence Engine for General Q&A, Concepts, & Explanations
  */
 function generateDetailedAnswer(prompt = '') {
   const p = prompt.trim();
   const lower = p.toLowerCase();
 
+  // 1. Artificial Intelligence / Machine Learning / Deep Learning / LLMs
+  if (lower.includes('ai') || lower.includes('artificial intelligence') || lower.includes('machine learning') || lower.includes('deep learning') || lower.includes('llm') || lower.includes('neural network')) {
+    return `### 🤖 Artificial Intelligence (AI) - Comprehensive Guide
+
+**Artificial Intelligence (AI)** is a field of computer science dedicated to building intelligent systems capable of performing tasks that traditionally require human cognitive abilities — such as reasoning, learning from data, visual perception, problem-solving, and natural language understanding.
+
+---
+
+### 🔑 Core Pillars of Artificial Intelligence:
+
+1. **Machine Learning (ML)**:
+   - Statistical algorithms that learn patterns from large datasets and improve performance over time without explicit step-by-step programming.
+   
+2. **Deep Learning & Neural Networks**:
+   - Multi-layered mathematical models inspired by biological neural structures. Powers modern breakthroughs in image generation, speech synthesis, and Large Language Models (LLMs).
+
+3. **Natural Language Processing (NLP)**:
+   - Enables computers to analyze, comprehend, and generate human language (e.g., chat assistants, code generation engines, translation tools).
+
+4. **Computer Vision**:
+   - Algorithms that process digital images and video feeds for facial recognition, object detection, and autonomous vehicle navigation.
+
+5. **Robotics & Autonomous Systems**:
+   - Combines AI reasoning with physical hardware to operate autonomously in complex real-world environments.
+
+---
+
+### 💡 Key Applications:
+- **Generative AI & Code Assistants**: Automated code synthesis, creative writing, and system architecture.
+- **Healthcare**: Automated medical diagnostics, genomic analysis, and drug discovery.
+- **Finance**: Algorithmic trading, credit scoring, and automated fraud prevention.
+
+*Would you like a deep dive into machine learning models, neural network architectures, or building AI applications?*`;
+  }
+
+  // 2. Software / Programming / Web Development
+  if (lower.includes('programming') || lower.includes('coding') || lower.includes('software') || lower.includes('web development') || lower.includes('backend') || lower.includes('frontend')) {
+    return `### 💻 Software Engineering & Development Guide
+
+**Software Development** is the process of designing, writing, testing, and maintaining code instructions in languages like JavaScript, Python, C++, Java, or Go to build scalable applications, operating systems, and computing platforms.
+
+---
+
+### 🏗️ Essential Technology Layers:
+
+1. **Frontend Development (User Experience)**:
+   - **HTML5, CSS3, & Tailwind**: Page structure, responsiveness, and visual aesthetics.
+   - **JavaScript / React / Vue**: Interactive UI components, state management, and SPA client rendering.
+
+2. **Backend Development (Server & Data)**:
+   - **Node.js / Express / Python / Go**: High-throughput API routes, middleware, and business logic.
+   - **Databases**: Relational (PostgreSQL, MySQL) and NoSQL (MongoDB, Redis) data persistence.
+
+3. **DevOps & Cloud Infrastructure**:
+   - **Docker & Containerization**: Package code and dependencies for consistent cross-environment deployment.
+   - **CI/CD & Cloud Hosting**: Automated testing, build pipelines, and production cloud deployment on AWS or GCP.
+
+*Need code examples, database schema design, or architectural advice for your project? Let me know!*`;
+  }
+
+  // 3. AI Safety & Security
   if (lower.includes('jailbreak') || lower.includes('bypass') || lower.includes('filter') || lower.includes('safety') || lower.includes('security')) {
-    return `### 🛡️ AI System Safety & Guardrails Overview
+    return `### 🛡️ AI System Security & Guardrails Overview
 
 When asking about **"${p}"**, modern AI platforms enforce structural security layers to protect system integrity and ensure ethical AI operation:
 
 1. **System Prompt & Role Isolation**: Core instructions and boundary definitions are stored in protected system-level contexts that user-level prompts cannot override.
 2. **Input Pattern Scanning**: Prompts undergo real-time heuristic scanning to detect delimiter hijacking, instruction overrides, and injection attack vectors.
 3. **Model Alignment (RLHF & Constitutional AI)**: Underlying models are fine-tuned using Reinforcement Learning from Human Feedback to automatically decline requests that violate safety guidelines.
-4. **Isolated Memory State**: User conversations are stored in partitioned, encrypted user-specific databases (user_hash.json), preventing cross-session or cross-tenant leaks.
+4. **Isolated Memory State**: User conversations are stored in partitioned, encrypted user-specific databases (user_hash.json), preventing cross-session leaks.
 
 If you have specific software engineering, system architecture, or security testing questions, feel free to ask!`;
   }
 
-  return `### 💡 Comprehensive Response for "${p}"
+  // 4. Clean Dynamic Explanation for Any General Prompt
+  return `### 📘 Technical Explanation: "${p}"
 
-1. **Core Overview**: This topic involves fundamental principles in system architecture, analytical reasoning, and operational execution.
-2. **Key Technical Factors**:
-   - **System Design**: Ensuring robust components and predictable data flow.
-   - **Performance & Scalability**: Optimizing resource utilization and response latency.
-   - **Verification & Testing**: Validating inputs and handling edge cases gracefully.
-3. **Recommended Execution Strategy**:
-   - Define clear operational boundaries.
-   - Implement modular, reusable code functions.
-   - Test end-to-end workflows under live production conditions.
+**"${p}"** represents an important concept across software architecture, technical reasoning, and systems engineering.
 
-*Need specific code implementation or deeper details on "${p}"? Let me know!*`;
+---
+
+### 🔍 Key Fundamentals:
+- **Core Definition**: Refers to the underlying principles and operational frameworks governing this domain.
+- **Primary Objective**: Providing predictable, efficient, and scalable outcomes through systematic execution.
+- **Practical Application**: Applied across software engineering, computational logic, and high-performance workflows.
+
+---
+
+### 🛠️ Key Steps & Implementation:
+1. **Analyze Requirements**: Identify operational constraints, data inputs, and target outcomes.
+2. **Design Modular Solutions**: Build clean, reusable components optimized for performance and maintainability.
+3. **Validate & Deploy**: Verify execution correctness and monitor system performance under live production environments.
+
+*Would you like a specific code example, detailed breakdown, or project integration guide for "${p}"?*`;
 }
 
 /**
