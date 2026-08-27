@@ -458,7 +458,7 @@ When asking about **"${p}"**, modern AI platforms enforce structural security la
 1. **System Prompt & Role Isolation**: Core instructions and boundary definitions are stored in protected system-level contexts that user-level prompts cannot override.
 2. **Input Pattern Scanning**: Prompts undergo real-time heuristic scanning to detect delimiter hijacking, instruction overrides, and injection attack vectors.
 3. **Model Alignment (RLHF & Constitutional AI)**: Underlying models are fine-tuned using Reinforcement Learning from Human Feedback to automatically decline requests that violate safety guidelines.
-4. **Isolated Memory State**: User conversations are stored in partitioned, encrypted user-specific databases (`user_{hash}.json`), preventing cross-session or cross-tenant leaks.
+4. **Isolated Memory State**: User conversations are stored in partitioned, encrypted user-specific databases (user_hash.json), preventing cross-session or cross-tenant leaks.
 
 If you have specific software engineering, system architecture, or security testing questions, feel free to ask!`;
   }
