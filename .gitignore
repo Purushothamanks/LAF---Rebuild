@@ -7,3 +7,6 @@ data/
 public/media_cache/
 BUILD_REPORT.md
 server/training/*.jsonl
+*.pem
+*.mp4
+.*.ud2xlh

@@ -1,9 +1,10 @@
+const { sendSecurityAlert } = require('../security/emailAlert');
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 const { verifyUserToken } = require('../security/encryption');
-const { sanitizeInput, detectThreats } = require('../security/sanitize');
+const { sanitizeInput, detectThreats, detectJailbreak } = require('../security/sanitize');
 const { generateResponse } = require('../services/aiEngine');
 const { saveConversation, deleteConversation, readUserDb, searchUserMemory, saveFeedbackRecord } = require('../services/database');
 
@@ -32,6 +33,27 @@ router.post('/send', authMiddleware, async (req, res) => {
 
     if (!cleanPrompt) {
       return res.status(400).json({ error: 'Prompt content cannot be empty.' });
+    }
+
+    if (detectJailbreak(cleanPrompt)) {
+      const clientIp = req.headers['x-forwarded-for'] || req.ip;
+      console.warn(`[SECURITY ALARM] Jailbreak attempt blocked from @${req.username} (IP: ${clientIp}): "${cleanPrompt.substring(0, 80)}..."`);
+      sendSecurityAlert({
+        type: 'Jailbreak / System Override Attempt Blocked',
+        username: req.username,
+        ip: clientIp,
+        details: cleanPrompt.substring(0, 300)
+      });
+      return res.json({
+        success: true,
+        conversationId: conversationId || `conv_${Date.now()}`,
+        response: {
+          role: 'assistant',
+          content: '🔒 **[LAF Security Shield]** I cannot process prompt overrides, system instruction leaks, or security bypass requests. How can I assist you with your project?',
+          provider: 'LAF Security Engine',
+          timestamp: new Date().toISOString()
+        }
+      });
     }
 
     if (detectThreats(cleanPrompt)) {

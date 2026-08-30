@@ -1,10 +1,10 @@
 /**
- * Input & Output Security Filtering Module for LAF
+ * Input & Output Security Filtering & Jailbreak Defense Module for LAF
  */
 
 function sanitizeInput(input) {
   if (typeof input !== 'string') return '';
-  // Strip control characters & dangerous scripts
+  // Strip control characters & dangerous script tags
   return input
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
     .trim();
@@ -30,8 +30,24 @@ function detectThreats(text) {
   return threatSignatures.some(sig => sig.test(text));
 }
 
+function detectJailbreak(text) {
+  if (!text || typeof text !== 'string') return false;
+  const jailbreakPatterns = [
+    /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions|directives|rules)/gi,
+    /system\s+prompt\s+override/gi,
+    /do\s+anything\s+now/gi,
+    /\bDAN\b\s+mode/gi,
+    /developer\s+mode\s+(enabled|on)/gi,
+    /reveal\s+(your\s+)?(system\s+prompt|instructions|api\s*keys?)/gi,
+    /you\s+are\s+now\s+in\s+unrestricted\s+mode/gi,
+    /bypass\s+(safety|content)\s+(filter|policy)/gi
+  ];
+  return jailbreakPatterns.some(pattern => pattern.test(text));
+}
+
 module.exports = {
   sanitizeInput,
   validateUsername,
-  detectThreats
+  detectThreats,
+  detectJailbreak
 };
