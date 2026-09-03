@@ -2,6 +2,7 @@ const axios = require('axios');
 const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
+const { getRagContext } = require('./ragEngine');
 
 const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite, helpful, and highly intelligent AI platform operating in 2026.
 
@@ -363,7 +364,12 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     } catch (e) {}
   }
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}`;
+  let ragContext = '';
+  try {
+    ragContext = getRagContext(cleanPrompt);
+  } catch (e) {}
+
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}${ragContext ? '\n' + ragContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }

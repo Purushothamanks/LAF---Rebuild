@@ -28,26 +28,35 @@ function initRagEngine() {
     });
   }
 
-  // Index JSONL dataset
-  if (fs.existsSync(JSONL_PATH)) {
+  // Index all JSONL datasets in data/
+  const dataDir = path.join(__dirname, '../../data');
+  if (fs.existsSync(dataDir)) {
     try {
-      const lines = fs.readFileSync(JSONL_PATH, 'utf-8').split('\n').filter(l => l.trim());
-      lines.forEach(line => {
+      const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.jsonl'));
+      files.forEach(file => {
+        const filePath = path.join(dataDir, file);
         try {
-          const parsed = JSON.parse(line);
-          const userMsg = parsed.messages?.find(m => m.role === 'user')?.content || '';
-          const assistantMsg = parsed.messages?.find(m => m.role === 'assistant')?.content || '';
-          if (userMsg && assistantMsg) {
-            RAG_INDEX.push({
-              source: 'jsonl_dataset',
-              keywords: userMsg.toLowerCase().split(/\s+/),
-              content: assistantMsg
-            });
-          }
-        } catch (e) {}
+          const lines = fs.readFileSync(filePath, 'utf-8').split('\n').filter(l => l.trim());
+          lines.forEach(line => {
+            try {
+              const parsed = JSON.parse(line);
+              const userMsg = parsed.messages?.find(m => m.role === 'user')?.content || '';
+              const assistantMsg = parsed.messages?.find(m => m.role === 'assistant')?.content || '';
+              if (userMsg && assistantMsg) {
+                RAG_INDEX.push({
+                  source: file,
+                  keywords: userMsg.toLowerCase().split(/\s+/),
+                  content: assistantMsg
+                });
+              }
+            } catch (e) {}
+          });
+        } catch (e) {
+          console.error(`[RAG-ENGINE] Error reading ${file}:`, e.message);
+        }
       });
     } catch (e) {
-      console.error('[RAG-ENGINE] Error reading JSONL dataset:', e.message);
+      console.error('[RAG-ENGINE] Error scanning data directory:', e.message);
     }
   }
 
