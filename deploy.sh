@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-if [ -f "/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem" ]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/Final-Pro-Key.pem" ]; then
+  KEY_PATH="$SCRIPT_DIR/Final-Pro-Key.pem"
+elif [ -f "/home/purushothaman/Videos/Projects/LAF-Rebuild/Final-Pro-Key.pem" ]; then
+  KEY_PATH="/home/purushothaman/Videos/Projects/LAF-Rebuild/Final-Pro-Key.pem"
+elif [ -f "/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem" ]; then
   KEY_PATH="/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem"
 else
   KEY_PATH="/home/purushothaman/Videos/Final-Pro-Key.pem"

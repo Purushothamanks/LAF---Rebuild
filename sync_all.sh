@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-if [ -f "/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem" ]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/Final-Pro-Key.pem" ]; then
+  DEFAULT_KEY="$SCRIPT_DIR/Final-Pro-Key.pem"
+elif [ -f "/home/purushothaman/Videos/Projects/LAF-Rebuild/Final-Pro-Key.pem" ]; then
+  DEFAULT_KEY="/home/purushothaman/Videos/Projects/LAF-Rebuild/Final-Pro-Key.pem"
+elif [ -f "/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem" ]; then
   DEFAULT_KEY="/home/purushothaman/Videos/LAF---Rebuild/Final-Pro-Key.pem"
 else
   DEFAULT_KEY="/home/purushothaman/Videos/Final-Pro-Key.pem"
@@ -48,7 +53,9 @@ rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
 
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   cd /home/ubuntu/LAF---Rebuild
-  rm -rf data/users/* data/*.json || true
+  if [ "$CLEAR_DATA" = "1" ]; then
+    rm -rf data/users/* data/*.json || true
+  fi
   mkdir -p data/users
   sudo docker stop laf-ai-product || true
   sudo docker rm laf-ai-product || true
