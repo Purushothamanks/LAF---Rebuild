@@ -131,33 +131,101 @@ function isImageCapabilityQuery(prompt = '') {
 
 function isImageGenerationQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  const directTriggers = [
-    'generate image of', 'create image of', 'make image of', 'draw image of', 'render image of',
-    'generate picture of', 'create picture of', 'make picture of', 'draw picture of',
-    'generate photo of', 'create photo of', 'make photo of',
-    'picture of', 'photo of', 'drawing of', 'painting of', 'image of',
-    'generate an image', 'create an image', 'make an image', 'draw an image',
-    'generate a photo', 'create a photo', 'draw a ', 'paint a '
-  ];
-  return directTriggers.some(t => p.includes(t));
+
+  // Negative checks: exclude capability or coding questions
+  if (
+    p.includes('can you generate image') ||
+    p.includes('can you make image') ||
+    p.includes('can you create image') ||
+    p.includes('do you support image') ||
+    p.includes('how to generate image') ||
+    p.includes('code to generate') ||
+    p.includes('code for image') ||
+    p.includes('html image')
+  ) {
+    return false;
+  }
+
+  // 1. Action verbs + image nouns: "create a bike image", "generate sports car photo", "make wallpaper of mountains"
+  const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce'];
+  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render'];
+
+  const hasVerb = imageVerbs.some(v => new RegExp(`\\b${v}\\b`, 'i').test(p));
+  const hasNoun = imageNouns.some(n => new RegExp(`\\b${n}s?\\b`, 'i').test(p));
+
+  if (hasVerb && hasNoun) {
+    return true;
+  }
+
+  // 2. Starts with image noun of/for: "image of a bike", "photo of lion", "picture for..."
+  if (imageNouns.some(n => p.startsWith(`${n} of `) || p.startsWith(`a ${n} of `) || p.startsWith(`an ${n} of `) || p.startsWith(`${n} for `))) {
+    return true;
+  }
+
+  // 3. Ends with image noun: "bike image", "sports car photo", "sunset wallpaper"
+  if (imageNouns.some(n => p.endsWith(` ${n}`) || p.endsWith(` ${n}s`))) {
+    return true;
+  }
+
+  // 4. "draw a ...", "paint a ...", "sketch a ..." (e.g. "draw a bicycle", "paint a landscape")
+  if (/^(draw|paint|sketch|render)\s+(an?\s+)?/i.test(p) && !p.includes('code') && !p.includes('function') && !p.includes('diagram')) {
+    return true;
+  }
+
+  return false;
 }
 
 function cleanImagePrompt(userPrompt = '') {
   let cleaned = userPrompt
     .replace(/^please\s+/i, '')
     .replace(/^can you\s+/i, '')
-    .replace(/^(generate|create|draw|render|make)\s+(an?\s+)?(image|picture|photo|illustration|drawing)\s+(of|about|showing|with)?\s*/i, '')
-    .replace(/^(image|picture|photo)\s+(of|about|showing)\s*/i, '')
+    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce)\s+(an?\s+)?/i, '')
+    .replace(/^(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s+(of|about|showing|with|for)?\s*/i, '')
+    .replace(/\s+(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
     .trim();
 
   if (!cleaned) cleaned = userPrompt;
-  return `${cleaned}, 8k resolution, photorealistic, highly detailed, masterclass lighting`;
+  return `${cleaned}, 8k resolution, photorealistic, cinematic lighting, ultra-detailed masterpiece`;
 }
 
 function generateImageUrl(promptText) {
-  const seed = Math.floor(Math.random() * 1000000);
+  const seed = Math.floor(Math.random() * 10000000);
   const encodedPrompt = encodeURIComponent(promptText);
   return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
+}
+
+async function callCloudImageGen(promptText, candidateKeys = []) {
+  for (const key of candidateKeys) {
+    if (!key || !key.startsWith('sk-')) continue;
+    try {
+      console.log('[AI-ENGINE] Attempting Cloud Image Generation via API key...');
+      const res = await axios.post(
+        'https://api.openai.com/v1/images/generations',
+        {
+          prompt: promptText,
+          n: 1,
+          size: '1024x1024'
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 8000
+        }
+      );
+      const url = res.data?.data?.[0]?.url;
+      if (url) {
+        return {
+          url,
+          provider: 'OpenAI DALL-E 3 Studio'
+        };
+      }
+    } catch (err) {
+      console.log(`[AI-ENGINE] Cloud Image API notice: ${err.response?.status || err.message}`);
+    }
+  }
+  return null;
 }
 
 function isUnsupportedMediaQuery(prompt = '') {
@@ -413,9 +481,35 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   const cleanPrompt = (prompt || '').trim();
   console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}"`);
 
-  // 1. Image Generation Handler
+  // Collect candidate API keys right at start
+  const candidateKeys = [];
+  if (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) {
+    candidateKeys.push(customApiKey.trim());
+  }
+  [process.env.LAF_API_KEY, process.env.LAF_API_KEY_SECONDARY, process.env.LAF_API_KEYS, process.env.OPENAI_API_KEY, process.env.GROQ_API_KEY].forEach(k => {
+    if (!k || typeof k !== 'string') return;
+    k.split(',').map(s => s.trim()).filter(Boolean).forEach(key => {
+      if (!candidateKeys.includes(key)) {
+        candidateKeys.push(key);
+      }
+    });
+  });
+
+  // 1. Image Generation Handler (Cloud API Key / High-Resolution FLUX Neural Engine)
   if (isImageGenerationQuery(cleanPrompt)) {
     const formattedPrompt = cleanImagePrompt(cleanPrompt);
+    console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}"`);
+
+    // Try Cloud Image API with API key first
+    const cloudImage = await callCloudImageGen(formattedPrompt, candidateKeys);
+    if (cloudImage && cloudImage.url) {
+      return {
+        text: `![${cleanPrompt}](${cloudImage.url})`,
+        provider: cloudImage.provider
+      };
+    }
+
+    // Guaranteed High-Resolution FLUX Neural Engine
     const imageUrl = generateImageUrl(formattedPrompt);
     return {
       text: `![${cleanPrompt}](${imageUrl})`,
@@ -526,18 +620,6 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
   // Priority 1: Dispatch to Cloud API with Auto-Switched Model (if key available)
-  const candidateKeys = [];
-  if (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) {
-    candidateKeys.push(customApiKey.trim());
-  }
-  [process.env.LAF_API_KEY, process.env.LAF_API_KEY_SECONDARY, process.env.LAF_API_KEYS, process.env.OPENAI_API_KEY, process.env.GROQ_API_KEY].forEach(k => {
-    if (!k || typeof k !== 'string') return;
-    k.split(',').map(s => s.trim()).filter(Boolean).forEach(key => {
-      if (!candidateKeys.includes(key)) {
-        candidateKeys.push(key);
-      }
-    });
-  });
 
   for (const activeApiKey of candidateKeys) {
     const cloudRes = await callCloudLLM({
