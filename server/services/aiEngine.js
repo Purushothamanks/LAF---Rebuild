@@ -253,6 +253,11 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
       model: model && model.includes('/') ? model : 'google/gemini-2.5-flash-lite'
     },
     {
+      name: 'SambaNova Cloud AI',
+      url: 'https://api.sambanova.ai/v1/chat/completions',
+      model: 'Meta-Llama-3.3-70B-Instruct'
+    },
+    {
       name: 'Groq Fast Engine',
       url: 'https://api.groq.com/openai/v1/chat/completions',
       model: model && model.includes('llama') ? model : 'llama-3.3-70b-versatile'
@@ -261,6 +266,16 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
       name: 'DeepSeek Reasoner Engine',
       url: 'https://api.deepseek.com/chat/completions',
       model: 'deepseek-chat'
+    },
+    {
+      name: 'Cerebras Engine',
+      url: 'https://api.cerebras.ai/v1/chat/completions',
+      model: 'llama3.1-8b'
+    },
+    {
+      name: 'DeepInfra Engine',
+      url: 'https://api.deepinfra.com/v1/openai/chat/completions',
+      model: 'meta-llama/Meta-Llama-3.1-70B-Instruct'
     }
   ];
 
@@ -283,7 +298,7 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
             'HTTP-Referer': 'https://laf.ai',
             'X-Title': 'LAF AI Platform'
           },
-          timeout: 120000
+          timeout: 15000
         }
       );
 
@@ -368,9 +383,21 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // ⭐ HIGHEST PRIORITY 1: DISPATCH DIRECTLY TO API KEY ENGINE
-  const activeApiKey = customApiKey || process.env.LAF_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
-  if (activeApiKey) {
+  // ⭐ HIGHEST PRIORITY 1: DISPATCH DIRECTLY TO API KEY ENGINE (Multi-Key Support)
+  const candidateKeys = [];
+  if (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) {
+    candidateKeys.push(customApiKey.trim());
+  }
+  [process.env.LAF_API_KEY, process.env.LAF_API_KEY_SECONDARY, process.env.LAF_API_KEYS, process.env.OPENAI_API_KEY, process.env.GROQ_API_KEY].forEach(k => {
+    if (!k || typeof k !== 'string') return;
+    k.split(',').map(s => s.trim()).filter(Boolean).forEach(key => {
+      if (!candidateKeys.includes(key)) {
+        candidateKeys.push(key);
+      }
+    });
+  });
+
+  for (const activeApiKey of candidateKeys) {
     const cloudRes = await callCloudLLM({
       messages: formattedMessages,
       apiKey: activeApiKey,
