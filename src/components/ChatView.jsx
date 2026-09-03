@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, Sparkles } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -74,16 +74,7 @@ export default function ChatView({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
-  const [selectedModel, setSelectedModel] = useState(() => {
-    return typeof window !== 'undefined' ? (localStorage.getItem('laf_selected_model') || 'laf-v2') : 'laf-v2';
-  });
-
-  const handleModelChange = (newModel) => {
-    setSelectedModel(newModel);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('laf_selected_model', newModel);
-    }
-  };
+  const selectedModel = 'auto';
   const [isListening, setIsListening] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -256,40 +247,6 @@ export default function ChatView({
 
   const userInitial = (user?.username || 'S').substring(0, 1).toUpperCase();
 
-  const renderModelSelector = (isCenter = false) => (
-    <div className="model-selector-bar" style={{ justifyContent: isCenter ? 'center' : 'flex-start' }}>
-      <div className="model-select-wrapper">
-        <Sparkles style={{ width: '14px', height: '14px', color: 'var(--ds-blue)' }} />
-        <span style={{ color: 'var(--ds-text-secondary)', fontSize: '0.78rem' }}>Model:</span>
-        <select
-          value={selectedModel}
-          onChange={(e) => handleModelChange(e.target.value)}
-          className="model-select-dropdown"
-          title="Select AI Model"
-        >
-          <optgroup label="⭐ Core LAF AI Model">
-            <option value="laf-v2">LAF AI (Look At Future) — Autonomous Model</option>
-          </optgroup>
-          <optgroup label="🚀 High-Reasoning Cloud Models (API Key)">
-            <option value="Meta-Llama-3.3-70B-Instruct">Meta LLaMA 3.3 70B (SambaNova / Groq)</option>
-            <option value="DeepSeek-V3.1">DeepSeek V3.1 Reasoner (SambaNova / DeepSeek)</option>
-            <option value="gpt-4o-mini">GPT-4o Mini (OpenAI Engine)</option>
-            <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash (Google / OpenRouter)</option>
-            <option value="MiniMax-M2.7">MiniMax M2.7 (High-Context)</option>
-          </optgroup>
-          <optgroup label="💻 On-Server 24/7 Local Models (Ollama)">
-            <option value="llama3.2:latest">LLaMA 3.2 (3.2B Local Weights)</option>
-            <option value="qwen2.5:0.5b">Qwen 2.5 (0.5B Sub-Second)</option>
-            <option value="llama3.2-vision:latest">LLaMA 3.2 Vision (Multimodal)</option>
-          </optgroup>
-          <optgroup label="🎨 Visual & Creative Studio">
-            <option value="flux-neural">FLUX.1 Neural Studio (Image Generation)</option>
-          </optgroup>
-        </select>
-      </div>
-    </div>
-  );
-
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', background: 'var(--ds-bg-main)', paddingTop: '60px' }}>
       
@@ -319,11 +276,6 @@ export default function ChatView({
               <p style={{ color: 'var(--ds-text-secondary)', fontSize: '0.98rem', marginBottom: '36px' }}>
                 How can I help you today?
               </p>
-
-              {/* Model Selector Bar */}
-              <div style={{ maxWidth: '760px', width: '100%', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
-                {renderModelSelector(true)}
-              </div>
 
               {/* Floating Centered Oval Input Box */}
               <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)', position: 'relative' }}>
@@ -532,7 +484,6 @@ export default function ChatView({
       {/* Floating Bottom Input Card */}
       {messages.length > 0 && (
         <div style={{ padding: '0 20px 16px 20px', maxWidth: '820px', width: '100%', margin: '0 auto' }}>
-          {renderModelSelector()}
           <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
             <textarea
               value={inputPrompt}

@@ -130,53 +130,6 @@ body {
   border-radius: var(--radius-oval);
 }
 
-/* Model Selector Pill */
-.model-selector-bar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-  padding: 0 6px;
-  width: 100%;
-}
-
-.model-select-wrapper {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--ds-bg-card);
-  border: 1px solid var(--ds-border);
-  border-radius: var(--radius-oval);
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--ds-text-primary);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s ease;
-}
-
-.model-select-wrapper:hover {
-  border-color: var(--ds-blue);
-  box-shadow: var(--ds-border-glow);
-}
-
-.model-select-dropdown {
-  background: transparent;
-  border: none;
-  color: var(--ds-text-primary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  outline: none;
-  cursor: pointer;
-  padding-right: 4px;
-}
-
-.model-select-dropdown option,
-.model-select-dropdown optgroup {
-  background: var(--ds-bg-sidebar);
-  color: var(--ds-text-primary);
-}
-
 /* Floating Centered Input Container (Oval Pill Shape) */
 .floating-input-card {
   width: 100%;

@@ -20,7 +20,15 @@ DIRECTIVES:
 
 const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
 const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
-const LAF_REAL_IDENTITY_TEXT = `The full form of **LAF** is - **Look at The Future**.\n\nLAF is an autonomous AI product platform engineered for high-speed software development, system design, algorithm optimization, and multi-domain problem solving.`;
+const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF AI** (**L**ook **A**t **F**uture) — an autonomous artificial intelligence platform developed by **Purushothaman**.
+
+### 🚀 What I Excel At:
+1. **Software Engineering**: Full-stack architectures, clean production code (React 19, Node.js, Python, Rust, Go, SQL, Docker).
+2. **Visual Hardware Diagnostics**: Real-time concepts for laptop thermals, fan RPM curves, and memory leak analysis.
+3. **Deep Reasoning & Mathematics**: Complex algorithms, system designs, and technical roadmaps.
+4. **Encrypted Architecture**: Client-side AES-GCM data encryption and zero-knowledge vaults.
+
+How can I assist you today?`;
 
 function isTemporalQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
@@ -163,15 +171,24 @@ function isUnsupportedMediaQuery(prompt = '') {
 }
 
 function isLafIdentityQuery(prompt = '') {
-  const p = prompt.toLowerCase().trim();
-  return (
-    p.includes('what is mean by laf') ||
-    p.includes('what is laf') ||
-    p.includes('what does laf stand for') ||
-    p.includes('full form of laf') ||
-    p.includes('laf full form') ||
-    p.includes('meaning of laf')
-  );
+  const p = prompt.toLowerCase().trim().replace(/[?!.,]/g, '');
+  const identityTriggers = [
+    'who are you', 'who r u', 'who r you', 'what are you', 'what r u',
+    'what is your name', 'tell me about yourself', 'introduce yourself',
+    'who is laf', 'what is laf', 'what is mean by laf', 'what does laf stand for',
+    'full form of laf', 'laf full form', 'meaning of laf'
+  ];
+  return identityTriggers.some(t => p === t || p.includes(t));
+}
+
+function isGreetingQuery(prompt = '') {
+  const p = prompt.toLowerCase().trim().replace(/[?!.,]/g, '');
+  const greetings = [
+    'hi', 'hello', 'hey', 'yo', 'sup', 'greetings', 'namaste', 'hola',
+    'hi laf', 'hello laf', 'hey laf', 'whats up', 'how are you', 'how r u',
+    'good morning', 'good afternoon', 'good evening', 'hey bro', 'hello bro'
+  ];
+  return greetings.includes(p) || p.startsWith('hi ') || p.startsWith('hello ') || p.startsWith('hey ');
 }
 
 function sanitizeLlmOutput(text = '') {
@@ -185,7 +202,7 @@ function sanitizeLlmOutput(text = '') {
 
 /**
  * Direct Connection to Local Ollama AI Server (Primary 24/7 Engine)
- * Keeps model loaded in RAM permanently (keep_alive: -1) for sub-3s responses
+ * Auto-falls back between available on-server models (laf-v2 / llama3.2:latest)
  */
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
   const ollamaEndpoints = Array.from(new Set([
@@ -196,40 +213,48 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
     'http://host.docker.internal:11434'
   ].filter(Boolean)));
 
-  let targetModel = model || 'laf-v2';
-  if (!targetModel || targetModel.includes('auto') || targetModel.includes('free')) {
-    targetModel = 'laf-v2';
+  const LOCAL_OLLAMA_MODELS = ['laf-v2', 'llama3.2:latest', 'qwen2.5:0.5b', 'llama3.2-vision:latest', 'llama3:latest', 'phi3:mini'];
+  let primaryModel = model;
+  if (!primaryModel || primaryModel === 'auto' || !LOCAL_OLLAMA_MODELS.includes(primaryModel)) {
+    primaryModel = 'laf-v2';
   }
 
-  for (const baseUrl of ollamaEndpoints) {
-    try {
-      console.log(`[AI-ENGINE] Connecting to 24/7 Ollama Server (${baseUrl}) with model "${targetModel}"...`);
-      const res = await axios.post(
-        `${baseUrl}/api/chat`,
-        {
-          model: targetModel,
-          messages: messages,
-          stream: false,
-          keep_alive: -1,
-          options: {
-            temperature: 0.5,
-            num_predict: 4096,
-            num_ctx: 8192,
-            num_thread: 4
-          }
-        },
-        { timeout: 120000 }
-      );
+  const candidateModels = [primaryModel, 'laf-v2', 'llama3.2:latest'].filter((v, i, a) => a.indexOf(v) === i);
 
-      const content = res.data?.message?.content;
-      if (content && content.trim()) {
-        return {
-          text: sanitizeLlmOutput(content.trim()),
-          provider: `Ollama (${res.data.model || targetModel})`
-        };
+  for (const baseUrl of ollamaEndpoints) {
+    for (const targetModel of candidateModels) {
+      try {
+        console.log(`[AI-ENGINE] Auto-Routed to Local Ollama (${baseUrl}) with model "${targetModel}"...`);
+        const res = await axios.post(
+          `${baseUrl}/api/chat`,
+          {
+            model: targetModel,
+            messages: messages,
+            stream: false,
+            keep_alive: -1,
+            options: {
+              temperature: 0.5,
+              num_predict: 4096,
+              num_ctx: 8192,
+              num_thread: 4
+            }
+          },
+          { timeout: 15000 }
+        );
+
+        const content = res.data?.message?.content;
+        if (content && content.trim()) {
+          return {
+            text: sanitizeLlmOutput(content.trim()),
+            provider: `LAF AI (${res.data.model || targetModel})`
+          };
+        }
+      } catch (err) {
+        console.log(`[AI-ENGINE] Ollama (${baseUrl}/${targetModel}) note: ${err.message}`);
+        if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ECONNABORTED' || (err.message && err.message.includes('timeout'))) {
+          break;
+        }
       }
-    } catch (err) {
-      console.log(`[AI-ENGINE] Ollama endpoint ${baseUrl} note: ${err.message}`);
     }
   }
   return null;
@@ -328,13 +353,67 @@ function isWebSearchNeeded(prompt = '') {
 }
 
 /**
- * Rebuilt Clean AI Engine: 24/7 Local Ollama AI Platform + FLUX.1 Image Engine
+ * Auto-Switch Router: Detects user intent and dynamically routes to the optimal model
  */
-async function generateResponse({ username, prompt, history = [], selectedModel = 'laf-v2', customApiKey = '' }) {
-  const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" | model: ${selectedModel}`);
+function detectOptimalModel(prompt = '') {
+  const p = prompt.toLowerCase().trim();
 
-  // Image Generation Handler
+  // 1. Coding & Software Architecture
+  const codeTriggers = [
+    'code', 'function', 'class', 'react', 'python', 'javascript', 'typescript',
+    'rust', 'golang', 'sql', 'docker', 'kubernetes', 'html', 'css', 'bug', 'fix',
+    'api', 'endpoint', 'database', 'algorithm', 'refactor', 'git', 'npm', 'node', 'express'
+  ];
+  if (codeTriggers.some(k => p.includes(k))) {
+    return {
+      category: 'Software Engineering',
+      cloudModel: 'Meta-Llama-3.3-70B-Instruct',
+      cloudFallback: 'gpt-4o-mini',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 2. Math, Logic & Deep Technical Reasoning
+  const mathTriggers = [
+    'calculate', 'solve', 'equation', 'integral', 'derivative', 'matrix',
+    'proof', 'logic puzzle', 'probability', 'theorem', 'math', 'algebra'
+  ];
+  if (mathTriggers.some(k => p.includes(k))) {
+    return {
+      category: 'Mathematical Reasoning',
+      cloudModel: 'DeepSeek-V3.1',
+      cloudFallback: 'Meta-Llama-3.3-70B-Instruct',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 3. Real-Time News, Current Events, Weather, Live Grounding
+  if (isWebSearchNeeded(p)) {
+    return {
+      category: 'Real-Time Grounding',
+      cloudModel: 'google/gemini-2.5-flash-lite',
+      cloudFallback: 'gpt-4o-mini',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 4. General Conversational Intelligence
+  return {
+    category: 'High-Performance Reasoning',
+    cloudModel: 'Meta-Llama-3.3-70B-Instruct',
+    cloudFallback: 'gpt-4o-mini',
+    localModel: 'laf-v2'
+  };
+}
+
+/**
+ * Rebuilt Clean AI Engine: 24/7 Auto-Switching Architecture + Local Ollama AI Platform + FLUX.1 Image Engine
+ */
+async function generateResponse({ username, prompt, history = [], selectedModel = 'auto', customApiKey = '' }) {
+  const cleanPrompt = (prompt || '').trim();
+  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}"`);
+
+  // 1. Image Generation Handler
   if (isImageGenerationQuery(cleanPrompt)) {
     const formattedPrompt = cleanImagePrompt(cleanPrompt);
     const imageUrl = generateImageUrl(formattedPrompt);
@@ -344,7 +423,64 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     };
   }
 
-  // 1. User Context Memory Recall & Live Web Grounding Context Build
+  // 2. Immediate Direct Checks (Zero-latency Identity & Greetings)
+  if (isLafIdentityQuery(cleanPrompt)) {
+    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Autonomous Core' };
+  }
+
+  if (isDeveloperQuery(cleanPrompt)) {
+    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Autonomous Core' };
+  }
+
+  if (isGreetingQuery(cleanPrompt)) {
+    const cleanUser = username ? username.charAt(0).toUpperCase() + username.slice(1) : '';
+    return {
+      text: `Hello ${cleanUser}! 👋 I am **LAF AI** (**L**ook **A**t **F**uture). How can I assist you today? Feel free to ask me anything about software engineering, system architecture, visual diagnostics, or complex problem solving!`,
+      provider: 'LAF Conversational Engine'
+    };
+  }
+
+  if (isTemporalQuery(cleanPrompt)) {
+    return {
+      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
+
+  if (isDateQuery(cleanPrompt)) {
+    return {
+      text: `Today's date is **August 8, 2026**.`,
+      provider: 'LAF Temporal Engine (2026)'
+    };
+  }
+
+  const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
+  if (ambiguousResult) {
+    return { text: ambiguousResult, provider: 'LAF Reasoner' };
+  }
+
+  if (isImageCapabilityQuery(cleanPrompt)) {
+    return {
+      text: 'Yes! I can generate high-resolution photorealistic images. Just describe what you would like me to create (e.g., *"generate an image of a majestic lion in golden hour"* or *"draw a futuristic floating city"*).',
+      provider: 'LAF Core Engine'
+    };
+  }
+
+  if (isUnsupportedMediaQuery(cleanPrompt)) {
+    return { text: 'LAF currently supports text reasoning, code generation, and 1024x1024 photorealistic image generation.', provider: 'LAF Core Engine' };
+  }
+
+  const customKnowledgeMatch = searchCustomKnowledge(cleanPrompt);
+  if (customKnowledgeMatch) {
+    return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
+  }
+
+  // 3. ⭐ AUTO-SWITCHING CONCEPT: Automatically route to the optimal model based on query category
+  const autoRoute = detectOptimalModel(cleanPrompt);
+  const targetCloudModel = (selectedModel && selectedModel !== 'auto') ? selectedModel : autoRoute.cloudModel;
+  console.log(`[AI-ENGINE] Auto-Switching Route: [Category: ${autoRoute.category}] | Target: ${targetCloudModel} | Local: ${autoRoute.localModel}`);
+
+  // Build Context (Memory Recall + Live Grounding + RAG Anchors)
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -376,8 +512,8 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   ];
 
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-2).forEach(h => {
-      const textSnippet = (h.content || '').substring(0, 140);
+    history.slice(-4).forEach(h => {
+      const textSnippet = (h.content || '').substring(0, 200);
       if (textSnippet.trim()) {
         formattedMessages.push({
           role: h.role === 'user' ? 'user' : 'assistant',
@@ -389,7 +525,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
 
-  // ⭐ HIGHEST PRIORITY 1: DISPATCH DIRECTLY TO API KEY ENGINE (Multi-Key Support)
+  // Priority 1: Dispatch to Cloud API with Auto-Switched Model (if key available)
   const candidateKeys = [];
   if (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) {
     candidateKeys.push(customApiKey.trim());
@@ -407,72 +543,33 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     const cloudRes = await callCloudLLM({
       messages: formattedMessages,
       apiKey: activeApiKey,
-      model: selectedModel
+      model: targetCloudModel
     });
     if (cloudRes) {
-      return cloudRes;
+      return {
+        text: cloudRes.text,
+        provider: `LAF AI (${autoRoute.category})`
+      };
     }
   }
 
-  // SECONDARY FALLBACKS (Only if API Key is not set or API call fails):
-  if (isTemporalQuery(cleanPrompt)) {
-    return {
-      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
-  }
-
-  if (isDateQuery(cleanPrompt)) {
-    return {
-      text: `Today's date is **August 8, 2026**.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
-  }
-
-  const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
-  if (ambiguousResult) {
-    return { text: ambiguousResult, provider: 'LAF Reasoner' };
-  }
-
-  if (isDeveloperQuery(cleanPrompt)) {
-    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Core Engine' };
-  }
-  if (isImageCapabilityQuery(cleanPrompt)) {
-    return {
-      text: 'Yes! I can generate high-resolution photorealistic images. Just describe what you would like me to create (e.g., *"generate an image of a majestic lion in golden hour"* or *"draw a futuristic floating city"*).',
-      provider: 'LAF Core Engine'
-    };
-  }
-  if (isUnsupportedMediaQuery(cleanPrompt)) {
-    return { text: 'LAF currently supports text reasoning, code generation, and 1024x1024 photorealistic image generation.', provider: 'LAF Core Engine' };
-  }
-  if (isLafIdentityQuery(cleanPrompt)) {
-    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Core Engine' };
-  }
-
-  // Check Custom Knowledge Base
-  const customKnowledgeMatch = searchCustomKnowledge(cleanPrompt);
-  if (customKnowledgeMatch) {
-    return { text: customKnowledgeMatch, provider: 'LAF Grounded Knowledge Matrix' };
-  }
-
-  // 3. Primary 24/7 Engine: Direct Call to Local Ollama Server
+  // Priority 2: Auto-Switch to Local 24/7 Ollama Model (laf-v2 / llama3.2)
   const ollamaRes = await callOllamaLocal({
     messages: formattedMessages,
-    model: selectedModel || 'laf-v2'
+    model: autoRoute.localModel || 'laf-v2'
   });
   if (ollamaRes) {
     return {
       text: ollamaRes.text,
-      provider: ollamaRes.provider
+      provider: `LAF AI (${autoRoute.category} • ${ollamaRes.provider})`
     };
   }
 
-  // 4. Grounded Fallback Engine
-  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, webGroundingContext });
+  // Priority 3: Grounded Fallback Engine
+  const fallbackText = await generateGemmaResponse({ prompt: cleanPrompt, username, webGroundingContext, ragContext });
   return {
     text: fallbackText,
-    provider: 'LAF Real-Time Web Engine'
+    provider: `LAF Autonomous AI (${autoRoute.category})`
   };
 }
 
@@ -557,32 +654,22 @@ When asking about **"${p}"**, modern AI platforms enforce structural security la
 If you have specific software engineering, system architecture, or security testing questions, feel free to ask!`;
   }
 
-  // 4. Clean Dynamic Explanation for Any General Prompt
-  return `### 📘 Technical Explanation: "${p}"
+  // 4. RAG Grounded Answer or Conversational Response
+  if (ragContext && ragContext.includes('VERIFIED')) {
+    const cleanRag = ragContext
+      .replace(/\[RETRIEVAL-AUGMENTED GENERATION \(RAG\) VERIFIED ANCHORS\]:\n?/gi, '')
+      .replace(/\[RAG VERIFIED GROUND-TRUTH #\d+\]:\n?/gi, '')
+      .trim();
+    if (cleanRag) return cleanRag;
+  }
 
-**"${p}"** represents an important concept across software architecture, technical reasoning, and systems engineering.
-
----
-
-### 🔍 Key Fundamentals:
-- **Core Definition**: Refers to the underlying principles and operational frameworks governing this domain.
-- **Primary Objective**: Providing predictable, efficient, and scalable outcomes through systematic execution.
-- **Practical Application**: Applied across software engineering, computational logic, and high-performance workflows.
-
----
-
-### 🛠️ Key Steps & Implementation:
-1. **Analyze Requirements**: Identify operational constraints, data inputs, and target outcomes.
-2. **Design Modular Solutions**: Build clean, reusable components optimized for performance and maintainability.
-3. **Validate & Deploy**: Verify execution correctness and monitor system performance under live production environments.
-
-*Would you like a specific code example, detailed breakdown, or project integration guide for "${p}"?*`;
+  return `I understand your question regarding **"${p}"**.\n\nCould you please provide a bit more detail or clarify what specific programming solution, system design, or concept you would like me to help you with? I am standing by and ready to assist you!`;
 }
 
 /**
  * Built-in High-Capacity Intelligence Engine with Live Web Search Synthesis
  */
-async function generateGemmaResponse({ prompt = '', username = '', webGroundingContext = '' }) {
+async function generateGemmaResponse({ prompt = '', username = '', webGroundingContext = '', ragContext = '' }) {
   const p = prompt.trim();
   const lower = p.toLowerCase();
 
@@ -703,7 +790,7 @@ ${liveSnippets}
   }
 
   // 7. General Questions / Concepts / Safety / AI Reasoning Fallback
-  return generateDetailedAnswer(p);
+  return generateDetailedAnswer(p, ragContext);
 }
 
 module.exports = {
