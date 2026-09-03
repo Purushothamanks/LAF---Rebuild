@@ -234,12 +234,12 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
             keep_alive: -1,
             options: {
               temperature: 0.5,
-              num_predict: 4096,
-              num_ctx: 8192,
+              num_predict: 1024,
+              num_ctx: 2048,
               num_thread: 4
             }
           },
-          { timeout: 15000 }
+          { timeout: 45000 }
         );
 
         const content = res.data?.message?.content;
@@ -324,7 +324,7 @@ async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
             'HTTP-Referer': 'https://laf.ai',
             'X-Title': 'LAF AI Platform'
           },
-          timeout: 15000
+          timeout: 3500
         }
       );
 
@@ -739,35 +739,13 @@ LAF (Look At The Future) is an autonomous, high-performance local AI product pla
     return `Hello **${username}**! 👋 I am **LAF AI**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
   }
 
-  // 5. Coding / Solution requests
-  if (lower.includes('code') || lower.includes('function') || lower.includes('script') || lower.includes('program') || lower.includes('python') || lower.includes('js') || lower.includes('html') || lower.includes('css') || lower.includes('react') || lower.includes('express') || lower.includes('software') || lower.includes('build') || lower.includes('create')) {
-    return `Here is a complete, production-ready solution for **"${p}"**:
-
-\`\`\`javascript
-// Solution for: ${p}
-function executeSolution(inputData) {
-  console.log("Processing input:", inputData);
-  
-  // Core business logic implementation
-  const result = {
-    status: "success",
-    timestamp: new Date().toISOString(),
-    processedInput: inputData
-  };
-
-  return result;
-}
-
-// Example usage:
-const sampleInput = { query: "${p.replace(/"/g, '')}" };
-const output = executeSolution(sampleInput);
-console.log("Execution Result:", output);
-\`\`\`
-
-### Explanation & Key Steps:
-1. **Input Validation**: Ensures valid structured input is passed before processing.
-2. **Core Logic**: Executes high-throughput processing and returns a formatted JSON payload.
-3. **Execution Verification**: Verifies success status and logs execution metrics.`;
+  // 5. Check RAG Grounded Code / Technical Solutions
+  if (ragContext && ragContext.includes('```')) {
+    const cleanRag = ragContext
+      .replace(/\[RETRIEVAL-AUGMENTED GENERATION \(RAG\) VERIFIED ANCHORS\]:\n?/gi, '')
+      .replace(/\[RAG VERIFIED GROUND-TRUTH #\d+\]:\n?/gi, '')
+      .trim();
+    if (cleanRag) return cleanRag;
   }
 
   // 6. Live Real-Time Web Grounding Search Integration (Only for explicit search requests)
