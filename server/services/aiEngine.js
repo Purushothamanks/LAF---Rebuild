@@ -274,10 +274,10 @@ function sanitizeLlmOutput(text = '') {
  */
 async function callOllamaLocal({ messages, model = 'laf-v2' }) {
   const ollamaEndpoints = Array.from(new Set([
-    process.env.OLLAMA_URL,
-    'http://172.17.0.1:11434',
     'http://127.0.0.1:11434',
     'http://localhost:11434',
+    process.env.OLLAMA_URL,
+    'http://172.17.0.1:11434',
     'http://host.docker.internal:11434'
   ].filter(Boolean)));
 
@@ -302,12 +302,12 @@ async function callOllamaLocal({ messages, model = 'laf-v2' }) {
             keep_alive: -1,
             options: {
               temperature: 0.5,
-              num_predict: 1024,
+              num_predict: 384,
               num_ctx: 2048,
-              num_thread: 4
+              num_thread: 6
             }
           },
-          { timeout: 45000 }
+          { timeout: 90000 }
         );
 
         const content = res.data?.message?.content;
