@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: laf-ai-platform
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: LAF_API_KEY
+        value: sk-VxsIAi0YwNN4KtS3ZPnb7h273DBLkaii4F6VQYOrRf0Hz6fC
+      - key: LAF_API_KEY_SECONDARY
+        value: sk-xueuIaK5y8ZxjCgJcZU1soulNFO9W0a62wLdMRyHEKLsGeNG
+      - key: LAF_API_KEYS
+        value: sk-VxsIAi0YwNN4KtS3ZPnb7h273DBLkaii4F6VQYOrRf0Hz6fC,sk-xueuIaK5y8ZxjCgJcZU1soulNFO9W0a62wLdMRyHEKLsGeNG
