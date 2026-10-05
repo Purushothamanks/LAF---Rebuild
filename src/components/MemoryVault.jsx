@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Database, Search, ShieldCheck, Clock, MessageSquare, Key } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function MemoryVault({ user, token }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +14,7 @@ export default function MemoryVault({ user, token }) {
     setSearched(true);
 
     try {
-      const res = await fetch(`/api/chat/memory-search?q=${encodeURIComponent(searchQuery)}`, {
+      const res = await fetch(apiUrl(`/api/chat/memory-search?q=${encodeURIComponent(searchQuery)}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();

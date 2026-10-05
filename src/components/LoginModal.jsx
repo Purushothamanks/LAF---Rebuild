@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, ShieldCheck, ArrowRight } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function LoginModal({ onLogin }) {
   const [usernameInput, setUsernameInput] = useState('');
@@ -18,7 +19,7 @@ export default function LoginModal({ onLogin }) {
 
     try {
       const existingToken = localStorage.getItem('laf_token') || '';
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

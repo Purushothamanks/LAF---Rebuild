@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, HelpCircle, Send, Check } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function HelpFeedbackModal({ isOpen, onClose, token }) {
   const [userEmail, setUserEmail] = useState('');
@@ -15,7 +16,7 @@ export default function HelpFeedbackModal({ isOpen, onClose, token }) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat/feedback', {
+      const res = await fetch(apiUrl('/api/chat/feedback'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

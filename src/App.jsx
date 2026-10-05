@@ -10,6 +10,7 @@ import LoginModal from './components/LoginModal';
 import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
+import { apiUrl } from './api';
 
 export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
@@ -47,7 +48,7 @@ export default function App() {
   // Validate session token on mount while maintaining permanent logged-in username
   useEffect(() => {
     if (token) {
-      fetch('/api/auth/me', {
+      fetch(apiUrl('/api/auth/me'), {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -80,7 +81,7 @@ export default function App() {
     const t = authToken || token;
     if (!t) return;
     try {
-      const res = await fetch('/api/chat/conversations', {
+      const res = await fetch(apiUrl('/api/chat/conversations'), {
         headers: { 'Authorization': `Bearer ${t}` }
       });
       const data = await res.json();
@@ -95,7 +96,7 @@ export default function App() {
   const loadConversation = async (convId) => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/chat/conversation/${convId}`, {
+      const res = await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -111,7 +112,7 @@ export default function App() {
   const deleteConversation = async (convId) => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/chat/conversation/${convId}`, {
+      const res = await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

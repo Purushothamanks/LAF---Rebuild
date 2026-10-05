@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Lock, Cpu, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function SecurityVault({ token }) {
   const [securityData, setSecurityData] = useState(null);
 
   useEffect(() => {
-    fetch('/api/security/status', {
+    fetch(apiUrl('/api/security/status'), {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

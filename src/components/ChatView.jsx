@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { apiUrl } from '../api';
 
 if (typeof window !== 'undefined') {
   window.downloadLafImage = function (url, filename) {
     try {
-      const proxyUrl = `/api/media/download-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'laf_ai_image.jpg')}`;
+      const proxyUrl = apiUrl(`/api/media/download-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'laf_ai_image.jpg')}`);
       const link = document.createElement('a');
       link.href = proxyUrl;
       link.download = filename || 'laf_ai_image.jpg';
@@ -163,7 +164,7 @@ export default function ChatView({
 
     const sendFetch = async (retries = 1) => {
       try {
-        return await fetch('/api/chat/send', {
+        return await fetch(apiUrl('/api/chat/send'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

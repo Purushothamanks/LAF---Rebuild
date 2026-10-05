@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, RefreshCw, ExternalLink, Zap, Flame, ShieldAlert } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function TrendsView() {
   const [trends, setTrends] = useState([]);
@@ -10,7 +11,7 @@ export default function TrendsView() {
   const fetchTrends = async (force = false) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/trends${force ? '?refresh=true' : ''}`);
+      const res = await fetch(apiUrl(`/api/trends${force ? '?refresh=true' : ''}`));
       const data = await res.json();
       if (data.success && data.trends) {
         setTrends(data.trends);
