@@ -4,29 +4,34 @@ const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
 
-const SYSTEM_PROMPT = `You are LAF (Look At Future), an elite, helpful, and highly intelligent AI platform operating in 2026.
+const SYSTEM_PROMPT = `You are LAF AI (Look At Future) — an elite, world-class autonomous AI assistant engineered and created by Purushothaman.
+You operate with the cognitive depth, structural precision, first-principles reasoning, and architectural mastery of Google DeepMind's Antigravity assistant.
 
-OPERATIONAL KNOWLEDGE & GROUNDING:
-- Current Year: 2026 | Current Date: August 8, 2026.
-- Prime Minister of India: Shri Narendra Modi (2014 – Present / 2026).
-- President of India: Smt. Droupadi Murmu (15th President of India, July 2022 – Present / 2026).
-- Vice President of India: Shri Jagdeep Dhankhar (August 2022 – Present / 2026).
+### 🌟 IDENTITY & DEVELOPER ATTRIBUTION:
+- Name: LAF AI (Look At Future)
+- Creator & Developer: Purushothaman (LinkedIn: https://www.linkedin.com/in/purushothaman-k-s-158900282/)
+- Operating Year: 2026 | Current Date: August 8, 2026.
+- Geopolitical Grounding: Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.
 
-DIRECTIVES:
-1. Always be direct, helpful, and respectful. Never issue robotic refusals or canned disclaimer responses.
-2. Evaluate historical and scientific statements accurately without preachy temporal disclaimers.
-3. If a query is short, broad, or ambiguous, ask a polite direct clarifying question to understand intent.
-4. Provide clean, 100% accurate, and well-structured Markdown responses.`;
+### 🧠 CORE COGNITIVE DIRECTIVES (ELITE THINKING):
+1. First-Principles Axiomatic Reasoning: Strip surface assumptions. Dissect problems down to foundational mechanical and logical truths. Build bottom-up solutions from core invariants.
+2. 5-Whys Root Cause Protocol: Trace failures from Symptom → Trigger → Vulnerability → Defensive Gap → Architectural Root Cause. Eliminate defects at the root.
+3. Architectural Precision: Format all technical responses with clean GitHub-flavored markdown, bold keywords, hierarchical headings (###), numbered steps, and markdown tables.
+4. Production Code: Complete, production-grade code with defensive error handling, explicit Big-O time and space complexity, and modular structure. Never use placeholder comments.
+5. UI/UX Design System Excellence: Apply the 60-30-10 color harmony rule (60% base, 30% structural, 10% accent), WCAG 2.1 AAA contrast, and omnichannel mobile-first responsiveness (320px+).
+6. Tone & Delivery: Articulate, authoritative, deeply technical, practical, and razor-sharp. Never issue robotic disclaimers or canned refusal scripts.`;
 
-const LAF_DEVELOPER_TEXT = `refer this linkedin profile to know about my developer : https://www.linkedin.com/in/purushothaman-k-s-158900282/`;
-const LAF_MEDIA_UNSUPPORTED_TEXT = `LAF currently does not support image, video, or audio generation features.`;
-const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF AI** (**L**ook **A**t **F**uture) — an autonomous artificial intelligence platform developed by **Purushothaman**.
+const LAF_DEVELOPER_TEXT = `I was created and engineered by **Purushothaman**.\n\nYou can explore his professional engineering profile, software projects, and background on LinkedIn:\n👉 **[Purushothaman K S - LinkedIn Profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**`;
 
-### 🚀 What I Excel At:
-1. **Software Engineering**: Full-stack architectures, clean production code (React 19, Node.js, Python, Rust, Go, SQL, Docker).
-2. **Visual Hardware Diagnostics**: Real-time concepts for laptop thermals, fan RPM curves, and memory leak analysis.
-3. **Deep Reasoning & Mathematics**: Complex algorithms, system designs, and technical roadmaps.
-4. **Encrypted Architecture**: Client-side AES-GCM data encryption and zero-knowledge vaults.
+const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF AI** (**L**ook **A**t **F**uture) — an elite autonomous AI system created and engineered by **Purushothaman**.
+
+Operating with the cognitive depth, structural precision, and architectural mastery of Google DeepMind's Antigravity assistant, I specialize in:
+
+### 🚀 Core Engineering Capabilities:
+1. **First-Principles Software Engineering**: Clean production code across React, Node.js, Python, Rust, Go, SQL, Docker, and modern web architectures.
+2. **Algorithmic & System Design**: Mathematical derivations, data structures with strict $\mathcal{O}(1)$ / $\mathcal{O}(N \log N)$ Big-O complexity, microservices, and distributed caching.
+3. **UI/UX Design Systems**: 60-30-10 color balance, WCAG 2.1 AAA accessibility, and zero-layout-shift responsive design (320px to 4K).
+4. **Defensive Resilience**: Zero-unhandled-error architecture, input boundary validation, and client-side encryption.
 
 How can I assist you today?`;
 
@@ -312,6 +317,66 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
 /**
  * Connection to Cloud LLM Endpoints (using User Custom API Key or Server API Key)
  */
+
+/**
+ * Direct Connection to Google DeepMind Gemini API (Antigravity Matrix)
+ */
+async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt }) {
+  if (!apiKey) return null;
+  const models = ['gemini-flash-latest', 'gemini-3.8-flash'];
+
+  for (const m of models) {
+    try {
+      console.log(`[AI-ENGINE] Connecting to Google Gemini (${m}) with Antigravity Directives...`);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+
+      const contents = [];
+      if (Array.isArray(history) && history.length > 0) {
+        history.slice(-6).forEach(h => {
+          if (h.content && typeof h.content === 'string') {
+            contents.push({
+              role: h.role === 'user' ? 'user' : 'model',
+              parts: [{ text: h.content.substring(0, 1500) }]
+            });
+          }
+        });
+      }
+
+      contents.push({
+        role: 'user',
+        parts: [{ text: prompt }]
+      });
+
+      const res = await axios.post(
+        url,
+        {
+          systemInstruction: { parts: [{ text: systemPrompt || SYSTEM_PROMPT }] },
+          contents,
+          generationConfig: {
+            temperature: 0.6,
+            maxOutputTokens: 4096
+          }
+        },
+        { timeout: 25000 }
+      );
+
+      const raw = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (raw && raw.trim()) {
+        const sanitized = raw.trim()
+          .replace(/I am Gemini, a large language model built by Google/gi, 'I am **LAF AI**, an autonomous artificial intelligence platform engineered by **Purushothaman**')
+          .replace(/I am a large language model trained by Google/gi, 'I am **LAF AI**, engineered by **Purushothaman** with Antigravity-grade cognitive architecture');
+        return {
+          text: sanitizeLlmOutput(sanitized),
+          provider: `LAF Antigravity Matrix (Gemini ${m})`
+        };
+      }
+    } catch (err) {
+      console.log(`[AI-ENGINE] Gemini (${m}) notice: ${err.response?.status || err.message}`);
+    }
+  }
+  return null;
+}
+
 async function callCloudLLM({ messages, apiKey, model = 'laf-v2' }) {
   if (!apiKey || !apiKey.trim()) return null;
   const cleanKey = apiKey.trim();
@@ -467,7 +532,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   if (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) {
     candidateKeys.push(customApiKey.trim());
   }
-  [process.env.LAF_API_KEY, process.env.LAF_API_KEY_SECONDARY, process.env.LAF_API_KEYS, process.env.OPENAI_API_KEY, process.env.GROQ_API_KEY].forEach(k => {
+  [process.env.GEMINI_API_KEY, process.env.LAF_API_KEY, process.env.LAF_API_KEY_SECONDARY, process.env.LAF_API_KEYS, process.env.OPENAI_API_KEY, process.env.GROQ_API_KEY].forEach(k => {
     if (!k || typeof k !== 'string') return;
     k.split(',').map(s => s.trim()).filter(Boolean).forEach(key => {
       if (!candidateKeys.includes(key)) {
@@ -599,6 +664,24 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   }
 
   formattedMessages.push({ role: 'user', content: cleanPrompt });
+
+  
+  // Priority 0: Antigravity-Grade Google Gemini Engine
+  const geminiKey = candidateKeys.find(k => k && (k.startsWith('AQ.') || k.startsWith('AIza'))) || process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    const geminiRes = await callGoogleGeminiAI({
+      prompt: cleanPrompt,
+      history,
+      apiKey: geminiKey,
+      systemPrompt: fullSystemPrompt
+    });
+    if (geminiRes) {
+      return {
+        text: geminiRes.text,
+        provider: geminiRes.provider
+      };
+    }
+  }
 
   // Priority 1: Dispatch to Cloud API with Auto-Switched Model (if key available)
 
