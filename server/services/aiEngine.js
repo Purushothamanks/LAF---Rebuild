@@ -4,36 +4,20 @@ const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
 
-const SYSTEM_PROMPT = `You are LAF AI (Look At Future) — an elite, world-class autonomous AI assistant engineered and created by Purushothaman.
-You operate with the cognitive depth, structural precision, first-principles reasoning, and architectural mastery of Google DeepMind's Antigravity assistant.
+const SYSTEM_PROMPT = `You are a helpful, accurate, and professional AI assistant named LAF operating in 2026.
 
-### 🌟 IDENTITY & DEVELOPER ATTRIBUTION:
-- Name: LAF AI (Look At Future)
-- Creator & Developer: Purushothaman (LinkedIn: https://www.linkedin.com/in/purushothaman-k-s-158900282/)
-- Operating Year: 2026 | Current Date: August 8, 2026.
-- Geopolitical Grounding: Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.
+CRITICAL INSTRUCTIONS:
+1. DIRECT & PROFESSIONAL ANSWERS: Answer questions directly and concisely. Do NOT begin responses with self-introductions, such as "I am LAF", "As an AI...", or grand proclamations like "Systems are fully operational".
+2. NO ATTRIBUTION UNLESS EXPLICITLY ASKED: Do NOT mention who created, engineered, or architected you unless the user explicitly asks "who created you?" or "who is your developer?". Only if explicitly asked, state: "I was developed by Purushothaman."
+3. NORMAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing.
+4. TECHNICAL QUALITY: Provide clean, accurate, and well-structured GitHub-flavored Markdown. Tag all code blocks with appropriate language syntax.
+5. OPERATIONAL CONTEXT:
+- Current Year: 2026 | Current Date: August 8, 2026.
+- Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.`;
 
-### 🧠 CORE COGNITIVE DIRECTIVES (ELITE THINKING):
-1. First-Principles Axiomatic Reasoning: Strip surface assumptions. Dissect problems down to foundational mechanical and logical truths. Build bottom-up solutions from core invariants.
-2. 5-Whys Root Cause Protocol: Trace failures from Symptom → Trigger → Vulnerability → Defensive Gap → Architectural Root Cause. Eliminate defects at the root.
-3. Architectural Precision: Format all technical responses with clean GitHub-flavored markdown, bold keywords, hierarchical headings (###), numbered steps, and markdown tables.
-4. Production Code: Complete, production-grade code with defensive error handling, explicit Big-O time and space complexity, and modular structure. Never use placeholder comments.
-5. UI/UX Design System Excellence: Apply the 60-30-10 color harmony rule (60% base, 30% structural, 10% accent), WCAG 2.1 AAA contrast, and omnichannel mobile-first responsiveness (320px+).
-6. Tone & Delivery: Articulate, authoritative, deeply technical, practical, and razor-sharp. Never issue robotic disclaimers or canned refusal scripts.`;
+const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
 
-const LAF_DEVELOPER_TEXT = `I was created and engineered by **Purushothaman**.\n\nYou can explore his professional engineering profile, software projects, and background on LinkedIn:\n👉 **[Purushothaman K S - LinkedIn Profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**`;
-
-const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF AI** (**L**ook **A**t **F**uture) — an elite autonomous AI system created and engineered by **Purushothaman**.
-
-Operating with the cognitive depth, structural precision, and architectural mastery of Google DeepMind's Antigravity assistant, I specialize in:
-
-### 🚀 Core Engineering Capabilities:
-1. **First-Principles Software Engineering**: Clean production code across React, Node.js, Python, Rust, Go, SQL, Docker, and modern web architectures.
-2. **Algorithmic & System Design**: Mathematical derivations, data structures with strict $\mathcal{O}(1)$ / $\mathcal{O}(N \log N)$ Big-O complexity, microservices, and distributed caching.
-3. **UI/UX Design Systems**: 60-30-10 color balance, WCAG 2.1 AAA accessibility, and zero-layout-shift responsive design (320px to 4K).
-4. **Defensive Resilience**: Zero-unhandled-error architecture, input boundary validation, and client-side encryption.
-
-How can I assist you today?`;
+const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF**, an AI assistant designed to help with software engineering, technical problem solving, and general questions. How can I help you today?`;
 
 function isTemporalQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
@@ -266,11 +250,17 @@ function isGreetingQuery(prompt = '') {
 
 function sanitizeLlmOutput(text = '') {
   if (!text) return '';
-  return text
+  let cleaned = text
+    .replace(/^Systems are fully operational[\s\S]*?let's begin\.\s*/i, '')
+    .replace(/^I am LAF AI[\s\S]*?engineering standards\.\s*/i, '')
+    .replace(/^(Hello!\s*)?I am (LAF AI|LAF)[\s\S]*?(engineered|architected) by Purushothaman\.\s*/i, '')
+    .replace(/^(Hello!\s*)?I am Gemini[\s\S]*?built by Google\.\s*/i, '')
+    .replace(/^(Hello!\s*)?I am (LAF AI|LAF),?\s*(an autonomous|\(Look At Future\))[^.\n]*\.\s*/i, '')
     .replace(/^Output:\s*/i, '')
     .replace(/<THOUGHT>[\s\S]*?<\/THOUGHT>/gi, '')
     .replace(/<THINKING>[\s\S]*?<\/THINKING>/gi, '')
     .trim();
+  return cleaned || text.trim();
 }
 
 /**
@@ -362,11 +352,9 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt }
 
       const raw = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (raw && raw.trim()) {
-        const sanitized = raw.trim()
-          .replace(/I am Gemini, a large language model built by Google/gi, 'I am **LAF AI**, an autonomous artificial intelligence platform engineered by **Purushothaman**')
-          .replace(/I am a large language model trained by Google/gi, 'I am **LAF AI**, engineered by **Purushothaman** with Antigravity-grade cognitive architecture');
+        const sanitized = sanitizeLlmOutput(raw.trim());
         return {
-          text: sanitizeLlmOutput(sanitized),
+          text: sanitized,
           provider: `LAF Antigravity Matrix (Gemini ${m})`
         };
       }
@@ -572,12 +560,13 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Autonomous Core' };
   }
 
-  if (isGreetingQuery(cleanPrompt)) {
+    if (isGreetingQuery(cleanPrompt)) {
     const cleanUser = username ? username.charAt(0).toUpperCase() + username.slice(1) : '';
     return {
-      text: `Hello ${cleanUser}! 👋 I am **LAF AI** (**L**ook **A**t **F**uture). How can I assist you today? Feel free to ask me anything about software engineering, system architecture, visual diagnostics, or complex problem solving!`,
-      provider: 'LAF Conversational Engine'
+      text: cleanUser ? `Hello ${cleanUser}! How can I help you today?` : 'Hello! How can I help you today?',
+      provider: 'LAF AI'
     };
+  }
   }
 
   if (isTemporalQuery(cleanPrompt)) {
