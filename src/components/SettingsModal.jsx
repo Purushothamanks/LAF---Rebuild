@@ -6,6 +6,8 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   const [language, setLanguage] = useState('en');
   const [keyInput, setKeyInput] = useState(customApiKey || '');
   const [savedKey, setSavedKey] = useState(false);
+  const [backendInput, setBackendInput] = useState(localStorage.getItem('laf_custom_backend') || '');
+  const [savedBackend, setSavedBackend] = useState(false);
   const [showLegalDoc, setShowLegalDoc] = useState(null); // 'terms' or 'privacy'
 
   // User editable profile details
@@ -23,6 +25,18 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
     localStorage.setItem('laf_custom_api_key', keyInput.trim());
     setSavedKey(true);
     setTimeout(() => setSavedKey(false), 2000);
+  };
+
+  const handleSaveBackend = (e) => {
+    e.preventDefault();
+    const clean = backendInput.trim();
+    if (clean) {
+      localStorage.setItem('laf_custom_backend', clean);
+    } else {
+      localStorage.removeItem('laf_custom_backend');
+    }
+    setSavedBackend(true);
+    setTimeout(() => setSavedBackend(false), 2000);
   };
 
   const handleSaveProfile = (e) => {
@@ -343,6 +357,36 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                   />
                   <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)', color: '#fff' }}>
                     {savedKey ? <Check style={{ width: '16px' }} /> : 'Save'}
+                  </button>
+                </form>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '16px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '6px' }}>
+                  Backend Server URL (Optional)
+                </label>
+                <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-muted)', marginBottom: '8px' }}>
+                  Leave blank to use Autonomous Cloud Realtime AI. Or enter your custom backend endpoint.
+                </div>
+                <form onSubmit={handleSaveBackend} style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={backendInput}
+                    onChange={(e) => setBackendInput(e.target.value)}
+                    placeholder="e.g. http://localhost:3000 or https://api.yourdomain.com"
+                    style={{
+                      flex: 1,
+                      padding: '12px 16px',
+                      background: 'var(--ds-bg-card)',
+                      border: '1px solid var(--ds-border)',
+                      borderRadius: '14px',
+                      color: 'var(--ds-text-primary)',
+                      outline: 'none',
+                      fontSize: '0.88rem'
+                    }}
+                  />
+                  <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)', color: '#fff' }}>
+                    {savedBackend ? <Check style={{ width: '16px' }} /> : 'Save'}
                   </button>
                 </form>
               </div>

@@ -11,6 +11,7 @@ import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
 import { apiUrl } from './api';
+import { getLocalUserDb, deleteLocalConversation } from './utils/aiClient';
 
 export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
@@ -47,85 +48,149 @@ export default function App() {
 
   // Validate session token on mount while maintaining permanent logged-in username
   useEffect(() => {
+    const activeName = user?.username || storedUser;
     if (token) {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 3500);
+
       fetch(apiUrl('/api/auth/me'), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       })
-        .then(res => res.json())
+        .then(res => {
+          clearTimeout(tid);
+          const ct = res.headers.get('content-type') || '';
+          if (res.ok && ct.includes('application/json')) {
+            return res.json();
+          }
+          return null;
+        })
         .then(data => {
-          if (data.success && data.user) {
+          if (data && data.success && data.user) {
             setUser(data.user);
-            fetchConversations(token);
-          } else if (storedUser) {
-            // Keep permanent user logged in with active token
-            setUser({ username: storedUser });
-            fetchConversations(token);
+            fetchConversations(token, data.user.username);
+          } else if (activeName) {
+            setUser({ username: activeName });
+            fetchConversations(token, activeName);
           }
         })
         .catch(err => {
-          console.warn('Session check note:', err);
-          if (storedUser) {
-            setUser({ username: storedUser });
+          console.warn('Session check note:', err.message);
+          if (activeName) {
+            setUser({ username: activeName });
+            fetchConversations(token, activeName);
           }
         })
         .finally(() => setLoadingSession(false));
     } else if (storedUser) {
       setUser({ username: storedUser });
+      fetchConversations('', storedUser);
       setLoadingSession(false);
     } else {
       setLoadingSession(false);
     }
   }, [token]);
 
-  const fetchConversations = async (authToken) => {
+  const fetchConversations = async (authToken, explicitUsername) => {
+    const activeUsername = explicitUsername || user?.username || storedUser;
+    if (!activeUsername) return;
+
     const t = authToken || token;
-    if (!t) return;
-    try {
-      const res = await fetch(apiUrl('/api/chat/conversations'), {
-        headers: { 'Authorization': `Bearer ${t}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setConversations(data.conversations);
+    let loaded = false;
+
+    if (t) {
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(apiUrl('/api/chat/conversations'), {
+          headers: { 'Authorization': `Bearer ${t}` },
+          signal: controller.signal
+        });
+        clearTimeout(tid);
+        const ct = res.headers.get('content-type') || '';
+        if (res.ok && ct.includes('application/json')) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.conversations)) {
+            setConversations(data.conversations);
+            loaded = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Backend conversations note:', e.message);
       }
-    } catch (e) {
-      console.error(e);
+    }
+
+    if (!loaded) {
+      // Fallback to local DB
+      const db = getLocalUserDb(activeUsername);
+      if (db && Array.isArray(db.conversations)) {
+        setConversations(db.conversations.map(c => ({
+          id: c.id,
+          title: c.title,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+          messageCount: c.messages ? c.messages.length : 0
+        })));
+      }
     }
   };
 
   const loadConversation = async (convId) => {
-    if (!token) return;
-    try {
-      const res = await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success && data.conversation) {
-        setActiveConvId(data.conversation.id);
-        setMessages(data.conversation.messages || []);
+    const activeUsername = user?.username || storedUser;
+    let loaded = false;
+
+    if (token) {
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal
+        });
+        clearTimeout(tid);
+        const ct = res.headers.get('content-type') || '';
+        if (res.ok && ct.includes('application/json')) {
+          const data = await res.json();
+          if (data.success && data.conversation) {
+            setActiveConvId(data.conversation.id);
+            setMessages(data.conversation.messages || []);
+            loaded = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Backend load conversation note:', e.message);
       }
-    } catch (e) {
-      console.error(e);
+    }
+
+    if (!loaded && activeUsername) {
+      const db = getLocalUserDb(activeUsername);
+      const found = db?.conversations?.find(c => c.id === convId);
+      if (found) {
+        setActiveConvId(found.id);
+        setMessages(found.messages || []);
+      }
     }
   };
 
   const deleteConversation = async (convId) => {
-    if (!token) return;
-    try {
-      const res = await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (activeConvId === convId) {
-          startNewChat();
-        }
-        fetchConversations(token);
-      }
-    } catch (e) {
-      console.error(e);
+    const activeUsername = user?.username || storedUser;
+    if (token) {
+      try {
+        await fetch(apiUrl(`/api/chat/conversation/${convId}`), {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (e) {}
     }
+
+    if (activeUsername) {
+      deleteLocalConversation(activeUsername, convId);
+    }
+
+    if (activeConvId === convId) {
+      startNewChat();
+    }
+    fetchConversations(token, activeUsername);
   };
 
   const startNewChat = () => {
@@ -140,7 +205,7 @@ export default function App() {
     }
     setUser(userData);
     setToken(sessionToken);
-    fetchConversations(sessionToken);
+    fetchConversations(sessionToken, userData?.username);
   };
 
   const handleLogout = () => {
@@ -148,6 +213,8 @@ export default function App() {
     localStorage.removeItem('laf_username');
     setUser(null);
     setToken('');
+    setConversations([]);
+    setMessages([]);
   };
 
   if (loadingSession) {
@@ -180,7 +247,7 @@ export default function App() {
         />
       )}
 
-      {/* Collapsible Floating Sidebar (Includes Trash Delete Icon for each conversation) */}
+      {/* Collapsible Floating Sidebar */}
       {user && (
         <Navigation
           sidebarOpen={sidebarOpen}
@@ -212,7 +279,7 @@ export default function App() {
               setActiveConvId={setActiveConvId}
               messages={messages}
               setMessages={setMessages}
-              fetchConversations={() => fetchConversations(token)}
+              fetchConversations={() => fetchConversations(token, user?.username)}
             />
           )}
           {activeTab === 'media' && <div style={{ paddingTop: '60px', height: '100%' }}><MediaStudio token={token} /></div>}
@@ -222,7 +289,7 @@ export default function App() {
         </main>
       )}
 
-      {/* Settings Modal (Includes working theme selector & editable fields) */}
+      {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -240,7 +307,7 @@ export default function App() {
         onClose={() => setIsDownloadAppOpen(false)}
       />
 
-      {/* Help & Feedback Modal (Dispatches feedback to purushothamaks1711@gmail.com) */}
+      {/* Help & Feedback Modal */}
       <HelpFeedbackModal
         isOpen={isHelpFeedbackOpen}
         onClose={() => setIsHelpFeedbackOpen(false)}

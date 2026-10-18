@@ -269,61 +269,42 @@ function sanitizeLlmOutput(text = '') {
 }
 
 /**
- * Direct Connection to Local Ollama AI Server (Primary 24/7 Engine)
- * Auto-falls back between available on-server models (laf-v2 / llama3.2:latest)
+ * Direct Connection to Realtime Cloud AI Engine (OpenAI GPT-4o via Pollinations)
+ * Zero setup, zero keys needed, zero dependency on Ollama, 100% 24/7 cloud availability.
  */
-async function callOllamaLocal({ messages, model = 'laf-v2' }) {
-  const ollamaEndpoints = Array.from(new Set([
-    'http://127.0.0.1:11434',
-    'http://localhost:11434',
-    process.env.OLLAMA_URL,
-    'http://172.17.0.1:11434',
-    'http://host.docker.internal:11434'
-  ].filter(Boolean)));
-
-  const LOCAL_OLLAMA_MODELS = ['laf-v2', 'llama3.2:latest', 'qwen2.5:0.5b', 'llama3.2-vision:latest', 'llama3:latest', 'phi3:mini'];
-  let primaryModel = model;
-  if (!primaryModel || primaryModel === 'auto' || !LOCAL_OLLAMA_MODELS.includes(primaryModel)) {
-    primaryModel = 'laf-v2';
-  }
-
-  const candidateModels = [primaryModel, 'laf-v2', 'llama3.2:latest'].filter((v, i, a) => a.indexOf(v) === i);
-
-  for (const baseUrl of ollamaEndpoints) {
-    for (const targetModel of candidateModels) {
-      try {
-        console.log(`[AI-ENGINE] Auto-Routed to Local Ollama (${baseUrl}) with model "${targetModel}"...`);
-        const res = await axios.post(
-          `${baseUrl}/api/chat`,
-          {
-            model: targetModel,
-            messages: messages,
-            stream: false,
-            keep_alive: -1,
-            options: {
-              temperature: 0.5,
-              num_predict: 384,
-              num_ctx: 2048,
-              num_thread: 6
-            }
-          },
-          { timeout: 90000 }
-        );
-
-        const content = res.data?.message?.content;
-        if (content && content.trim()) {
-          return {
-            text: sanitizeLlmOutput(content.trim()),
-            provider: `LAF AI (${res.data.model || targetModel})`
-          };
-        }
-      } catch (err) {
-        console.log(`[AI-ENGINE] Ollama (${baseUrl}/${targetModel}) note: ${err.message}`);
-        if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ECONNABORTED' || (err.message && err.message.includes('timeout'))) {
-          break;
-        }
-      }
+async function callRealtimeCloudAI({ messages, systemPrompt }) {
+  try {
+    const payloadMessages = [];
+    if (systemPrompt) {
+      payloadMessages.push({ role: 'system', content: systemPrompt });
     }
+    messages.forEach(m => {
+      payloadMessages.push({ role: m.role, content: m.content });
+    });
+
+    console.log('[AI-ENGINE] Auto-Routed to Realtime Cloud AI Engine (OpenAI GPT-4o)...');
+    const res = await axios.post(
+      'https://text.pollinations.ai/',
+      {
+        messages: payloadMessages,
+        model: 'openai',
+        temperature: 0.7
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 35000
+      }
+    );
+
+    const raw = typeof res.data === 'string' ? res.data : (res.data?.choices?.[0]?.message?.content || JSON.stringify(res.data));
+    if (raw && raw.trim()) {
+      return {
+        text: sanitizeLlmOutput(raw.trim()),
+        provider: 'LAF Real-Time Cloud AI (GPT-4o)'
+      };
+    }
+  } catch (err) {
+    console.log(`[AI-ENGINE] Realtime Cloud AI note: ${err.message}`);
   }
   return null;
 }
@@ -635,15 +616,14 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     }
   }
 
-  // Priority 2: Auto-Switch to Local 24/7 Ollama Model (laf-v2 / llama3.2)
-  const ollamaRes = await callOllamaLocal({
-    messages: formattedMessages,
-    model: autoRoute.localModel || 'laf-v2'
+  // Priority 2: Real-Time High Performance Cloud AI Engine (OpenAI GPT-4o, Zero Ollama)
+  const realtimeRes = await callRealtimeCloudAI({
+    messages: formattedMessages
   });
-  if (ollamaRes) {
+  if (realtimeRes) {
     return {
-      text: ollamaRes.text,
-      provider: `LAF AI (${autoRoute.category} • ${ollamaRes.provider})`
+      text: realtimeRes.text,
+      provider: `LAF AI (${autoRoute.category} • ${realtimeRes.provider})`
     };
   }
 

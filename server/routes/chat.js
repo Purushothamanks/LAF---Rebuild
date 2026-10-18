@@ -98,7 +98,7 @@ router.post('/send', authMiddleware, async (req, res) => {
         username: req.username,
         prompt: req.body.prompt || '',
         history: req.body.history || [],
-        selectedModel: 'laf-v2'
+        selectedModel: 'gpt-4o-mini'
       });
       return res.json({
         success: true,
@@ -127,15 +127,15 @@ router.post('/send', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/chat/models
- * Returns available AI models (Cloud Engine & Local Ollama Engine)
+ * Returns available AI models (Realtime Cloud Engine)
  */
 router.get('/models', authMiddleware, (req, res) => {
   res.json({
     success: true,
     models: [
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (All-Rounder #1)', provider: 'Cloud API Key Engine', desc: 'Best overall model for speed, code, and reasoning' },
-      { id: 'deepseek-chat', name: 'DeepSeek V3 (Deep Logic & Math)', provider: 'Cloud API Key Engine', desc: 'Exceptional for deep math and complex code' },
-      { id: 'laf-v2', name: 'Ollama LAF v2 (24/7 Local)', provider: 'Local Ollama Engine', desc: 'Primary 24/7 fast local model' }
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Real-Time Cloud #1)', provider: 'Realtime Cloud Engine', desc: 'Best overall model for speed, code, and reasoning' },
+      { id: 'deepseek-chat', name: 'DeepSeek V3 (Deep Logic & Math)', provider: 'Realtime Cloud Engine', desc: 'Exceptional for deep math and complex code' },
+      { id: 'laf-realtime', name: 'LAF Real-Time Neural Core', provider: 'Autonomous Cloud Engine', desc: 'Primary 24/7 fast real-time cloud model' }
     ]
   });
 });

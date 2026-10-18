@@ -10,3 +10,4 @@ server/training/*.jsonl
 *.pem
 *.mp4
 .*.ud2xlh
+.firebase/

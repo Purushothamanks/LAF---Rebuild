@@ -3,6 +3,7 @@ import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff } from 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { apiUrl } from '../api';
+import { generateRealtimeResponse, saveLocalConversation } from '../utils/aiClient';
 
 if (typeof window !== 'undefined') {
   window.downloadLafImage = function (url, filename) {
@@ -162,63 +163,86 @@ export default function ChatView({
     setMessages(newHistory);
     setLoading(true);
 
-    const sendFetch = async (retries = 1) => {
-      try {
-        return await fetch(apiUrl('/api/chat/send'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            prompt: textToSend,
-            conversationId: activeConvId,
-            history: messages,
-            customApiKey,
-            selectedModel
-          })
-        });
-      } catch (err) {
-        if (retries > 0) {
-          await new Promise(r => setTimeout(r, 1000));
-          return sendFetch(retries - 1);
-        }
-        throw err;
-      }
-    };
+    let answered = false;
 
+    // 1. Try sending to backend if reachable
     try {
-      const res = await sendFetch(1);
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setActiveConvId(data.conversationId);
-        
-        const fullContent = data.response.content || '';
-        const providerName = data.response.provider || 'LAF AI';
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 12000);
 
-        setLoading(false);
+      const res = await fetch(apiUrl('/api/chat/send'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          prompt: textToSend,
+          conversationId: activeConvId,
+          history: messages,
+          customApiKey,
+          selectedModel
+        }),
+        signal: controller.signal
+      });
 
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
-        ]);
+      clearTimeout(tid);
+
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        if (data.success && data.response) {
+          setActiveConvId(data.conversationId);
+          const fullContent = data.response.content || '';
+          const providerName = data.response.provider || 'LAF AI';
+
+          setMessages(prev => [
+            ...prev,
+            { role: 'assistant', content: fullContent, provider: providerName, isTyping: false }
+          ]);
+          answered = true;
+          fetchConversations();
+        }
+      }
+    } catch (backendErr) {
+      console.warn('Backend chat route note:', backendErr.message);
+    }
+
+    // 2. Real-Time Autonomous AI Engine (No Ollama, 100% Guaranteed Real-Time Response)
+    if (!answered) {
+      try {
+        const aiResult = await generateRealtimeResponse({
+          prompt: textToSend,
+          history: messages,
+          customApiKey,
+          username: user?.username || 'User'
+        });
+
+        const newAssistantMsg = {
+          role: 'assistant',
+          content: aiResult.text,
+          provider: aiResult.provider,
+          isTyping: false
+        };
+
+        const updatedMessages = [...newHistory, newAssistantMsg];
+        setMessages(updatedMessages);
+
+        // Persist to local database
+        const convId = activeConvId || `conv_${Date.now()}`;
+        setActiveConvId(convId);
+        const title = messages.length === 0 ? textToSend.substring(0, 35) + '...' : undefined;
+        saveLocalConversation(user?.username, convId, title, updatedMessages);
         fetchConversations();
-      } else {
-        setLoading(false);
+      } catch (clientAiErr) {
         setMessages(prev => [
           ...prev,
-          { role: 'assistant', content: `Error: ${data.error || 'Failed to process request'}`, provider: 'System Error' }
+          { role: 'assistant', content: `Error: ${clientAiErr.message}`, provider: 'System Notice' }
         ]);
       }
-    } catch (err) {
-      setLoading(false);
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: `Network Error: ${err.message}`, provider: 'System Error' }
-      ]);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
