@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, Bot, Sparkles, ChevronDown, ChevronUp, Layers, CheckCircle2, Play } from 'lucide-react';
+import { Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, Bot, Sparkles, ChevronDown, ChevronUp, Layers, CheckCircle2, Play, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { apiUrl } from '../api';
@@ -75,12 +75,13 @@ export default function ChatView({
   fetchConversations
 }) {
   const [inputPrompt, setInputPrompt] = useState('');
+  const [attachment, setAttachment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [speakingIndex, setSpeakingIndex] = useState(null);
   const selectedModel = 'auto';
   const [isListening, setIsListening] = useState(false);
-  const [isAgentMode, setIsAgentMode] = useState(true);
+  const isAgentMode = true; // Intelligent Autonomous Engine active seamlessly
   const [expandedMilestones, setExpandedMilestones] = useState({});
 
   const toggleMilestone = (idx) => {
@@ -89,6 +90,110 @@ export default function ChatView({
 
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const fileInputWelcomeRef = useRef(null);
+  const fileInputBottomRef = useRef(null);
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const processUploadedFile = (file) => {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      alert('File size exceeds 25MB limit. Please upload a smaller file.');
+      return;
+    }
+
+    const formattedSize = formatFileSize(file.size);
+    const isImg = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    if (isImg) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        const base64Data = dataUrl.split(',')[1];
+        setAttachment({
+          name: file.name,
+          size: file.size,
+          formattedSize,
+          mimeType: file.type || 'image/jpeg',
+          isImage: true,
+          previewUrl: dataUrl,
+          data: base64Data
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (isPdf) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        const base64Data = dataUrl.split(',')[1];
+        setAttachment({
+          name: file.name,
+          size: file.size,
+          formattedSize,
+          mimeType: 'application/pdf',
+          isImage: false,
+          isPdf: true,
+          previewUrl: null,
+          data: base64Data
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Text, Code, JSON, Markdown, CSV, etc.
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAttachment({
+          name: file.name,
+          size: file.size,
+          formattedSize,
+          mimeType: file.type || 'text/plain',
+          isImage: false,
+          previewUrl: null,
+          textContent: e.target.result
+        });
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processUploadedFile(file);
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachment(null);
+    if (fileInputWelcomeRef.current) fileInputWelcomeRef.current.value = '';
+    if (fileInputBottomRef.current) fileInputBottomRef.current.value = '';
+  };
+
+  // Support clipboard image paste
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            processUploadedFile(file);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
 
   const toggleVoiceTyping = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -154,7 +259,7 @@ export default function ChatView({
   const handleSend = async (e, overridePrompt) => {
     if (e) e.preventDefault();
     const textToSend = (overridePrompt || inputPrompt).trim();
-    if (!textToSend || loading) return;
+    if ((!textToSend && !attachment) || loading) return;
 
     // Immediately stop and unbind recognition to prevent trailing voice text from reappearing
     if (recognitionRef.current) {
@@ -166,8 +271,28 @@ export default function ChatView({
     setIsListening(false);
     setInputPrompt('');
 
-    // Append user message
-    const newHistory = [...messages, { role: 'user', content: textToSend, timestamp: new Date().toISOString() }];
+    const currentAttachment = attachment;
+    handleRemoveAttachment();
+
+    // Append user message with attachment details
+    const newHistory = [
+      ...messages,
+      {
+        role: 'user',
+        content: textToSend,
+        attachment: currentAttachment ? {
+          name: currentAttachment.name,
+          size: currentAttachment.size,
+          formattedSize: currentAttachment.formattedSize,
+          mimeType: currentAttachment.mimeType,
+          isImage: currentAttachment.isImage,
+          previewUrl: currentAttachment.previewUrl,
+          data: currentAttachment.data,
+          textContent: currentAttachment.textContent
+        } : null,
+        timestamp: new Date().toISOString()
+      }
+    ];
     setMessages(newHistory);
     setLoading(true);
 
@@ -189,7 +314,8 @@ export default function ChatView({
           conversationId: activeConvId,
           history: messages,
           customApiKey,
-          selectedModel
+          selectedModel,
+          attachment: currentAttachment
         }),
         signal: controller.signal
       });
@@ -216,7 +342,7 @@ export default function ChatView({
       console.warn('Backend chat route note:', backendErr.message);
     }
 
-    // 2. Real-Time Autonomous AI Engine (No Ollama, 100% Guaranteed Real-Time Response)
+    // 2. Real-Time Autonomous AI Engine (Multimodal Google Gemini Vision & File Intelligence)
     if (!answered) {
       try {
         let aiResultText = '';
@@ -230,7 +356,8 @@ export default function ChatView({
             prompt: textToSend,
             history: messages,
             customApiKey,
-            username: user?.username || 'User'
+            username: user?.username || 'User',
+            attachment: currentAttachment
           });
           aiResultText = agentTask.text;
           providerName = agentTask.provider;
@@ -242,7 +369,8 @@ export default function ChatView({
             prompt: textToSend,
             history: messages,
             customApiKey,
-            username: user?.username || 'User'
+            username: user?.username || 'User',
+            attachment: currentAttachment
           });
           aiResultText = res.text;
           providerName = res.provider;
@@ -265,7 +393,10 @@ export default function ChatView({
         // Persist to local database
         const convId = activeConvId || `conv_${Date.now()}`;
         setActiveConvId(convId);
-        const title = messages.length === 0 ? textToSend.substring(0, 35) + '...' : undefined;
+        const displayTitle = textToSend
+          ? (textToSend.substring(0, 35) + '...')
+          : (currentAttachment ? `Attached: ${currentAttachment.name}` : 'New Conversation');
+        const title = messages.length === 0 ? displayTitle : undefined;
         saveLocalConversation(user?.username, convId, title, updatedMessages);
         fetchConversations();
       } catch (clientAiErr) {
@@ -314,7 +445,7 @@ export default function ChatView({
         <div style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {messages.length === 0 ? (
-            /* Floating Centered Welcome Screen */
+            /* Floating Centered Welcome Screen with Clean Minimalist Aesthetic */
             <div style={{ marginTop: '100px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
@@ -336,141 +467,202 @@ export default function ChatView({
                 How can I help you today?
               </p>
 
-              {/* Floating Centered Oval Input Box */}
-              <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)', position: 'relative' }}>
-                <textarea
-                  value={inputPrompt}
-                  onChange={(e) => setInputPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder={isListening ? "Listening... speak now..." : "Message LAF..."}
-                  rows={2}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    resize: 'none',
-                    maxHeight: '160px'
-                  }}
-                />
-
-                {/* Autonomous Agent Mode Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setIsAgentMode(!isAgentMode)}
-                  title={isAgentMode ? "Autonomous Agent Mode Active" : "Standard Chat Mode"}
-                  style={{
+              {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
+              <form
+                onSubmit={handleSend}
+                className="floating-input-card"
+                style={{
+                  background: 'rgba(23, 28, 38, 0.95)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
+                  borderRadius: attachment ? '22px' : 'var(--radius-oval)',
+                  padding: attachment ? '12px 18px 10px 18px' : '10px 18px',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              >
+                {/* Selected File/Image Preview Chip */}
+                {attachment && (
+                  <div style={{
+                    width: '100%',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px',
-                    height: '36px',
-                    padding: '0 10px',
-                    borderRadius: '18px',
-                    background: isAgentMode ? 'rgba(79, 117, 255, 0.2)' : 'var(--ds-bg-card)',
-                    border: isAgentMode ? '1px solid rgba(79, 117, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                    color: isAgentMode ? '#60a5fa' : '#94a3b8',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                >
-                  <Bot style={{ width: '14px', height: '14px', color: isAgentMode ? '#60a5fa' : '#94a3b8' }} />
-                  <span>Agent {isAgentMode ? 'ON' : 'OFF'}</span>
-                </button>
-
-                {/* Dead-Centered Voice Typing Mic Button */}
-                <button
-                  type="button"
-                  onClick={toggleVoiceTyping}
-                  title={isListening ? "Stop Voice Typing" : "Voice Typing"}
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
-                    border: 'none',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
-                    padding: 0,
-                    margin: 0,
-                    lineHeight: 0,
-                    outline: 'none',
-                    animation: isListening ? 'micPulse 1.5s infinite' : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                    {isListening ? <MicOff style={{ width: '17px', height: '17px', display: 'block' }} /> : <Mic style={{ width: '17px', height: '17px', color: 'var(--ds-blue)', display: 'block' }} />}
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    marginBottom: '8px',
+                    background: 'rgba(30, 41, 59, 0.75)',
+                    border: '1px solid rgba(79, 117, 255, 0.3)',
+                    borderRadius: '14px',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      {attachment.isImage ? (
+                        <img
+                          src={attachment.previewUrl}
+                          alt={attachment.name}
+                          style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          background: 'rgba(79, 117, 255, 0.15)',
+                          border: '1px solid rgba(79, 117, 255, 0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#60a5fa'
+                        }}>
+                          <FileText style={{ width: '18px', height: '18px' }} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, textAlign: 'left' }}>
+                        <span style={{ fontSize: '0.84rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>
+                          {attachment.name}
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          {attachment.formattedSize} • {attachment.isImage ? 'Image' : 'Document / Code'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveAttachment}
+                      title="Remove attachment"
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: 'none',
+                        color: '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}
+                    >
+                      <X style={{ width: '13px', height: '13px' }} />
+                    </button>
                   </div>
-                </button>
+                )}
 
-                {/* Dead-Centered Send Button */}
-                <button
-                  type="submit"
-                  disabled={loading || !inputPrompt.trim()}
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
-                    border: 'none',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justify: 'center',
-                    cursor: inputPrompt.trim() ? 'pointer' : 'default',
-                    transition: 'all 0.15s ease',
-                    flexShrink: 0,
-                    padding: 0,
-                    margin: 0
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
-                    <Send style={{ width: '16px', height: '16px' }} />
-                  </div>
-                </button>
-              </form>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+                  <input
+                    type="file"
+                    ref={fileInputWelcomeRef}
+                    onChange={handleFileSelect}
+                    accept="image/*,text/*,.pdf,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.csv,.md,.txt,.xml,.yml,.yaml,.sql"
+                    style={{ display: 'none' }}
+                  />
 
-              {/* Starter Autonomous Engineering Prompts */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '24px', maxWidth: '720px' }}>
-                {[
-                  '⚡ Build a Neon Stopwatch App with lap recorder',
-                  '🎮 Create an interactive Cyber Snake Game in Canvas',
-                  '📊 Build an Asset Allocation portfolio visualizer',
-                  '🧮 Code a scientific calculator in HTML & JavaScript'
-                ].map((suggestion, sIdx) => (
+                  {/* Attachment Button */}
                   <button
-                    key={sIdx}
-                    onClick={() => handleSend(null, suggestion)}
+                    type="button"
+                    onClick={() => fileInputWelcomeRef.current?.click()}
+                    title="Attach image or file"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '20px',
-                      padding: '7px 14px',
-                      color: '#94a3b8',
-                      fontSize: '0.78rem',
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
+                      border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
+                      color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0,
+                      padding: 0
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--ds-blue)'; e.currentTarget.style.color = '#fff'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; e.currentTarget.style.color = '#94a3b8'; }}
                   >
-                    {suggestion}
+                    <Paperclip style={{ width: '17px', height: '17px' }} />
                   </button>
-                ))}
-              </div>
+
+                  <textarea
+                    value={inputPrompt}
+                    onChange={(e) => setInputPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
+                    rows={1}
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#fff',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      resize: 'none',
+                      maxHeight: '160px'
+                    }}
+                  />
+
+                  {/* Voice Typing Mic Button */}
+                  <button
+                    type="button"
+                    onClick={toggleVoiceTyping}
+                    title={isListening ? "Stop Voice Typing" : "Voice Typing"}
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
+                      border: 'none',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0,
+                      padding: 0,
+                      margin: 0,
+                      lineHeight: 0,
+                      outline: 'none',
+                      animation: isListening ? 'micPulse 1.5s infinite' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                      {isListening ? <MicOff style={{ width: '17px', height: '17px', display: 'block' }} /> : <Mic style={{ width: '17px', height: '17px', color: 'var(--ds-blue)', display: 'block' }} />}
+                    </div>
+                  </button>
+
+                  {/* Send Button */}
+                  <button
+                    type="submit"
+                    disabled={loading || (!inputPrompt.trim() && !attachment)}
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      background: (inputPrompt.trim() || attachment) ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
+                      border: 'none',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0,
+                      padding: 0,
+                      margin: 0
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
+                      <Send style={{ width: '16px', height: '16px' }} />
+                    </div>
+                  </button>
+                </div>
+              </form>
             </div>
           ) : (
             /* Active Conversation Messages List */
@@ -515,6 +707,58 @@ export default function ChatView({
                     <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? 'var(--ds-text-secondary)' : 'var(--ds-blue)', marginBottom: '4px' }}>
                       {isUser ? user.username : (m.provider || 'LAF AI')}
                     </div>
+
+                    {/* Render User Attached Image or File Badge if present */}
+                    {m.attachment && (
+                      <div style={{ marginBottom: '10px', display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                        {m.attachment.isImage && m.attachment.previewUrl ? (
+                          <div
+                            onClick={() => window.open(m.attachment.previewUrl, '_blank')}
+                            title="Click to view full image"
+                            style={{
+                              borderRadius: '12px',
+                              overflow: 'hidden',
+                              border: '1px solid rgba(79, 117, 255, 0.35)',
+                              maxWidth: '300px',
+                              maxHeight: '220px',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+                              background: 'rgba(15, 23, 42, 0.7)'
+                            }}
+                          >
+                            <img
+                              src={m.attachment.previewUrl}
+                              alt={m.attachment.name || 'User uploaded image'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '7px 12px',
+                              borderRadius: '10px',
+                              background: 'rgba(30, 41, 59, 0.85)',
+                              border: '1px solid rgba(79, 117, 255, 0.3)',
+                              color: '#f8fafc',
+                              fontSize: '0.82rem'
+                            }}
+                          >
+                            <FileText style={{ width: '15px', height: '15px', color: '#60a5fa' }} />
+                            <span style={{ fontWeight: '600', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {m.attachment.name}
+                            </span>
+                            {m.attachment.formattedSize && (
+                              <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>
+                                ({m.attachment.formattedSize})
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Agent Milestone & Thought HUD */}
                     {!isUser && m.milestones && m.milestones.length > 0 && (
@@ -568,23 +812,25 @@ export default function ChatView({
                     )}
 
                     {/* Actual Pure Text & Code Box Message */}
-                    <div
-                      className="message-markdown-content"
-                      style={{
-                        fontSize: '0.96rem',
-                        lineHeight: '1.65',
-                        color: 'var(--ds-text-primary)',
-                        display: 'inline-block',
-                        width: '100%',
-                        textAlign: isUser ? 'right' : 'left'
-                      }}
-                      dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
-                          ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
-                          ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
-                        })
-                      }}
-                    />
+                    {m.content && (
+                      <div
+                        className="message-markdown-content"
+                        style={{
+                          fontSize: '0.96rem',
+                          lineHeight: '1.65',
+                          color: 'var(--ds-text-primary)',
+                          display: 'inline-block',
+                          width: '100%',
+                          textAlign: isUser ? 'right' : 'left'
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
+                            ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
+                            ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
+                          })
+                        }}
+                      />
+                    )}
 
                     {/* Render Interactive Live Sandbox for Executable Code Artifacts */}
                     {!isUser && Array.isArray(m.artifacts) && m.artifacts.filter(a => a.isExecutable).map((art, aIdx) => (
@@ -598,7 +844,7 @@ export default function ChatView({
 
                     {/* Voice, Copy & Edit Options Under Messages */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
-                      {isUser && (
+                      {isUser && m.content && (
                         <button
                           onClick={() => {
                             setInputPrompt(m.content);
@@ -614,22 +860,26 @@ export default function ChatView({
                           <span>Edit</span>
                         </button>
                       )}
-                      <button
-                        onClick={() => handleSpeak(m.content, idx)}
-                        style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
-                        title="Read Aloud"
-                      >
-                        <Volume2 style={{ width: '13px' }} />
-                        <span>Speak</span>
-                      </button>
-                      <button
-                        onClick={() => handleCopy(m.content, idx)}
-                        style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? '#10b981' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
-                        title="Copy text"
-                      >
-                        {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
-                        <span>{copiedIndex === idx ? 'Copied' : 'Copy'}</span>
-                      </button>
+                      {m.content && (
+                        <button
+                          onClick={() => handleSpeak(m.content, idx)}
+                          style={{ background: 'transparent', border: 'none', color: speakingIndex === idx ? 'var(--ds-blue)' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                          title="Read Aloud"
+                        >
+                          <Volume2 style={{ width: '13px' }} />
+                          <span>Speak</span>
+                        </button>
+                      )}
+                      {m.content && (
+                        <button
+                          onClick={() => handleCopy(m.content, idx)}
+                          style={{ background: 'transparent', border: 'none', color: copiedIndex === idx ? '#10b981' : 'var(--ds-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                          title="Copy text"
+                        >
+                          {copiedIndex === idx ? <Check style={{ width: '13px' }} /> : <Copy style={{ width: '13px' }} />}
+                          <span>{copiedIndex === idx ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      )}
                     </div>
 
                   </div>
@@ -658,110 +908,199 @@ export default function ChatView({
       {/* Floating Bottom Input Card */}
       {messages.length > 0 && (
         <div style={{ padding: '0 20px 16px 20px', maxWidth: '820px', width: '100%', margin: '0 auto' }}>
-          <form onSubmit={handleSend} className="floating-input-card" style={{ background: 'rgba(23, 28, 38, 0.95)' }}>
-            <textarea
-              value={inputPrompt}
-              onChange={(e) => setInputPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={isListening ? "Listening... speak now..." : "Message LAF..."}
-              rows={1}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                color: '#fff',
-                fontSize: '0.95rem',
-                outline: 'none',
-                resize: 'none',
-                maxHeight: '120px'
-              }}
-            />
-
-            {/* Autonomous Agent Mode Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsAgentMode(!isAgentMode)}
-              title={isAgentMode ? "Autonomous Agent Mode Active" : "Standard Chat Mode"}
-              style={{
+          <form
+            onSubmit={handleSend}
+            className="floating-input-card"
+            style={{
+              background: 'rgba(23, 28, 38, 0.95)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              borderRadius: attachment ? '20px' : 'var(--radius-oval)',
+              padding: attachment ? '10px 16px 8px 16px' : '8px 16px',
+              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            {/* Selected File/Image Preview Chip */}
+            {attachment && (
+              <div style={{
+                width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                height: '34px',
-                padding: '0 9px',
-                borderRadius: '17px',
-                background: isAgentMode ? 'rgba(79, 117, 255, 0.2)' : 'var(--ds-bg-card)',
-                border: isAgentMode ? '1px solid rgba(79, 117, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
-                color: isAgentMode ? '#60a5fa' : '#94a3b8',
-                fontSize: '0.72rem',
-                fontWeight: '700',
-                cursor: 'pointer',
-                flexShrink: 0
-              }}
-            >
-              <Bot style={{ width: '13px', height: '13px', color: isAgentMode ? '#60a5fa' : '#94a3b8' }} />
-              <span>Agent {isAgentMode ? 'ON' : 'OFF'}</span>
-            </button>
-
-            {/* Dead-Centered Voice Typing Mic Button */}
-            <button
-              type="button"
-              onClick={toggleVoiceTyping}
-              title={isListening ? "Stop Voice Typing" : "Voice Typing"}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
-                border: 'none',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-                padding: 0,
-                margin: 0,
-                lineHeight: 0,
-                outline: 'none',
-                animation: isListening ? 'micPulse 1.5s infinite' : 'none'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                {isListening ? <MicOff style={{ width: '16px', height: '16px', display: 'block' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)', display: 'block' }} />}
+                justifyContent: 'space-between',
+                padding: '6px 12px',
+                marginBottom: '6px',
+                background: 'rgba(30, 41, 59, 0.75)',
+                border: '1px solid rgba(79, 117, 255, 0.3)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(8px)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  {attachment.isImage ? (
+                    <img
+                      src={attachment.previewUrl}
+                      alt={attachment.name}
+                      style={{ width: '34px', height: '34px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      background: 'rgba(79, 117, 255, 0.15)',
+                      border: '1px solid rgba(79, 117, 255, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#60a5fa'
+                    }}>
+                      <FileText style={{ width: '16px', height: '16px' }} />
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, textAlign: 'left' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
+                      {attachment.name}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                      {attachment.formattedSize} • {attachment.isImage ? 'Image' : 'Document / Code'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveAttachment}
+                  title="Remove attachment"
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: 'none',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  <X style={{ width: '12px', height: '12px' }} />
+                </button>
               </div>
-            </button>
+            )}
 
-            {/* Dead-Centered Send Button */}
-            <button
-              type="submit"
-              disabled={loading || !inputPrompt.trim()}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: inputPrompt.trim() ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
-                border: 'none',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justify: 'center',
-                cursor: inputPrompt.trim() ? 'pointer' : 'default',
-                transition: 'all 0.15s ease',
-                flexShrink: 0,
-                padding: 0,
-                margin: 0
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
-                <Send style={{ width: '15px', height: '15px' }} />
-              </div>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+              <input
+                type="file"
+                ref={fileInputBottomRef}
+                onChange={handleFileSelect}
+                accept="image/*,text/*,.pdf,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.csv,.md,.txt,.xml,.yml,.yaml,.sql"
+                style={{ display: 'none' }}
+              />
+
+              {/* Attachment Button */}
+              <button
+                type="button"
+                onClick={() => fileInputBottomRef.current?.click()}
+                title="Attach image or file"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
+                  border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
+                  color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0,
+                  padding: 0
+                }}
+              >
+                <Paperclip style={{ width: '16px', height: '16px' }} />
+              </button>
+
+              <textarea
+                value={inputPrompt}
+                onChange={(e) => setInputPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
+                rows={1}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  resize: 'none',
+                  maxHeight: '120px'
+                }}
+              />
+
+              {/* Voice Typing Mic Button */}
+              <button
+                type="button"
+                onClick={toggleVoiceTyping}
+                title={isListening ? "Stop Voice Typing" : "Voice Typing"}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
+                  border: 'none',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                  padding: 0,
+                  margin: 0,
+                  lineHeight: 0,
+                  outline: 'none',
+                  animation: isListening ? 'micPulse 1.5s infinite' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  {isListening ? <MicOff style={{ width: '16px', height: '16px', display: 'block' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)', display: 'block' }} />}
+                </div>
+              </button>
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={loading || (!inputPrompt.trim() && !attachment)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: (inputPrompt.trim() || attachment) ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
+                  border: 'none',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0,
+                  padding: 0,
+                  margin: 0
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', transform: 'translate(-1px, 1px)' }}>
+                  <Send style={{ width: '15px', height: '15px' }} />
+                </div>
+              </button>
+            </div>
           </form>
         </div>
       )}

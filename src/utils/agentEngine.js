@@ -51,10 +51,11 @@ export async function executeAgentTask({
   history = [],
   customApiKey = '',
   username = 'User',
+  attachment = null,
   onMilestoneUpdate = () => {}
 }) {
   const startTime = Date.now();
-  const cleanPrompt = prompt.trim();
+  const cleanPrompt = (prompt || '').trim();
 
   // Milestone 1: Decomposition & Invariant Planning
   onMilestoneUpdate({
@@ -80,12 +81,13 @@ CRITICAL AGENT RULES:
     status: 'IN_PROGRESS'
   });
 
-  // Call the high-speed candidate model chain
+  // Call the high-speed candidate model chain with multimodal support
   const result = await generateRealtimeResponse({
     prompt: cleanPrompt,
     history,
     customApiKey,
-    username
+    username,
+    attachment
   });
 
   // Milestone 3: Artifact Extraction & Invariant Audit

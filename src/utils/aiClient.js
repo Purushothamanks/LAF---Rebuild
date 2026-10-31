@@ -135,24 +135,58 @@ const CANDIDATE_GEMINI_MODELS = [
 ];
 
 /**
- * Call Google Gemini API directly with multi-model automatic failover
+ * Call Google Gemini API directly with multi-model automatic failover and multimodal attachment support
  */
-async function callGeminiApi({ prompt, history, apiKey, username = '' }) {
+async function callGeminiApi({ prompt, history, apiKey, username = '', attachment = null }) {
   const contents = [];
   if (Array.isArray(history) && history.length > 0) {
     history.slice(-8).forEach(h => {
       if (h.content && typeof h.content === 'string') {
+        const parts = [];
+        if (h.attachment?.isImage && h.attachment?.data) {
+          parts.push({
+            inlineData: {
+              mimeType: h.attachment.mimeType || 'image/jpeg',
+              data: h.attachment.data
+            }
+          });
+        }
+        if (h.attachment?.textContent) {
+          parts.push({
+            text: `[Attached File: ${h.attachment.name}]\n\`\`\`\n${h.attachment.textContent.substring(0, 10000)}\n\`\`\``
+          });
+        }
+        parts.push({ text: h.content.substring(0, 2000) });
         contents.push({
           role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content.substring(0, 2000) }]
+          parts
         });
       }
     });
   }
 
+  const userParts = [];
+  if (attachment) {
+    if (attachment.isImage && attachment.data) {
+      userParts.push({
+        inlineData: {
+          mimeType: attachment.mimeType || 'image/jpeg',
+          data: attachment.data
+        }
+      });
+    } else if (attachment.textContent) {
+      userParts.push({
+        text: `--- ATTACHED FILE: ${attachment.name} (${attachment.mimeType || 'code/text'}) ---\n\`\`\`\n${attachment.textContent.substring(0, 50000)}\n\`\`\`\n`
+      });
+    }
+  }
+
+  const userPrompt = (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail. Describe its contents, any text, graphics, and key insights.' : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation, code/content breakdown, and suggestions.`) : '');
+  userParts.push({ text: userPrompt });
+
   contents.push({
     role: 'user',
-    parts: [{ text: prompt }]
+    parts: userParts
   });
 
   const body = {
@@ -172,7 +206,7 @@ async function callGeminiApi({ prompt, history, apiKey, username = '' }) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 9000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -204,49 +238,52 @@ async function callGeminiApi({ prompt, history, apiKey, username = '' }) {
 /**
  * Generate real-time AI response directly from client
  */
-export async function generateRealtimeResponse({ prompt, history = [], customApiKey = '', username = 'User' }) {
+export async function generateRealtimeResponse({ prompt, history = [], customApiKey = '', username = 'User', attachment = null }) {
   const cleanPrompt = (prompt || '').trim();
 
-  // 1. Direct Greetings (Normal, polite, no robotic speeches)
-  if (isGreetingQuery(cleanPrompt)) {
-    return { text: 'Hello! How can I help you today?', provider: 'LAF AI' };
+  // If there is NO attachment, allow quick conversational intercepts
+  if (!attachment) {
+    // 1. Direct Greetings (Normal, polite, no robotic speeches)
+    if (isGreetingQuery(cleanPrompt)) {
+      return { text: 'Hello! How can I help you today?', provider: 'LAF AI' };
+    }
+
+    // 2. Identity & Developer Queries (Only answered when explicitly asked)
+    if (isDeveloperQuery(cleanPrompt)) {
+      return { text: LAF_DEVELOPER_TEXT, provider: 'LAF AI' };
+    }
+
+    if (isIdentityQuery(cleanPrompt)) {
+      return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF AI' };
+    }
+
+    if (isTemporalQuery(cleanPrompt)) {
+      return {
+        text: getDynamicTemporalResponse(),
+        provider: 'LAF AI'
+      };
+    }
+
+    // 3. Image Generation
+    if (isImageQuery(cleanPrompt)) {
+      const url = generateImageUrl(cleanPrompt);
+      return {
+        text: `![${cleanPrompt}](${url})\n\n*Generated via LAF Image Engine.*`,
+        provider: 'LAF Image Engine'
+      };
+    }
+
+    // 4. Built-in Verified Knowledge Base (Direct answers to algorithms, interview questions, etc.)
+    const directKnowledge = searchCustomKnowledge(cleanPrompt);
+    if (directKnowledge) {
+      return {
+        text: directKnowledge,
+        provider: 'LAF AI'
+      };
+    }
   }
 
-  // 2. Identity & Developer Queries (Only answered when explicitly asked)
-  if (isDeveloperQuery(cleanPrompt)) {
-    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF AI' };
-  }
-
-  if (isIdentityQuery(cleanPrompt)) {
-    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF AI' };
-  }
-
-  if (isTemporalQuery(cleanPrompt)) {
-    return {
-      text: getDynamicTemporalResponse(),
-      provider: 'LAF AI'
-    };
-  }
-
-  // 3. Image Generation
-  if (isImageQuery(cleanPrompt)) {
-    const url = generateImageUrl(cleanPrompt);
-    return {
-      text: `![${cleanPrompt}](${url})\n\n*Generated via LAF Image Engine.*`,
-      provider: 'LAF Image Engine'
-    };
-  }
-
-  // 4. Built-in Verified Knowledge Base (Direct answers to algorithms, interview questions, etc.)
-  const directKnowledge = searchCustomKnowledge(cleanPrompt);
-  if (directKnowledge) {
-    return {
-      text: directKnowledge,
-      provider: 'LAF AI'
-    };
-  }
-
-  // 5. Primary Engine: Google Gemini (Fast, sub-second, accurate, professional)
+  // 5. Primary Engine: Google Gemini (Fast, sub-second, accurate, professional, multimodal)
   const candidateGeminiKey = (customApiKey && (customApiKey.startsWith('AQ.') || customApiKey.startsWith('AIza')))
     ? customApiKey
     : (process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
@@ -257,11 +294,17 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
         prompt: cleanPrompt,
         history,
         apiKey: candidateGeminiKey,
-        username
+        username,
+        attachment
       });
+
+      let provider = 'LAF AI';
+      if (attachment?.isImage) provider = 'LAF Vision Engine';
+      else if (attachment) provider = 'LAF File Intelligence';
+
       return {
         text: geminiText,
-        provider: 'LAF AI'
+        provider
       };
     } catch (geminiErr) {
       console.warn('Gemini candidate chain note:', geminiErr.message);

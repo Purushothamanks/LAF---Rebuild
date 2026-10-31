@@ -311,7 +311,7 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
 /**
  * Direct Connection to Google DeepMind Gemini API (Antigravity Matrix)
  */
-async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt }) {
+async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, attachment = null }) {
   if (!apiKey) return null;
   const models = [
     'gemini-flash-lite-latest',
@@ -331,17 +331,52 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt }
       if (Array.isArray(history) && history.length > 0) {
         history.slice(-6).forEach(h => {
           if (h.content && typeof h.content === 'string') {
+            const parts = [];
+            if (h.attachment?.isImage && h.attachment?.data) {
+              parts.push({
+                inlineData: {
+                  mimeType: h.attachment.mimeType || 'image/jpeg',
+                  data: h.attachment.data
+                }
+              });
+            }
+            if (h.attachment?.textContent) {
+              parts.push({
+                text: `[Attached File: ${h.attachment.name}]\n\`\`\`\n${h.attachment.textContent.substring(0, 10000)}\n\`\`\``
+              });
+            }
+            parts.push({ text: h.content.substring(0, 1500) });
             contents.push({
               role: h.role === 'user' ? 'user' : 'model',
-              parts: [{ text: h.content.substring(0, 1500) }]
+              parts
             });
           }
         });
       }
 
+      const userParts = [];
+      if (attachment) {
+        if (attachment.isImage && attachment.data) {
+          userParts.push({
+            inlineData: {
+              mimeType: attachment.mimeType || 'image/jpeg',
+              data: attachment.data
+            }
+          });
+        } else if (attachment.textContent) {
+          userParts.push({
+            text: `--- ATTACHED FILE: ${attachment.name} (${attachment.mimeType || 'code/text'}) ---\n\`\`\`\n${attachment.textContent.substring(0, 50000)}\n\`\`\`\n`
+          });
+        }
+      }
+
+      userParts.push({
+        text: (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail.' : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation and suggestions.`) : '')
+      });
+
       contents.push({
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: userParts
       });
 
       const res = await axios.post(
@@ -518,9 +553,9 @@ function detectOptimalModel(prompt = '') {
 /**
  * Rebuilt Clean AI Engine: 24/7 Auto-Switching Architecture + Local Ollama AI Platform + FLUX.1 Image Engine
  */
-async function generateResponse({ username, prompt, history = [], selectedModel = 'auto', customApiKey = '' }) {
+async function generateResponse({ username, prompt, history = [], selectedModel = 'auto', customApiKey = '', attachment = null }) {
   const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}"`);
+  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" (Attachment: ${attachment ? attachment.name : 'None'})`);
 
   // Collect candidate API keys right at start
   const candidateKeys = [];
@@ -537,7 +572,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   });
 
   // 1. Image Generation Handler (Cloud API Key / High-Resolution FLUX Neural Engine)
-  if (isImageGenerationQuery(cleanPrompt)) {
+  if (!attachment && isImageGenerationQuery(cleanPrompt)) {
     const formattedPrompt = cleanImagePrompt(cleanPrompt);
     console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}"`);
 
@@ -559,39 +594,40 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   }
 
   // 2. Immediate Direct Checks (Zero-latency Identity & Greetings)
-  if (isLafIdentityQuery(cleanPrompt)) {
-    return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Autonomous Core' };
-  }
+  if (!attachment) {
+    if (isLafIdentityQuery(cleanPrompt)) {
+      return { text: LAF_REAL_IDENTITY_TEXT, provider: 'LAF Autonomous Core' };
+    }
 
-  if (isDeveloperQuery(cleanPrompt)) {
-    return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Autonomous Core' };
-  }
+    if (isDeveloperQuery(cleanPrompt)) {
+      return { text: LAF_DEVELOPER_TEXT, provider: 'LAF Autonomous Core' };
+    }
 
     if (isGreetingQuery(cleanPrompt)) {
-    const cleanUser = username ? username.charAt(0).toUpperCase() + username.slice(1) : '';
-    return {
-      text: cleanUser ? `Hello ${cleanUser}! How can I help you today?` : 'Hello! How can I help you today?',
-      provider: 'LAF AI'
-    };
-  }
-  }
+      const cleanUser = username ? username.charAt(0).toUpperCase() + username.slice(1) : '';
+      return {
+        text: cleanUser ? `Hello ${cleanUser}! How can I help you today?` : 'Hello! How can I help you today?',
+        provider: 'LAF AI'
+      };
+    }
 
-  if (isTemporalQuery(cleanPrompt)) {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    return {
-      text: `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
-  }
+    if (isTemporalQuery(cleanPrompt)) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      return {
+        text: `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+        provider: 'LAF Temporal Engine (2026)'
+      };
+    }
 
-  if (isDateQuery(cleanPrompt)) {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    return {
-      text: `Today's date is **${dateStr}**.`,
-      provider: 'LAF Temporal Engine (2026)'
-    };
+    if (isDateQuery(cleanPrompt)) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      return {
+        text: `Today's date is **${dateStr}**.`,
+        provider: 'LAF Temporal Engine (2026)'
+      };
+    }
   }
 
   const ambiguousResult = checkAmbiguousQuery(cleanPrompt);
@@ -673,7 +709,8 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
       prompt: cleanPrompt,
       history,
       apiKey: geminiKey,
-      systemPrompt: fullSystemPrompt
+      systemPrompt: fullSystemPrompt,
+      attachment
     });
     if (geminiRes) {
       return {

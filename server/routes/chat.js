@@ -28,14 +28,14 @@ function authMiddleware(req, res, next) {
  */
 router.post('/send', authMiddleware, async (req, res) => {
   try {
-    const { prompt, conversationId, history = [], selectedModel = 'gpt-4o-mini' } = req.body;
-    const cleanPrompt = sanitizeInput(prompt);
+    const { prompt, conversationId, history = [], selectedModel = 'gpt-4o-mini', attachment = null } = req.body;
+    const cleanPrompt = sanitizeInput(prompt || '');
 
-    if (!cleanPrompt) {
-      return res.status(400).json({ error: 'Prompt content cannot be empty.' });
+    if (!cleanPrompt && !attachment) {
+      return res.status(400).json({ error: 'Prompt content or file attachment cannot be empty.' });
     }
 
-    if (detectJailbreak(cleanPrompt)) {
+    if (cleanPrompt && detectJailbreak(cleanPrompt)) {
       const clientIp = req.headers['x-forwarded-for'] || req.ip;
       console.warn(`[SECURITY ALARM] Jailbreak attempt blocked from @${req.username} (IP: ${clientIp}): "${cleanPrompt.substring(0, 80)}..."`);
       sendSecurityAlert({
@@ -56,7 +56,7 @@ router.post('/send', authMiddleware, async (req, res) => {
       });
     }
 
-    if (detectThreats(cleanPrompt)) {
+    if (cleanPrompt && detectThreats(cleanPrompt)) {
       return res.status(400).json({ error: 'Security Shield: Potential malicious injection pattern blocked.' });
     }
 
@@ -66,13 +66,28 @@ router.post('/send', authMiddleware, async (req, res) => {
       prompt: cleanPrompt,
       history,
       selectedModel,
+      attachment,
       customApiKey: req.body.customApiKey || process.env.LAF_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY
     });
 
     // Update conversation in user's isolated DB
     const updatedHistory = [
       ...history,
-      { role: 'user', content: cleanPrompt, timestamp: new Date().toISOString() },
+      {
+        role: 'user',
+        content: cleanPrompt,
+        attachment: attachment ? {
+          name: attachment.name,
+          size: attachment.size,
+          formattedSize: attachment.formattedSize,
+          mimeType: attachment.mimeType,
+          isImage: attachment.isImage,
+          previewUrl: attachment.previewUrl,
+          data: attachment.data,
+          textContent: attachment.textContent
+        } : null,
+        timestamp: new Date().toISOString()
+      },
       { role: 'assistant', content: aiResult.text, provider: aiResult.provider, timestamp: new Date().toISOString() }
     ];
 
