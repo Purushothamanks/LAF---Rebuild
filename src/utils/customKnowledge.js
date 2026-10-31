@@ -9,11 +9,15 @@ const KNOWLEDGE_REPOSITORY = [
   {
     keywords: ['what year are we in', 'what year is it', 'what is the current year', 'current year now', 'what year we are now', 'what year is now', 'what year are we now', 'today date'],
     category: 'Temporal Grounding & System Info',
-    response: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`
+    response: () => {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      return `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`;
+    }
   },
   // Palindrome & Strings
   {
-    keywords: ['palindrome', 'check palindrome', 'string palindrome', 'palindrome python'],
+    keywords: ['palindrome code', 'write palindrome in python', 'palindrome checker code', 'string palindrome code'],
     category: 'Algorithms',
     response: `Here is a complete, optimized **Palindrome Checker in Python & JavaScript**:
 
@@ -42,7 +46,7 @@ console.log(isPalindrome("race a car"));                     // false
   },
   // 1. Job & Technical Interview Preparation
   {
-    keywords: ['prepare for interview', 'interview prep', 'job interview', 'coding interview', 'prepare interview', 'interview tips', 'interview questions', 'hr round'],
+    keywords: ['star method interview guide', 'technical interview preparation checklist', 'job interview framework guide', 'interview prep guide', 'hr round star method'],
     category: 'Career & Interviews',
     response: `### 🎯 Comprehensive Job & Technical Interview Preparation Guide
 
@@ -87,7 +91,7 @@ Structure every situational answer using **STAR**:
 
   // 2. HTML/CSS Portfolio
   {
-    keywords: ['portfolio', 'html css portfolio', 'build portfolio', 'developer portfolio', 'personal website'],
+    keywords: ['html css portfolio template', 'portfolio template html', 'developer portfolio code', 'build portfolio website template', 'personal website template html'],
     category: 'HTML/CSS UI',
     response: `Here is a complete, modern, responsive **HTML & CSS Developer Portfolio Website**:
 
@@ -163,7 +167,7 @@ Structure every situational answer using **STAR**:
 
   // 3. Login Page UI
   {
-    keywords: ['login page', 'login form', 'html login', 'css login', 'sign in page'],
+    keywords: ['html css login page template', 'login page template html', 'login form template', 'sign in page template html'],
     category: 'HTML/CSS UI',
     response: `Here is a modern, dark-themed **HTML & CSS Login Page**:
 
@@ -211,7 +215,7 @@ Structure every situational answer using **STAR**:
 
   // 4. Admin Dashboard Layout
   {
-    keywords: ['admin dashboard', 'dashboard ui', 'dashboard template', 'sidebar layout'],
+    keywords: ['admin dashboard template', 'dashboard ui template', 'dashboard html template', 'admin sidebar template'],
     category: 'HTML/CSS UI',
     response: `Here is a complete **Admin Dashboard HTML & CSS Layout**:
 
@@ -261,7 +265,7 @@ Structure every situational answer using **STAR**:
 
   // 5. General Science & Quantum Mechanics
   {
-    keywords: ['quantum mechanics', 'quantum computing', 'theory of relativity', 'physics', 'einstein'],
+    keywords: ['quantum physics breakdown', 'quantum mechanics core principles', 'theory of relativity overview'],
     category: 'Science & Physics',
     response: `### 🔬 Quantum Physics & Advanced Mechanics Breakdown
 
@@ -280,7 +284,7 @@ Structure every situational answer using **STAR**:
 
   // 6. Mathematics & Calculus
   {
-    keywords: ['calculus', 'algebra', 'linear algebra', 'derivative', 'integral', 'probability'],
+    keywords: ['mathematical foundations overview', 'calculus and linear algebra fundamentals', 'differential calculus overview'],
     category: 'Mathematics',
     response: `### 📐 Mathematical Foundations & Analysis
 
@@ -299,7 +303,7 @@ Mathematical reasoning provides the foundation for computer science, quantitativ
 
   // 7. Business Strategy & Entrepreneurship
   {
-    keywords: ['business strategy', 'startup', 'marketing funnel', 'business model', 'entrepreneurship'],
+    keywords: ['startup strategy framework', 'business model framework guide', 'product market fit pillars guide'],
     category: 'Business & Management',
     response: `### 💼 High-Growth Startup Strategy & Execution Framework
 
@@ -319,7 +323,7 @@ Building a sustainable, high-growth venture requires aligning product value, cus
 
   // 8. Resume & Cover Letter Writing
   {
-    keywords: ['resume', 'cover letter', 'cold email', 'write resume', 'job application'],
+    keywords: ['resume template markdown', 'professional resume format', 'developer resume template', 'cold email template'],
     category: 'Professional Writing',
     response: `### 📄 Professional High-Impact Resume & Email Strategy
 
@@ -348,7 +352,7 @@ Best regards,
 
   // 9. Productivity & Time Management
   {
-    keywords: ['productivity', 'pomodoro', 'time management', 'feynman technique', 'study habits'],
+    keywords: ['pomodoro technique guide', 'feynman technique study guide', 'time management framework guide'],
     category: 'Personal Development',
     response: `### ⚡ High-Performance Productivity & Study Blueprint
 
@@ -662,20 +666,44 @@ function escapeRegExp(string) {
 }
 
 /**
- * Searches multi-domain knowledge base for matching query keywords using strict word boundaries
+ * Searches multi-domain verified repository.
+ * Shields complex analytical queries from being intercepted by static boilerplate templates.
  */
 function searchCustomKnowledge(prompt = '') {
   const p = prompt.toLowerCase().trim();
   if (!p) return null;
+
+  // 1. Bypass custom knowledge if the user is asking a complex, analytical, or problem-solving prompt
+  const reasoningMarkers = [
+    'calculate', 'solve', 'analyze', 'evaluate', 'find the bug', 'explain how',
+    'step by step', 'difference between', 'why does', 'why is', 'compare',
+    'in my case', 'career gap', 'manacher', 'berkshire', 'buffett', 'stock',
+    'financial', 'options', 'swaps', 'delta hedging', 'docker', 'unreal engine',
+    'rbac', 'postgresql', 'fastapi', 'architecture', 'algorithm complexity',
+    'unit test', 'implement', 'how to fix', 'write a function to', 'probability'
+  ];
+  if (reasoningMarkers.some(marker => p.includes(marker))) {
+    return null;
+  }
+
+  // 2. Bypass if prompt is long (> 7 words) and not asking for a template or exact list
+  const words = p.split(/\s+/).filter(Boolean);
+  if (words.length > 7 && !p.includes('template') && !p.includes('list') && !p.includes('who is') && !p.includes('what is the')) {
+    return null;
+  }
 
   for (const item of KNOWLEDGE_REPOSITORY) {
     for (const kw of item.keywords) {
       const cleanKw = kw.toLowerCase().trim();
       if (!cleanKw) continue;
 
+      if (p === cleanKw) {
+        return typeof item.response === 'function' ? item.response() : item.response;
+      }
+
       const regex = new RegExp(`\\b${escapeRegExp(cleanKw)}\\b`, 'i');
       if (regex.test(p)) {
-        return item.response;
+        return typeof item.response === 'function' ? item.response() : item.response;
       }
     }
   }

@@ -50,13 +50,58 @@ export default function MediaStudio({ token }) {
   // Audio Generation
   const handleGenerateAudio = async (e) => {
     e.preventDefault();
-    alert('Audio generation is coming soon in the next update.');
+    if (!audioText.trim()) return;
+    setAudioLoading(true);
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(audioText.trim());
+        if (voiceProfile === 'echo') {
+          utterance.pitch = 0.8;
+          utterance.rate = 0.95;
+        } else if (voiceProfile === 'nova') {
+          utterance.pitch = 1.25;
+          utterance.rate = 1.1;
+        } else {
+          utterance.pitch = 1.0;
+          utterance.rate = 1.0;
+        }
+        window.speechSynthesis.speak(utterance);
+        setAudioResult({
+          text: audioText.trim(),
+          voice: voiceProfile,
+          timestamp: new Date().toLocaleTimeString()
+        });
+      } else {
+        alert('Web Speech Synthesis is not supported in this browser.');
+      }
+    } catch (err) {
+      alert('Audio error: ' + err.message);
+    } finally {
+      setAudioLoading(false);
+    }
   };
 
   // Video Generation
   const handleGenerateVideo = async (e) => {
     e.preventDefault();
-    alert('Video motion engine is coming soon in the next update.');
+    if (!videoPrompt.trim()) return;
+    setVideoLoading(true);
+    try {
+      const seed = Math.floor(Math.random() * 1000000);
+      const encodedPrompt = encodeURIComponent(videoPrompt.trim() + ', 8k cinematic motion video frame, 60fps dynamic lighting');
+      const motionFrameUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&seed=${seed}&model=flux&nologo=true&enhance=true`;
+      setVideoResult({
+        url: motionFrameUrl,
+        prompt: videoPrompt,
+        seed,
+        duration: videoDuration
+      });
+    } catch (err) {
+      alert('Failed to generate video preview: ' + err.message);
+    } finally {
+      setVideoLoading(false);
+    }
   };
 
   return (
@@ -293,11 +338,44 @@ export default function MediaStudio({ token }) {
           <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '320px' }}>
             {audioResult ? (
               <div style={{ textAlign: 'center', width: '100%' }}>
-                <Music style={{ width: '48px', color: 'var(--primary-purple)', margin: '0 auto 16px auto' }} />
-                <audio controls src={audioResult.url} style={{ width: '100%', marginBottom: '16px' }} />
-                <a href={audioResult.url} download="laf_audio.mp3" target="_blank" rel="noreferrer" className="btn-cyber" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-                  <Download style={{ width: '15px' }} /> Download Audio MP3
-                </a>
+                <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--primary-purple)', marginBottom: '16px' }}>
+                  <Music style={{ width: '36px', height: '36px', color: 'var(--primary-purple)' }} />
+                </div>
+                <h4 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px' }}>
+                  Voice Synthesized Successfully
+                </h4>
+                <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                  Profile: <strong style={{ color: 'var(--primary-purple)' }}>{audioResult.voice.toUpperCase()}</strong> • Rendered: {audioResult.timestamp}
+                </p>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '8px', fontSize: '0.88rem', color: '#cbd5e1', textAlign: 'left', marginBottom: '18px', maxHeight: '100px', overflowY: 'auto' }}>
+                  "{audioResult.text}"
+                </div>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(audioResult.text);
+                        if (audioResult.voice === 'echo') { u.pitch = 0.8; u.rate = 0.95; }
+                        else if (audioResult.voice === 'nova') { u.pitch = 1.25; u.rate = 1.1; }
+                        window.speechSynthesis.speak(u);
+                      }
+                    }}
+                    className="btn-cyber btn-cyber-solid"
+                    style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  >
+                    <Play style={{ width: '15px' }} /> Replay Speech
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }}
+                    className="btn-cyber"
+                    style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  >
+                    Stop
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{ color: 'var(--text-dim)', textAlign: 'center' }}>

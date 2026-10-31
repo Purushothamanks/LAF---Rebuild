@@ -49,15 +49,30 @@ export function isGreetingQuery(prompt = '') {
   return greetings.includes(p) || p.startsWith('hi ') || p.startsWith('hello ') || p.startsWith('hey ');
 }
 
+export function getDynamicTemporalResponse() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  const year = now.getFullYear();
+  return `We are currently in the year **${year}** (Today is **${dateStr}**).\n\nLAF (Look At The Future) operates on real-time temporal grounding.`;
+}
+
 export function isTemporalQuery(prompt = '') {
   const p = prompt.toLowerCase().trim().replace(/[?!.,]/g, '');
   const queries = [
     'what year are we in', 'what year is it', 'what is the year', 'current year',
     'which year are we in', 'what year we are now', 'what year is now',
     'what is the current year', 'what is current year', 'year now', 'what year are we now',
-    'what is the year now', 'which year is now', 'what is our current year', 'what year'
+    'what is the year now', 'which year is now', 'what is our current year', 'what year',
+    'what is today date', 'what is today\'s date', 'today date', 'current date',
+    'what is the date today', 'what is the date', 'what date is today', 'date today',
+    'todays date', 'which date is today'
   ];
-  return queries.includes(p);
+  return queries.some(q => p === q || p.includes(q));
 }
 
 export function isImageQuery(prompt = '') {
@@ -93,19 +108,26 @@ function sanitizeLafResponse(text = '') {
   return cleaned || text.trim();
 }
 
-/**
- * Call Google Gemini API directly
- */
-async function callGeminiApi({ prompt, history, apiKey, modelName = 'gemini-flash-latest' }) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+const CANDIDATE_GEMINI_MODELS = [
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-3-flash-preview',
+  'gemini-flash-latest',
+  'gemini-3.8-flash'
+];
 
+/**
+ * Call Google Gemini API directly with multi-model automatic failover
+ */
+async function callGeminiApi({ prompt, history, apiKey }) {
   const contents = [];
   if (Array.isArray(history) && history.length > 0) {
-    history.slice(-6).forEach(h => {
+    history.slice(-8).forEach(h => {
       if (h.content && typeof h.content === 'string') {
         contents.push({
           role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content.substring(0, 1500) }]
+          parts: [{ text: h.content.substring(0, 2000) }]
         });
       }
     });
@@ -127,29 +149,39 @@ async function callGeminiApi({ prompt, history, apiKey, modelName = 'gemini-flas
     }
   };
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  let lastErr = null;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: controller.signal
-  });
+  for (const modelName of CANDIDATE_GEMINI_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
 
-  clearTimeout(timeoutId);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
 
-  if (!res.ok) {
-    throw new Error(`Gemini API returned status ${res.status}`);
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        continue;
+      }
+
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText && rawText.trim()) {
+        return sanitizeLafResponse(rawText.trim());
+      }
+    } catch (err) {
+      lastErr = err;
+      continue;
+    }
   }
 
-  const data = await res.json();
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText || !rawText.trim()) {
-    throw new Error('Gemini response was empty');
-  }
-
-  return sanitizeLafResponse(rawText.trim());
+  throw lastErr || new Error('All Gemini candidate models failed to return content');
 }
 
 /**
@@ -174,7 +206,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
   if (isTemporalQuery(cleanPrompt)) {
     return {
-      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).`,
+      text: getDynamicTemporalResponse(),
       provider: 'LAF AI'
     };
   }
@@ -197,7 +229,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     };
   }
 
-  // 5. Primary Engine: Google Gemini (Fast, accurate, professional)
+  // 5. Primary Engine: Google Gemini (Fast, sub-second, accurate, professional)
   const candidateGeminiKey = (customApiKey && (customApiKey.startsWith('AQ.') || customApiKey.startsWith('AIza')))
     ? customApiKey
     : (process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
@@ -207,29 +239,14 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
       const geminiText = await callGeminiApi({
         prompt: cleanPrompt,
         history,
-        apiKey: candidateGeminiKey,
-        modelName: 'gemini-flash-latest'
+        apiKey: candidateGeminiKey
       });
       return {
         text: geminiText,
         provider: 'LAF AI'
       };
-    } catch (err1) {
-      console.warn('Gemini primary attempt note:', err1.message);
-      try {
-        const fallbackGemini = await callGeminiApi({
-          prompt: cleanPrompt,
-          history,
-          apiKey: candidateGeminiKey,
-          modelName: 'gemini-3.8-flash'
-        });
-        return {
-          text: fallbackGemini,
-          provider: 'LAF AI'
-        };
-      } catch (err2) {
-        console.warn('Gemini secondary attempt note:', err2.message);
-      }
+    } catch (geminiErr) {
+      console.warn('Gemini candidate chain note:', geminiErr.message);
     }
   }
 
@@ -240,9 +257,9 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
         { role: 'system', content: LAF_SYSTEM_INSTRUCTION }
       ];
       if (Array.isArray(history)) {
-        history.slice(-4).forEach(h => {
+        history.slice(-6).forEach(h => {
           if (h.content) {
-            messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content.substring(0, 500) });
+            messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content.substring(0, 1000) });
           }
         });
       }
@@ -273,19 +290,31 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     }
   }
 
-  // 7. Secondary Cloud Engine: Pollinations AI (openai-fast)
+  // 7. Secondary Cloud Engine: Pollinations AI (openai-fast with history preservation)
   try {
+    const messages = [
+      { role: 'system', content: LAF_SYSTEM_INSTRUCTION }
+    ];
+    if (Array.isArray(history) && history.length > 0) {
+      history.slice(-6).forEach(h => {
+        if (h.content && typeof h.content === 'string') {
+          messages.push({
+            role: h.role === 'user' ? 'user' : 'assistant',
+            content: h.content.substring(0, 1000)
+          });
+        }
+      });
+    }
+    messages.push({ role: 'user', content: cleanPrompt });
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     const res = await fetch('https://text.pollinations.ai/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages: [
-          { role: 'system', content: LAF_SYSTEM_INSTRUCTION },
-          { role: 'user', content: cleanPrompt }
-        ],
+        messages,
         model: 'openai-fast',
         temperature: 0.5
       }),
@@ -296,7 +325,15 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
     if (res.ok) {
       const text = await res.text();
-      if (text && text.trim()) {
+      // Ensure rate limit strings or errors are not passed as legitimate AI answers
+      if (
+        text &&
+        text.trim() &&
+        !text.includes('Free limit reached') &&
+        !text.includes('Please wait') &&
+        !text.includes('pollen key') &&
+        !text.includes('Rate limit')
+      ) {
         return {
           text: sanitizeLafResponse(text.trim()),
           provider: 'LAF AI'
@@ -381,4 +418,29 @@ export function createLocalSession(username) {
       userPreferences: db.userPreferences
     }
   };
+}
+
+export function searchLocalMemory(username, query = '') {
+  const db = getLocalUserDb(username);
+  if (!db || !Array.isArray(db.conversations)) return [];
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return [];
+
+  const matches = [];
+  for (const conv of db.conversations) {
+    if (Array.isArray(conv.messages)) {
+      for (const m of conv.messages) {
+        if (m.content && typeof m.content === 'string' && m.content.toLowerCase().includes(q)) {
+          matches.push({
+            conversationTitle: conv.title || 'Conversation',
+            conversationId: conv.id,
+            date: new Date(conv.updatedAt || conv.createdAt).toLocaleDateString(),
+            role: m.role || 'assistant',
+            content: m.content
+          });
+        }
+      }
+    }
+  }
+  return matches;
 }

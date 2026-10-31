@@ -662,20 +662,44 @@ function escapeRegExp(string) {
 }
 
 /**
- * Searches multi-domain knowledge base for matching query keywords using strict word boundaries
+ * Searches multi-domain verified repository.
+ * Shields complex analytical queries from being intercepted by static boilerplate templates.
  */
 function searchCustomKnowledge(prompt = '') {
   const p = prompt.toLowerCase().trim();
   if (!p) return null;
+
+  // 1. Bypass custom knowledge if the user is asking a complex, analytical, or problem-solving prompt
+  const reasoningMarkers = [
+    'calculate', 'solve', 'analyze', 'evaluate', 'find the bug', 'explain how',
+    'step by step', 'difference between', 'why does', 'why is', 'compare',
+    'in my case', 'career gap', 'manacher', 'berkshire', 'buffett', 'stock',
+    'financial', 'options', 'swaps', 'delta hedging', 'docker', 'unreal engine',
+    'rbac', 'postgresql', 'fastapi', 'architecture', 'algorithm complexity',
+    'unit test', 'implement', 'how to fix', 'write a function to', 'probability'
+  ];
+  if (reasoningMarkers.some(marker => p.includes(marker))) {
+    return null;
+  }
+
+  // 2. Bypass if prompt is long (> 7 words) and not asking for a template or exact list
+  const words = p.split(/\s+/).filter(Boolean);
+  if (words.length > 7 && !p.includes('template') && !p.includes('list') && !p.includes('who is') && !p.includes('what is the')) {
+    return null;
+  }
 
   for (const item of KNOWLEDGE_REPOSITORY) {
     for (const kw of item.keywords) {
       const cleanKw = kw.toLowerCase().trim();
       if (!cleanKw) continue;
 
+      if (p === cleanKw) {
+        return typeof item.response === 'function' ? item.response() : item.response;
+      }
+
       const regex = new RegExp(`\\b${escapeRegExp(cleanKw)}\\b`, 'i');
       if (regex.test(p)) {
-        return item.response;
+        return typeof item.response === 'function' ? item.response() : item.response;
       }
     }
   }

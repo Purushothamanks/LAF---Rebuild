@@ -313,7 +313,14 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
  */
 async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt }) {
   if (!apiKey) return null;
-  const models = ['gemini-flash-latest', 'gemini-3.8-flash'];
+  const models = [
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
+    'gemini-flash-latest',
+    'gemini-3.8-flash'
+  ];
 
   for (const m of models) {
     try {
@@ -570,15 +577,19 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   }
 
   if (isTemporalQuery(cleanPrompt)) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     return {
-      text: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+      text: `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
       provider: 'LAF Temporal Engine (2026)'
     };
   }
 
   if (isDateQuery(cleanPrompt)) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     return {
-      text: `Today's date is **August 8, 2026**.`,
+      text: `Today's date is **${dateStr}**.`,
       provider: 'LAF Temporal Engine (2026)'
     };
   }

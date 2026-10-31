@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Database, Search, ShieldCheck, Clock, MessageSquare, Key } from 'lucide-react';
 import { apiUrl } from '../api';
+import { searchLocalMemory } from '../utils/aiClient';
 
 export default function MemoryVault({ user, token }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,22 +11,35 @@ export default function MemoryVault({ user, token }) {
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+
     setSearching(true);
     setSearched(true);
+
+    let foundBackend = false;
 
     try {
       const res = await fetch(apiUrl(`/api/chat/memory-search?q=${encodeURIComponent(searchQuery)}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.success) {
-        setResults(data.memoryResults || []);
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.memoryResults)) {
+          setResults(data.memoryResults);
+          foundBackend = true;
+        }
       }
     } catch (e) {
-      console.error(e);
-    } finally {
-      setSearching(false);
+      console.warn('Backend memory search note:', e.message);
     }
+
+    if (!foundBackend) {
+      const localResults = searchLocalMemory(user?.username, searchQuery);
+      setResults(localResults);
+    }
+
+    setSearching(false);
   };
 
   return (
