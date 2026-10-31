@@ -19,6 +19,23 @@ CRITICAL INSTRUCTIONS:
 4. ACCURACY & HIGH QUALITY: Provide precise, well-structured, production-ready answers. Use GitHub-flavored markdown with clean syntax-highlighted code blocks, clear headings, and concise explanations.
 5. TEMPORAL GROUNDING: Current year is 2026.`;
 
+export function getEffectiveSystemInstruction(username = '') {
+  let customDirectivesText = '';
+  if (typeof window !== 'undefined') {
+    try {
+      const key = `laf_directives_${(username || 'default').toLowerCase()}`;
+      const saved = localStorage.getItem(key) || localStorage.getItem('laf_directives_default');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          customDirectivesText = `\n\nUSER ENGINEERING DIRECTIVES (ACTIVE):\n` + parsed.map((d, i) => `${i + 1}. ${d}`).join('\n');
+        }
+      }
+    } catch (e) {}
+  }
+  return LAF_SYSTEM_INSTRUCTION + customDirectivesText;
+}
+
 export function isIdentityQuery(prompt = '') {
   const p = prompt.toLowerCase().trim().replace(/[?!.,]/g, '');
   const triggers = [
@@ -120,7 +137,7 @@ const CANDIDATE_GEMINI_MODELS = [
 /**
  * Call Google Gemini API directly with multi-model automatic failover
  */
-async function callGeminiApi({ prompt, history, apiKey }) {
+async function callGeminiApi({ prompt, history, apiKey, username = '' }) {
   const contents = [];
   if (Array.isArray(history) && history.length > 0) {
     history.slice(-8).forEach(h => {
@@ -140,7 +157,7 @@ async function callGeminiApi({ prompt, history, apiKey }) {
 
   const body = {
     systemInstruction: {
-      parts: [{ text: LAF_SYSTEM_INSTRUCTION }]
+      parts: [{ text: getEffectiveSystemInstruction(username) }]
     },
     contents,
     generationConfig: {
@@ -239,7 +256,8 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
       const geminiText = await callGeminiApi({
         prompt: cleanPrompt,
         history,
-        apiKey: candidateGeminiKey
+        apiKey: candidateGeminiKey,
+        username
       });
       return {
         text: geminiText,
@@ -254,7 +272,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
   if (customApiKey && customApiKey.startsWith('sk-')) {
     try {
       const messages = [
-        { role: 'system', content: LAF_SYSTEM_INSTRUCTION }
+        { role: 'system', content: getEffectiveSystemInstruction(username) }
       ];
       if (Array.isArray(history)) {
         history.slice(-6).forEach(h => {
@@ -293,7 +311,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
   // 7. Secondary Cloud Engine: Pollinations AI (openai-fast with history preservation)
   try {
     const messages = [
-      { role: 'system', content: LAF_SYSTEM_INSTRUCTION }
+      { role: 'system', content: getEffectiveSystemInstruction(username) }
     ];
     if (Array.isArray(history) && history.length > 0) {
       history.slice(-6).forEach(h => {
