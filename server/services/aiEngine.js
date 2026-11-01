@@ -182,13 +182,14 @@ function cleanImagePrompt(userPrompt = '') {
     .trim();
 
   if (!cleaned) cleaned = userPrompt;
-  return `${cleaned}, 8k resolution, photorealistic, cinematic lighting, ultra-detailed masterpiece --no watermark, text, logo, signature, label, brand`;
+  return `${cleaned}, ultra-detailed masterpiece, 8k resolution, photorealistic, professional photography, realistic texture, cinematic lighting, sharp focus`;
 }
 
 function generateImageUrl(promptText) {
   const seed = Math.floor(Math.random() * 10000000);
   const encodedPrompt = encodeURIComponent(promptText);
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true`;
+  const negative = encodeURIComponent('watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${negative}`;
 }
 
 async function callCloudImageGen(promptText, candidateKeys = []) {
@@ -589,7 +590,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     const cloudImage = await callCloudImageGen(formattedPrompt, candidateKeys);
     if (cloudImage && cloudImage.url) {
       return {
-        text: `![${cleanPrompt}](${cloudImage.url})\n\nImage generated successfully !`,
+        text: `![${cleanPrompt}](${cloudImage.url})`,
         provider: cloudImage.provider
       };
     }
@@ -597,7 +598,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     // Guaranteed High-Resolution FLUX Neural Engine
     const imageUrl = generateImageUrl(formattedPrompt);
     return {
-      text: `![${cleanPrompt}](${imageUrl})\n\nImage generated successfully !`,
+      text: `![${cleanPrompt}](${imageUrl})`,
       provider: 'LAF FLUX Neural Engine'
     };
   }

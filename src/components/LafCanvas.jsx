@@ -247,30 +247,28 @@ export default function LafCanvas({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: '#0d111a',
-        borderLeft: isFullscreen ? 'none' : '1px solid var(--ds-border)',
-        boxShadow: '-8px 0 32px rgba(0,0,0,0.5)',
-        zIndex: isFullscreen ? 2000 : 80,
+        width: '100%',
+        background: isFullscreen ? '#0d111a' : 'transparent',
+        border: 'none',
+        zIndex: isFullscreen ? 9999 : 80,
         position: isFullscreen ? 'fixed' : 'relative',
-        top: isFullscreen ? 0 : 'auto',
-        left: isFullscreen ? 0 : 'auto',
-        right: isFullscreen ? 0 : 'auto',
-        bottom: isFullscreen ? 0 : 'auto',
-        width: isFullscreen ? '100vw' : '100%',
-        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        overflow: 'hidden'
+        inset: isFullscreen ? 0 : 'auto',
+        borderRadius: isFullscreen ? 0 : 'inherit',
+        overflow: 'hidden',
+        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
       }}
     >
-      {/* LAF Canvas Header - Pixel Perfect Alignment & Elevated Stacking */}
+      {/* LAF Canvas Header - Blur-Transparent Frosted Glass */}
       <div 
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 18px',
+          padding: '12px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
-          background: 'rgba(15, 23, 42, 0.95)',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(15, 23, 42, 0.72)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           gap: '12px',
           flexShrink: 0,
           position: 'relative',
@@ -520,11 +518,22 @@ export default function LafCanvas({
         </div>
       </div>
 
-      {/* Canvas Body Viewport */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+      {/* Canvas Body Viewport - Frosted Blur Transparent */}
+      <div 
+        style={{ 
+          flex: 1, 
+          overflow: 'hidden', 
+          position: 'relative', 
+          display: 'flex', 
+          flexDirection: 'column',
+          background: 'rgba(11, 15, 24, 0.6)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)'
+        }}
+      >
         {/* Tab 1: Interactive Preview for Web Code */}
         {activeTab === 'preview' && isCode && (
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={{ width: '100%', height: '100%', background: 'transparent' }}>
             <AgentSandbox
               code={artifact.code}
               language={artifact.language || 'html'}
@@ -540,8 +549,8 @@ export default function LafCanvas({
               width: '100%', 
               height: '100%', 
               overflowY: 'auto', 
-              background: '#0a0d14',
-              padding: '16px',
+              background: 'rgba(8, 11, 18, 0.75)',
+              padding: '18px 24px',
               fontFamily: 'var(--font-mono)'
             }}
           >
@@ -558,8 +567,8 @@ export default function LafCanvas({
               width: '100%', 
               height: '100%', 
               overflowY: 'auto', 
-              padding: '28px 36px',
-              background: 'var(--ds-bg-sidebar)',
+              padding: '32px 44px',
+              background: 'rgba(15, 23, 42, 0.35)',
               color: 'var(--ds-text-primary)'
             }}
           >
@@ -580,8 +589,8 @@ export default function LafCanvas({
               width: '100%', 
               height: '100%', 
               overflowY: 'auto', 
-              background: '#0a0d14',
-              padding: '20px',
+              background: 'rgba(8, 11, 18, 0.75)',
+              padding: '20px 26px',
               fontFamily: 'var(--font-mono)'
             }}
           >

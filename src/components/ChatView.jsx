@@ -95,7 +95,7 @@ renderer.image = function ({ href, title, text }) {
       </button>
     </div>
     <div class="laf-image-badge-caption">
-      <span class="laf-image-badge-sparkle">✨</span> Powered by LAF Ai
+      <span class="laf-image-badge-sparkle">✨</span> Image generated successfully !
     </div>
   </div>`;
 };
@@ -641,7 +641,7 @@ export default function ChatView({
       {/* Primary Chat Conversation Pane */}
       <div 
         style={{ 
-          flex: isCanvasOpen ? '1 1 50%' : '1 1 100%', 
+          flex: '1 1 100%', 
           display: 'flex', 
           flexDirection: 'column', 
           height: '100%', 
@@ -1305,23 +1305,23 @@ export default function ChatView({
 
       </div>
 
-      {/* Side-by-Side LAF Canvas Panel */}
+      {/* Floating Centered Blur-Transparent LAF Canvas Modal Overlay */}
       {isCanvasOpen && (
         <div 
-          className="laf-canvas-container las-canvas-container"
-          style={{ 
-            flex: '1 1 50%', 
-            height: '100%', 
-            minWidth: '340px',
-            borderLeft: '1px solid var(--ds-border)'
-          }}
+          className="laf-canvas-floating-overlay"
+          onClick={() => setIsCanvasOpen(false)}
         >
-          <LafCanvas
-            isOpen={isCanvasOpen}
-            onClose={() => setIsCanvasOpen(false)}
-            artifact={canvasArtifact}
-            isLiveUpdating={isLiveGenerating}
-          />
+          <div 
+            className="laf-canvas-floating-window"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <LafCanvas
+              isOpen={isCanvasOpen}
+              onClose={() => setIsCanvasOpen(false)}
+              artifact={canvasArtifact}
+              isLiveUpdating={isLiveGenerating}
+            />
+          </div>
         </div>
       )}
 

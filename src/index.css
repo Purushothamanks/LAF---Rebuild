@@ -671,45 +671,50 @@ p code, li code {
   position: relative;
   display: flex;
   flex-direction: column;
-  max-width: 100%;
+  width: 100%;
+  max-width: 520px;
   margin: 14px 0;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--ds-border);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-  background: var(--ds-bg-card);
+  border: 1px solid rgba(79, 117, 255, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 25px rgba(59, 130, 246, 0.15);
+  background: #0d121f;
 }
 
 .laf-img-wrapper {
   position: relative;
   width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #080b12;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .laf-generated-img {
-  display: block;
-  max-width: 100%;
-  max-height: 520px;
-  width: auto;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.3s ease;
 }
 
 .laf-generated-img:hover {
-  transform: scale(1.015);
+  transform: scale(1.02);
 }
 
 .laf-image-badge-caption {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 9px 16px;
-  background: rgba(15, 23, 42, 0.95);
+  gap: 8px;
+  padding: 11px 16px;
+  background: rgba(15, 23, 42, 0.98);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   color: #93c5fd;
   text-align: center;
 }
@@ -1502,9 +1507,59 @@ p code, li code {
   background: rgba(79, 117, 255, 0.15);
 }
 
+/* Floating Centered Canvas with Frosted Glass Blur & Transparency */
+.laf-canvas-floating-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  background: rgba(3, 7, 18, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: canvasFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.laf-canvas-floating-window {
+  position: relative;
+  width: 92vw;
+  max-width: 1160px;
+  height: 86vh;
+  max-height: 860px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid rgba(79, 117, 255, 0.35);
+  background: rgba(13, 17, 26, 0.78);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.85), 0 0 45px rgba(59, 130, 246, 0.22);
+  overflow: hidden;
+  animation: floatCanvasIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes floatCanvasIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .laf-canvas-panel,
 .las-canvas-panel {
-  border-left: 1px solid var(--ds-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  overflow: hidden;
 }
 
 .laf-canvas-fullscreen,
@@ -1514,6 +1569,8 @@ p code, li code {
   width: 100vw !important;
   height: 100vh !important;
   z-index: 9999 !important;
+  border-radius: 0 !important;
+  border: none !important;
 }
 
 .document-canvas-body h1 {
@@ -1568,15 +1625,16 @@ p code, li code {
   font-weight: 700;
 }
 
-@media (max-width: 900px) {
-  .laf-canvas-container,
-  .las-canvas-container {
-    position: fixed !important;
-    inset: 60px 0 0 0 !important;
-    width: 100vw !important;
-    height: calc(100vh - 60px) !important;
-    z-index: 1000 !important;
-    border-left: none !important;
+@media (max-width: 768px) {
+  .laf-canvas-floating-overlay {
+    padding: 8px !important;
+  }
+  .laf-canvas-floating-window {
+    width: 98vw !important;
+    max-width: 100vw !important;
+    height: 94vh !important;
+    max-height: 96vh !important;
+    border-radius: 14px !important;
   }
 }
 

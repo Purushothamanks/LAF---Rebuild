@@ -122,9 +122,10 @@ export function generateImageUrl(promptText) {
     .replace(/^(image|picture|photo)\s+(of|for)?\s*/i, '')
     .trim() || promptText;
   const seed = Math.floor(Math.random() * 10000000);
-  const promptWithNegatives = `${cleaned}, photorealistic, 8k resolution, masterpiece, professional photography, cinematic lighting --no watermark, text, logo, signature, label, brand`;
-  const encoded = encodeURIComponent(promptWithNegatives);
-  return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true`;
+  const cleanPrompt = `${cleaned}, ultra-detailed masterpiece, 8k resolution, photorealistic, professional photography, realistic texture, cinematic lighting, sharp focus`;
+  const encoded = encodeURIComponent(cleanPrompt);
+  const negative = encodeURIComponent('watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
+  return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${negative}`;
 }
 
 function sanitizeLafResponse(text = '') {
@@ -285,7 +286,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     if (isImageQuery(cleanPrompt)) {
       const url = generateImageUrl(cleanPrompt);
       return {
-        text: `![${cleanPrompt}](${url})\n\nImage generated successfully !`,
+        text: `![${cleanPrompt}](${url})`,
         provider: 'LAF Image Engine'
       };
     }
