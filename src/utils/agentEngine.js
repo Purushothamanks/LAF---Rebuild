@@ -63,7 +63,7 @@ export function extractCanvasArtifact(markdownText = '') {
 /**
  * Canvas auto-open rule:
  * Canvas only automatically opens for Web UI apps or full document previews.
- * Normal code snippets stay in chat with the option to click "Preview in Las Canvas".
+ * Normal code snippets stay in chat with the option to click "Preview in LAF Canvas".
  */
 export function shouldAutoOpenCanvas(artifact) {
   if (!artifact) return false;

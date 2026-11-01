@@ -926,7 +926,7 @@ p code, li code {
   50% { opacity: 0; }
 }
 
-/* Open in Las Canvas Button */
+/* Open in LAF Canvas Button */
 .open-canvas-action-pill {
   display: inline-flex;
   align-items: center;
@@ -1285,6 +1285,40 @@ p code, li code {
   50% { transform: scale(1.3); opacity: 1; }
 }
 
+@keyframes canvasFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.export-modal-backdrop {
+  animation: canvasFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.export-format-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  text-align: left;
+}
+
+.export-format-row-btn:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.export-format-row-btn:active {
+  transform: scale(0.99);
+}
+
 .export-option-btn {
   display: flex;
   align-items: center;
@@ -1302,10 +1336,12 @@ p code, li code {
   background: rgba(79, 117, 255, 0.15);
 }
 
+.laf-canvas-panel,
 .las-canvas-panel {
   border-left: 1px solid var(--ds-border);
 }
 
+.laf-canvas-fullscreen,
 .las-canvas-fullscreen {
   position: fixed !important;
   inset: 0 !important;
@@ -1367,6 +1403,7 @@ p code, li code {
 }
 
 @media (max-width: 900px) {
+  .laf-canvas-container,
   .las-canvas-container {
     position: fixed !important;
     inset: 60px 0 0 0 !important;

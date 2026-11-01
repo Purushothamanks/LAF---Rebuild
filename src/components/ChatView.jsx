@@ -9,7 +9,7 @@ import DOMPurify from 'dompurify';
 import { apiUrl } from '../api';
 import { generateRealtimeResponse, saveLocalConversation, isImageQuery } from '../utils/aiClient';
 import AgentSandbox from './AgentSandbox';
-import LasCanvas from './LasCanvas';
+import LafCanvas from './LafCanvas';
 import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAutoOpenCanvas, isComplexAgentTask } from '../utils/agentEngine';
 
 if (typeof window !== 'undefined') {
@@ -126,7 +126,7 @@ export default function ChatView({
   const isAgentMode = true;
   const [expandedMilestones, setExpandedMilestones] = useState({});
 
-  // Las Canvas States
+  // LAF Canvas States
   const [canvasArtifact, setCanvasArtifact] = useState(null);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
   const [isLiveGenerating, setIsLiveGenerating] = useState(false);
@@ -646,7 +646,7 @@ export default function ChatView({
                 </h1>
                 
                 <p className="laf-hero-subheading">
-                  Experience live Las Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
+                  Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
                 </p>
 
                 {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
@@ -943,7 +943,7 @@ export default function ChatView({
                             <span className="streaming-cursor"></span>
                           )}
 
-                          {/* Open in Las Canvas Button for Code or Documents */}
+                          {/* Open in LAF Canvas Button for Code or Documents */}
                           {!isUser && !m.isTyping && extractCanvasArtifact(m.content) && (
                             <div style={{ marginTop: '12px' }}>
                               <button
@@ -956,7 +956,7 @@ export default function ChatView({
                                 className="open-canvas-action-pill"
                               >
                                 <Sparkles style={{ width: '14px', height: '14px', color: '#60a5fa' }} />
-                                <span>Preview in Las Canvas</span>
+                                <span>Preview in LAF Canvas</span>
                               </button>
                             </div>
                           )}
@@ -1172,10 +1172,10 @@ export default function ChatView({
 
       </div>
 
-      {/* Side-by-Side Las Canvas Panel */}
+      {/* Side-by-Side LAF Canvas Panel */}
       {isCanvasOpen && (
         <div 
-          className="las-canvas-container"
+          className="laf-canvas-container las-canvas-container"
           style={{ 
             flex: '1 1 50%', 
             height: '100%', 
@@ -1183,7 +1183,7 @@ export default function ChatView({
             borderLeft: '1px solid var(--ds-border)'
           }}
         >
-          <LasCanvas
+          <LafCanvas
             isOpen={isCanvasOpen}
             onClose={() => setIsCanvasOpen(false)}
             artifact={canvasArtifact}

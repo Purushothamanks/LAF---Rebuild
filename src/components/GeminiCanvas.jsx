@@ -1,1 +1,1 @@
-export { default } from './LasCanvas';
+export { default } from './LafCanvas';
