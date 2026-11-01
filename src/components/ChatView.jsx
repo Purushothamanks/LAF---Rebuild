@@ -15,48 +15,75 @@ import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAu
 if (typeof window !== 'undefined') {
   window.downloadLafImage = async function (url, filename) {
     const safeFilename = filename || `laf_image_${Date.now()}.jpg`;
+
+    // Method 1: Fetch as Blob and trigger standard link download
     try {
       const res = await fetch(url, { mode: 'cors' });
-      if (!res.ok) throw new Error('Fetch failed');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = safeFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = safeFilename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        return;
+      }
     } catch (err) {
-      // Robust Canvas draw fallback (bypasses CORS restrictions)
-      try {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function() {
+      console.warn('Direct blob fetch failed, trying canvas/direct fallback:', err);
+    }
+
+    // Method 2: HTML5 Canvas Export with crossOrigin
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () {
+        try {
           const canvas = document.createElement('canvas');
           canvas.width = img.naturalWidth || img.width;
           canvas.height = img.naturalHeight || img.height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
-          canvas.toBlob(function(b) {
-            if (!b) { window.open(url, '_blank'); return; }
-            const bUrl = URL.createObjectURL(b);
-            const a = document.createElement('a');
-            a.href = bUrl;
-            a.download = safeFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(bUrl), 2000);
+          canvas.toBlob(function (blob) {
+            if (blob) {
+              const blobUrl = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = blobUrl;
+              a.download = safeFilename;
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            } else {
+              fallbackDirectLink(url, safeFilename);
+            }
           }, 'image/jpeg', 0.95);
-        };
-        img.onerror = function() {
-          window.open(url, '_blank');
-        };
-        img.src = url;
-      } catch (e) {
-        window.open(url, '_blank');
-      }
+        } catch (e) {
+          fallbackDirectLink(url, safeFilename);
+        }
+      };
+      img.onerror = function () {
+        fallbackDirectLink(url, safeFilename);
+      };
+      img.src = url;
+      return;
+    } catch (e) {
+      fallbackDirectLink(url, safeFilename);
+    }
+
+    function fallbackDirectLink(targetUrl, fname) {
+      const a = document.createElement('a');
+      a.href = targetUrl;
+      a.download = fname;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 }
@@ -72,7 +99,7 @@ renderer.code = function ({ text, lang }) {
   return `<div class="code-box">
     <div class="code-box-header">
       <span class="code-box-lang">${language}</span>
-      <button class="code-box-copy-btn" onclick="navigator.clipboard.writeText(decodeURIComponent('${encodedText}')); this.innerText = 'Copied!'; setTimeout(() => this.innerText = 'Copy code', 2000);">
+      <button class="code-box-copy-btn" data-copy-text="${encodedText}" type="button">
         Copy code
       </button>
     </div>
@@ -86,7 +113,7 @@ renderer.image = function ({ href, title, text }) {
   return `<div class="laf-image-card">
     <div class="laf-img-wrapper">
       <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" />
-      <button onclick="window.downloadLafImage(decodeURIComponent('${encodedHref}'), 'laf_ai_image.jpg')" class="laf-img-download-icon" title="Download Image" type="button">
+      <button data-download-url="${encodedHref}" class="laf-img-download-icon" title="Download Image" type="button" aria-label="Download Image">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
@@ -265,6 +292,57 @@ export default function ChatView({
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
+  // Delegated Click Interceptor for Generated Images & Code Copy (bypasses any DOMPurify stripping)
+  useEffect(() => {
+    const handleGlobalClick = async (e) => {
+      // 1. Image Download Button Click
+      const dlBtn = e.target.closest('.laf-img-download-icon');
+      if (dlBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const rawUrl = dlBtn.getAttribute('data-download-url');
+        if (rawUrl) {
+          const url = decodeURIComponent(rawUrl);
+          // Visual confirmation animation on icon
+          const originalHTML = dlBtn.innerHTML;
+          dlBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          dlBtn.classList.add('laf-download-active');
+          setTimeout(() => {
+            dlBtn.innerHTML = originalHTML;
+            dlBtn.classList.remove('laf-download-active');
+          }, 2200);
+
+          if (window.downloadLafImage) {
+            window.downloadLafImage(url, 'laf_ai_image.jpg');
+          }
+        }
+        return;
+      }
+
+      // 2. Code Box Copy Button Click
+      const copyBtn = e.target.closest('.code-box-copy-btn');
+      if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const rawCode = copyBtn.getAttribute('data-copy-text');
+        if (rawCode) {
+          try {
+            await navigator.clipboard.writeText(decodeURIComponent(rawCode));
+            const orig = copyBtn.innerText;
+            copyBtn.innerText = 'Copied!';
+            setTimeout(() => { copyBtn.innerText = orig || 'Copy code'; }, 2000);
+          } catch (err) {
+            console.warn('Copy failed:', err);
+          }
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
 
   const toggleVoiceTyping = () => {
@@ -1025,7 +1103,7 @@ export default function ChatView({
                                 </div>
 
                                 <div className="doc-presentation-footer-note">
-                                  ✨ Document created successfully and displayed in LAF Canvas on the right.
+                                  ✨ Document created successfully and ready in LAF Canvas.
                                 </div>
                               </div>
                             );
@@ -1050,8 +1128,13 @@ export default function ChatView({
                                   }}
                                   dangerouslySetInnerHTML={{
                                     __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
-                                      ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
-                                      ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
+                                      ADD_TAGS: ['svg', 'path', 'polyline', 'line', 'button'],
+                                      ADD_ATTR: [
+                                        'target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 
+                                        'stroke-width', 'stroke-linecap', 'stroke-linejoin', 
+                                        'data-download-url', 'data-copy-text', 'class', 'title', 'type', 'aria-label'
+                                      ],
+                                      ALLOW_DATA_ATTR: true
                                     })
                                   }}
                                 />

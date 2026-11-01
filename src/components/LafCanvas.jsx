@@ -260,23 +260,10 @@ export default function LafCanvas({
     >
       {/* LAF Canvas Header - Blur-Transparent Frosted Glass */}
       <div 
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '12px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          background: 'rgba(15, 23, 42, 0.72)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          gap: '12px',
-          flexShrink: 0,
-          position: 'relative',
-          zIndex: 100
-        }}
+        className="laf-canvas-header"
       >
         {/* Left Title & Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        <div className="laf-canvas-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div 
             style={{
               width: '32px',
@@ -313,6 +300,7 @@ export default function LafCanvas({
 
         {/* Center Tabs */}
         <div 
+          className="laf-canvas-header-tabs"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -417,7 +405,7 @@ export default function LafCanvas({
         </div>
 
         {/* Right Action Tools */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="laf-canvas-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {/* Export Notice Badge */}
           {exportNotice && (
             <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10b981', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
@@ -607,15 +595,16 @@ export default function LafCanvas({
           className="export-modal-backdrop"
           onClick={() => setShowExportModal(false)}
           style={{
-            position: 'absolute',
+            position: 'fixed',
             inset: 0,
-            background: 'rgba(5, 8, 16, 0.8)',
-            backdropFilter: 'blur(10px)',
+            background: 'rgba(5, 8, 16, 0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '20px',
-            zIndex: 5000,
+            padding: '16px',
+            zIndex: 99999,
             animation: 'canvasFadeIn 0.15s ease'
           }}
         >
@@ -625,11 +614,12 @@ export default function LafCanvas({
             style={{
               width: '100%',
               maxWidth: '460px',
+              maxHeight: '90vh',
               background: '#0f172a',
               border: '1px solid rgba(79, 117, 255, 0.35)',
               borderRadius: '16px',
               boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 35px rgba(59, 130, 246, 0.15)',
-              overflow: 'hidden',
+              overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column'
             }}

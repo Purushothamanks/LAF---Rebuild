@@ -346,6 +346,23 @@ export default function App() {
         />
       )}
 
+      {/* Mobile & Click-Away Sidebar Backdrop */}
+      {user && sidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 950,
+            transition: 'opacity 0.2s ease'
+          }}
+        />
+      )}
+
       {/* Main Workspace Body */}
       {user && (
         <main style={{ width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
