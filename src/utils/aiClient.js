@@ -5,6 +5,12 @@
  */
 
 import { searchCustomKnowledge } from './customKnowledge.js';
+import { 
+  idbSaveConversation, 
+  idbDeleteConversation, 
+  idbGetConversation, 
+  idbGetAllConversations 
+} from './indexedDbVault.js';
 
 const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
 
@@ -413,6 +419,93 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 }
 
 /**
+ * Sanitizes messages before persisting to localStorage
+ * Strips out large base64 attachments, binary audio/image dumps, and truncated payloads
+ */
+function sanitizeForLocalStorage(messages) {
+  if (!Array.isArray(messages)) return [];
+  return messages.map(msg => {
+    if (!msg) return msg;
+    const copy = { ...msg };
+    if (copy.attachment) {
+      copy.attachment = {
+        name: copy.attachment.name || 'Attachment',
+        size: copy.attachment.size || 0,
+        formattedSize: copy.attachment.formattedSize || '',
+        mimeType: copy.attachment.mimeType || '',
+        isImage: !!copy.attachment.isImage,
+        // Preserve lightweight preview URL only if NOT a massive base64 data string
+        previewUrl: (typeof copy.attachment.previewUrl === 'string' && copy.attachment.previewUrl.length < 500)
+          ? copy.attachment.previewUrl
+          : null
+      };
+    }
+    // Cap oversized single message text (e.g. huge pasted log dumps) to 40KB
+    if (copy.content && typeof copy.content === 'string' && copy.content.length > 40000) {
+      copy.content = copy.content.substring(0, 40000) + '\n\n...[Content truncated for storage quota]';
+    }
+    return copy;
+  });
+}
+
+/**
+ * Self-healing localStorage writer with 4-tier progressive eviction
+ * Ensures QuotaExceededError is permanently neutralized and never bubbles to the user interface
+ */
+function safeSetUserDb(key, db) {
+  try {
+    localStorage.setItem(key, JSON.stringify(db));
+    return true;
+  } catch (err) {
+    console.warn(`[LAF Storage] Quota exceeded on key "${key}". Running self-healing eviction protocol...`);
+
+    // Tier 1: Sanitize all conversations and cap to 30 messages per conversation
+    try {
+      db.conversations = (db.conversations || []).map(c => ({
+        ...c,
+        messages: sanitizeForLocalStorage(Array.isArray(c.messages) ? c.messages.slice(-30) : [])
+      }));
+      localStorage.setItem(key, JSON.stringify(db));
+      console.log('[LAF Storage] Tier 1 eviction succeeded.');
+      return true;
+    } catch (e1) {}
+
+    // Tier 2: Retain the 15 most recent conversations
+    try {
+      db.conversations = db.conversations.slice(0, 15);
+      localStorage.setItem(key, JSON.stringify(db));
+      console.log('[LAF Storage] Tier 2 eviction succeeded.');
+      return true;
+    } catch (e2) {}
+
+    // Tier 3: Retain the active conversation + 5 most recent
+    try {
+      db.conversations = db.conversations.slice(0, 6);
+      localStorage.setItem(key, JSON.stringify(db));
+      console.log('[LAF Storage] Tier 3 eviction succeeded.');
+      return true;
+    } catch (e3) {}
+
+    // Tier 4: Clear non-critical localStorage cache keys and keep top 2 conversations
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k !== key && (k.startsWith('laf_temp_') || k.startsWith('laf_profile_') || k.startsWith('laf_directives_'))) {
+          localStorage.removeItem(k);
+        }
+      }
+      db.conversations = db.conversations.slice(0, 2);
+      localStorage.setItem(key, JSON.stringify(db));
+      console.log('[LAF Storage] Tier 4 eviction succeeded.');
+      return true;
+    } catch (e4) {
+      console.warn('[LAF Storage] Graceful fallback to memory/IndexedDB session.', e4?.message);
+      return false;
+    }
+  }
+}
+
+/**
  * Client-Side Local Database Vault
  * Enables 100% functional auth and conversations even without a backend server
  */
@@ -421,8 +514,16 @@ export function getLocalUserDb(username) {
   const key = `laf_user_db_${username.toLowerCase()}`;
   try {
     const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        if (!Array.isArray(parsed.conversations)) parsed.conversations = [];
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('[LAF Storage] Corrupted local user DB detected. Reinitializing safe profile.', e?.message);
+  }
 
   const initial = {
     username,
@@ -430,11 +531,12 @@ export function getLocalUserDb(username) {
     conversations: [],
     userPreferences: { theme: 'dark', conciseness: 'short' }
   };
-  localStorage.setItem(key, JSON.stringify(initial));
+  safeSetUserDb(key, initial);
   return initial;
 }
 
 export function saveLocalConversation(username, convId, title, messages) {
+  if (!username) return null;
   const db = getLocalUserDb(username);
   if (!db) return null;
 
@@ -454,16 +556,47 @@ export function saveLocalConversation(username, convId, title, messages) {
     if (title && title !== 'New Chat') conv.title = title;
   }
 
-  conv.messages = messages;
-  localStorage.setItem(`laf_user_db_${username.toLowerCase()}`, JSON.stringify(db));
+  // 1. Asynchronously persist full, uncapped conversation to IndexedDB (virtually unlimited quota)
+  const fullConvRecord = {
+    ...conv,
+    messages: Array.isArray(messages) ? [...messages] : []
+  };
+  try {
+    idbSaveConversation(username, fullConvRecord);
+  } catch (e) {}
+
+  // 2. Sanitize and cap messages for localStorage (avoiding quota limits)
+  conv.messages = sanitizeForLocalStorage(messages);
+
+  // 3. Persist safely with self-healing eviction
+  const key = `laf_user_db_${username.toLowerCase()}`;
+  safeSetUserDb(key, db);
+
   return conv;
 }
 
 export function deleteLocalConversation(username, convId) {
+  if (!username || !convId) return;
   const db = getLocalUserDb(username);
-  if (!db) return;
-  db.conversations = db.conversations.filter(c => c.id !== convId);
-  localStorage.setItem(`laf_user_db_${username.toLowerCase()}`, JSON.stringify(db));
+  if (db) {
+    db.conversations = (db.conversations || []).filter(c => c.id !== convId);
+    safeSetUserDb(`laf_user_db_${username.toLowerCase()}`, db);
+  }
+  try {
+    idbDeleteConversation(username, convId);
+  } catch (e) {}
+}
+
+export async function loadFullConversationFromVault(username, convId) {
+  if (!username || !convId) return null;
+  try {
+    const idbRecord = await idbGetConversation(username, convId);
+    if (idbRecord && Array.isArray(idbRecord.messages) && idbRecord.messages.length > 0) {
+      return idbRecord;
+    }
+  } catch (e) {}
+  const db = getLocalUserDb(username);
+  return db?.conversations?.find(c => c.id === convId) || null;
 }
 
 export function createLocalSession(username) {

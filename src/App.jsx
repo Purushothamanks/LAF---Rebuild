@@ -11,7 +11,7 @@ import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
 import { apiUrl } from './api';
-import { getLocalUserDb, deleteLocalConversation } from './utils/aiClient';
+import { getLocalUserDb, deleteLocalConversation, loadFullConversationFromVault } from './utils/aiClient';
 
 export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
@@ -163,11 +163,22 @@ export default function App() {
     }
 
     if (!loaded && activeUsername) {
-      const db = getLocalUserDb(activeUsername);
-      const found = db?.conversations?.find(c => c.id === convId);
-      if (found) {
-        setActiveConvId(found.id);
-        setMessages(found.messages || []);
+      try {
+        const fullConv = await loadFullConversationFromVault(activeUsername, convId);
+        if (fullConv && Array.isArray(fullConv.messages)) {
+          setActiveConvId(fullConv.id);
+          setMessages(fullConv.messages);
+          loaded = true;
+        }
+      } catch (vaultErr) {}
+
+      if (!loaded) {
+        const db = getLocalUserDb(activeUsername);
+        const found = db?.conversations?.find(c => c.id === convId);
+        if (found) {
+          setActiveConvId(found.id);
+          setMessages(found.messages || []);
+        }
       }
     }
   };

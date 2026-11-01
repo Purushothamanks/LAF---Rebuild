@@ -390,15 +390,19 @@ export default function ChatView({
         const updatedMessages = [...newHistory, newAssistantMsg];
         setMessages(updatedMessages);
 
-        // Persist to local database
+        // Persist to local database vault (with quota management)
         const convId = activeConvId || `conv_${Date.now()}`;
         setActiveConvId(convId);
         const displayTitle = textToSend
           ? (textToSend.substring(0, 35) + '...')
           : (currentAttachment ? `Attached: ${currentAttachment.name}` : 'New Conversation');
         const title = messages.length === 0 ? displayTitle : undefined;
-        saveLocalConversation(user?.username, convId, title, updatedMessages);
-        fetchConversations();
+        try {
+          saveLocalConversation(user?.username, convId, title, updatedMessages);
+          fetchConversations();
+        } catch (saveErr) {
+          console.warn('[ChatView] Storage persistence note:', saveErr);
+        }
       } catch (clientAiErr) {
         setMessages(prev => [
           ...prev,
