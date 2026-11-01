@@ -121,8 +121,9 @@ export function generateImageUrl(promptText) {
     .replace(/^(image|picture|photo)\s+(of|for)?\s*/i, '')
     .trim() || promptText;
   const seed = Math.floor(Math.random() * 10000000);
-  const encoded = encodeURIComponent(`${cleaned}, 8k resolution, photorealistic, cinematic lighting`);
-  return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+  const promptWithNegatives = `${cleaned}, photorealistic, 8k resolution, masterpiece, professional photography, cinematic lighting --no watermark, text, logo, signature, label, brand`;
+  const encoded = encodeURIComponent(promptWithNegatives);
+  return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true`;
 }
 
 function sanitizeLafResponse(text = '') {
@@ -283,7 +284,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     if (isImageQuery(cleanPrompt)) {
       const url = generateImageUrl(cleanPrompt);
       return {
-        text: `![${cleanPrompt}](${url})\n\n**✨ Powered by LAF Ai**`,
+        text: `![${cleanPrompt}](${url})\n\nImage generated successfully !`,
         provider: 'LAF Image Engine'
       };
     }

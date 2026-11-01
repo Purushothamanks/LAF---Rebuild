@@ -60,6 +60,22 @@ export function extractCanvasArtifact(markdownText = '') {
   return null;
 }
 
+/**
+ * Canvas auto-open rule:
+ * Canvas only automatically opens for Web UI apps or full document previews.
+ * Normal code snippets stay in chat with the option to click "Preview in Las Canvas".
+ */
+export function shouldAutoOpenCanvas(artifact) {
+  if (!artifact) return false;
+  if (artifact.type === 'code' && artifact.isExecutable) {
+    return true;
+  }
+  if (artifact.type === 'document') {
+    return true;
+  }
+  return false;
+}
+
 export function isComplexAgentTask(prompt = '') {
   const p = prompt.toLowerCase();
   const agentTriggers = [

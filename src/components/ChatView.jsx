@@ -9,22 +9,54 @@ import DOMPurify from 'dompurify';
 import { apiUrl } from '../api';
 import { generateRealtimeResponse, saveLocalConversation, isImageQuery } from '../utils/aiClient';
 import AgentSandbox from './AgentSandbox';
-import GeminiCanvas from './GeminiCanvas';
-import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, isComplexAgentTask } from '../utils/agentEngine';
+import LasCanvas from './LasCanvas';
+import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAutoOpenCanvas, isComplexAgentTask } from '../utils/agentEngine';
 
 if (typeof window !== 'undefined') {
-  window.downloadLafImage = function (url, filename) {
+  window.downloadLafImage = async function (url, filename) {
+    const safeFilename = filename || `laf_image_${Date.now()}.jpg`;
     try {
-      const proxyUrl = apiUrl(`/api/media/download-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'laf_ai_image.jpg')}`);
+      const res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) throw new Error('Fetch failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = proxyUrl;
-      link.download = filename || 'laf_ai_image.jpg';
+      link.href = blobUrl;
+      link.download = safeFilename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
     } catch (err) {
-      console.error('Image download error:', err);
-      window.open(url, '_blank');
+      // Robust Canvas draw fallback (bypasses CORS restrictions)
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(function(b) {
+            if (!b) { window.open(url, '_blank'); return; }
+            const bUrl = URL.createObjectURL(b);
+            const a = document.createElement('a');
+            a.href = bUrl;
+            a.download = safeFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(bUrl), 2000);
+          }, 'image/jpeg', 0.95);
+        };
+        img.onerror = function() {
+          window.open(url, '_blank');
+        };
+        img.src = url;
+      } catch (e) {
+        window.open(url, '_blank');
+      }
     }
   };
 }
@@ -94,7 +126,7 @@ export default function ChatView({
   const isAgentMode = true;
   const [expandedMilestones, setExpandedMilestones] = useState({});
 
-  // Gemini Canvas States
+  // Las Canvas States
   const [canvasArtifact, setCanvasArtifact] = useState(null);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
   const [isLiveGenerating, setIsLiveGenerating] = useState(false);
@@ -302,12 +334,14 @@ export default function ChatView({
     setIsImageGenerating(false);
     setIsStreaming(true);
 
-    // Auto-detect Code or Document Canvas Artifact
+    // Auto-detect Code or Document Canvas Artifact (Canvas only auto-opens for Web UI or full Documents)
     const detectedArtifact = extractCanvasArtifact(fullText);
     if (detectedArtifact) {
       setCanvasArtifact(detectedArtifact);
-      setIsCanvasOpen(true);
-      setIsLiveGenerating(true);
+      if (shouldAutoOpenCanvas(detectedArtifact)) {
+        setIsCanvasOpen(true);
+        setIsLiveGenerating(true);
+      }
     }
 
     const assistantMsgIndex = baseHistory.length;
@@ -559,14 +593,6 @@ export default function ChatView({
 
   const userInitial = (user?.username || 'U').substring(0, 1).toUpperCase();
 
-  // Unique Hero Inspiration Starter Prompts
-  const heroPrompts = [
-    { icon: '⚡', label: 'Build Web App', prompt: 'Create an interactive glassmorphism Pomodoro timer with audio alerts and dark mode in HTML, CSS, and JavaScript.' },
-    { icon: '🎨', label: 'Generate Vision', prompt: 'Generate an ultra-realistic image of a futuristic floating neon cyber-city over reflecting waters at midnight, 8k cinematic.' },
-    { icon: '📄', label: 'Draft Document', prompt: 'Write a comprehensive technical architecture specification for an autonomous real-time AI multimodal reasoning platform.' },
-    { icon: '🔬', label: 'Algorithm Lab', prompt: 'Explain how transformer self-attention mechanisms calculate Q, K, V matrices and implement it in clean Python code.' }
-  ];
-
   return (
     <div style={{ flex: 1, display: 'flex', width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       
@@ -620,7 +646,7 @@ export default function ChatView({
                 </h1>
                 
                 <p className="laf-hero-subheading">
-                  Experience live Gemini Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
+                  Experience live Las Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
                 </p>
 
                 {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
@@ -752,23 +778,6 @@ export default function ChatView({
                     </button>
                   </div>
                 </form>
-
-                {/* Quick Inspiration Pills */}
-                <div className="hero-inspiration-grid">
-                  {heroPrompts.map((hp, i) => (
-                    <div 
-                      key={i} 
-                      className="hero-inspiration-pill"
-                      onClick={() => handleSend(null, hp.prompt)}
-                    >
-                      <div className="pill-header">
-                        <span className="pill-icon">{hp.icon}</span>
-                        <span className="pill-label">{hp.label}</span>
-                      </div>
-                      <div className="pill-text">{hp.prompt}</div>
-                    </div>
-                  ))}
-                </div>
               </div>
             ) : (
               /* Active Conversation Messages List with Left-Aligned Clean Typography */
@@ -934,7 +943,7 @@ export default function ChatView({
                             <span className="streaming-cursor"></span>
                           )}
 
-                          {/* Open in Gemini Canvas Button for Code or Documents */}
+                          {/* Open in Las Canvas Button for Code or Documents */}
                           {!isUser && !m.isTyping && extractCanvasArtifact(m.content) && (
                             <div style={{ marginTop: '12px' }}>
                               <button
@@ -947,7 +956,7 @@ export default function ChatView({
                                 className="open-canvas-action-pill"
                               >
                                 <Sparkles style={{ width: '14px', height: '14px', color: '#60a5fa' }} />
-                                <span>Preview in Gemini Canvas</span>
+                                <span>Preview in Las Canvas</span>
                               </button>
                             </div>
                           )}
@@ -1163,10 +1172,10 @@ export default function ChatView({
 
       </div>
 
-      {/* Side-by-Side Gemini Canvas Panel */}
+      {/* Side-by-Side Las Canvas Panel */}
       {isCanvasOpen && (
         <div 
-          className="gemini-canvas-container"
+          className="las-canvas-container"
           style={{ 
             flex: '1 1 50%', 
             height: '100%', 
@@ -1174,7 +1183,7 @@ export default function ChatView({
             borderLeft: '1px solid var(--ds-border)'
           }}
         >
-          <GeminiCanvas
+          <LasCanvas
             isOpen={isCanvasOpen}
             onClose={() => setIsCanvasOpen(false)}
             artifact={canvasArtifact}
