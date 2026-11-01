@@ -33,11 +33,47 @@ export function extractCodeArtifacts(markdownText = '') {
   return artifacts;
 }
 
-export function extractCanvasArtifact(markdownText = '') {
+/**
+ * Checks if a user's prompt is explicitly asking to draft or create a document
+ */
+export function isDocumentCreationRequest(prompt = '') {
+  if (!prompt || typeof prompt !== 'string') return false;
+  const p = prompt.toLowerCase().trim();
+  const docCreationPatterns = [
+    /\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?([a-z0-9\s_-]*\s+)?(document|doc|docs|documentation|report|whitepaper|proposal|spec|specification|handbook|manual|memo|brief|paper|summary)\b/i,
+    /\b(document|doc|report|whitepaper|spec|specification)\s+(on|about|for|of|regarding)\b/i,
+    /\b(technical\s+spec|architecture\s+spec|system\s+design\s+doc|requirements\s+doc)\b/i,
+    /^doc(ument)?\s*:\s*.+/i
+  ];
+  return docCreationPatterns.some(pattern => pattern.test(p));
+}
+
+/**
+ * Extracts a clean summary or excerpt from document markdown
+ */
+export function extractDocumentExcerpt(markdownText = '', maxLength = 190) {
+  if (!markdownText) return '';
+  const clean = markdownText
+    .replace(/^#+\s+.*$/gm, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\n+/g, ' ')
+    .trim();
+  if (!clean) return 'Comprehensive structured document synthesized in LAF Canvas.';
+  if (clean.length <= maxLength) return clean;
+  return clean.substring(0, maxLength).trim() + '...';
+}
+
+export function extractCanvasArtifact(markdownText = '', userPrompt = '') {
   if (!markdownText) return null;
 
+  const isDocRequest = isDocumentCreationRequest(userPrompt);
   const codeArtifacts = extractCodeArtifacts(markdownText);
-  if (codeArtifacts && codeArtifacts.length > 0) {
+
+  // If user explicitly asked for code or it's primarily code blocks and not a doc request
+  if (!isDocRequest && codeArtifacts && codeArtifacts.length > 0) {
     return {
       type: 'code',
       ...codeArtifacts[0],
@@ -45,15 +81,30 @@ export function extractCanvasArtifact(markdownText = '') {
     };
   }
 
-  // Detect structured documents (headings + comprehensive text)
+  // Detect structured documents (headings + comprehensive text) OR explicit document request
   const headings = (markdownText.match(/^#{1,3}\s+.+/gm) || []);
-  if (headings.length >= 2 && markdownText.length > 250) {
-    const firstHeading = headings[0].replace(/^#+\s*/, '').trim();
+  if (isDocRequest || (headings.length >= 2 && markdownText.length > 200) || (headings.length >= 1 && markdownText.length > 350)) {
+    const firstHeading = headings[0] ? headings[0].replace(/^#+\s*/, '').trim() : '';
+    let title = firstHeading;
+    if (!title && userPrompt) {
+      title = userPrompt
+        .replace(/\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?(document|doc|docs|report|spec|specification)?\s*(of|on|about|for|regarding)?\s*/i, '')
+        .trim();
+      title = title ? (title.charAt(0).toUpperCase() + title.slice(1)) : 'Document';
+    }
     return {
       type: 'document',
-      title: firstHeading || 'Technical Document',
+      title: title || 'LAF Document',
       content: markdownText,
       wordCount: markdownText.split(/\s+/).filter(Boolean).length
+    };
+  }
+
+  if (codeArtifacts && codeArtifacts.length > 0) {
+    return {
+      type: 'code',
+      ...codeArtifacts[0],
+      allCode: codeArtifacts
     };
   }
 

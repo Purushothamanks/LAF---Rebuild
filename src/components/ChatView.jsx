@@ -10,7 +10,7 @@ import { apiUrl } from '../api';
 import { generateRealtimeResponse, saveLocalConversation, isImageQuery } from '../utils/aiClient';
 import AgentSandbox from './AgentSandbox';
 import LafCanvas from './LafCanvas';
-import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAutoOpenCanvas, isComplexAgentTask } from '../utils/agentEngine';
+import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAutoOpenCanvas, isComplexAgentTask, isDocumentCreationRequest, extractDocumentExcerpt } from '../utils/agentEngine';
 
 if (typeof window !== 'undefined') {
   window.downloadLafImage = async function (url, filename) {
@@ -133,6 +133,8 @@ export default function ChatView({
 
   // Live Typing & Streaming State
   const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [isDocGenerating, setIsDocGenerating] = useState(false);
+  const [docTopic, setDocTopic] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 
   // Message Editing & Regeneration State
@@ -329,13 +331,16 @@ export default function ChatView({
   /**
    * Fluid Live Typewriter Streaming simulation for instantaneous, lifelike AI responses
    */
-  const streamTextResponse = async (fullText, providerName, baseHistory, artifacts = [], milestones = null, executionTimeMs = null) => {
+  const streamTextResponse = async (fullText, providerName, baseHistory, artifacts = [], milestones = null, executionTimeMs = null, userPrompt = '') => {
     setLoading(false);
     setIsImageGenerating(false);
+    setIsDocGenerating(false);
     setIsStreaming(true);
 
     // Auto-detect Code or Document Canvas Artifact (Canvas only auto-opens for Web UI or full Documents)
-    const detectedArtifact = extractCanvasArtifact(fullText);
+    const detectedArtifact = extractCanvasArtifact(fullText, userPrompt);
+    const isDoc = detectedArtifact && detectedArtifact.type === 'document';
+
     if (detectedArtifact) {
       setCanvasArtifact(detectedArtifact);
       if (shouldAutoOpenCanvas(detectedArtifact)) {
@@ -347,7 +352,9 @@ export default function ChatView({
     const assistantMsgIndex = baseHistory.length;
     const initialAssistantMsg = {
       role: 'assistant',
-      content: '',
+      content: fullText,
+      documentArtifact: isDoc ? detectedArtifact : null,
+      isDocument: isDoc,
       provider: providerName,
       artifacts,
       milestones,
@@ -371,6 +378,8 @@ export default function ChatView({
           const finalMessages = [...baseHistory, {
             role: 'assistant',
             content: fullText,
+            documentArtifact: isDoc ? detectedArtifact : null,
+            isDocument: isDoc,
             provider: providerName,
             artifacts,
             milestones,
@@ -381,6 +390,10 @@ export default function ChatView({
           setMessages(finalMessages);
           setIsStreaming(false);
           setIsLiveGenerating(false);
+
+          if (isDoc && detectedArtifact) {
+            setCanvasArtifact(detectedArtifact);
+          }
 
           // Persist conversation to vault
           const convId = activeConvId || `conv_${Date.now()}`;
@@ -393,12 +406,21 @@ export default function ChatView({
           resolve();
         } else {
           const partial = fullText.substring(0, currentLen);
+          // Stream document content into side canvas live
+          if (isDoc && detectedArtifact) {
+            setCanvasArtifact(prev => ({
+              ...(prev || detectedArtifact),
+              content: partial
+            }));
+          }
           setMessages(prev => {
             const next = [...prev];
             if (next.length > assistantMsgIndex) {
               next[assistantMsgIndex] = {
                 ...next[assistantMsgIndex],
-                content: partial,
+                content: fullText,
+                isDocument: isDoc,
+                documentArtifact: isDoc ? { ...detectedArtifact, content: partial } : null,
                 isTyping: true
               };
             }
@@ -429,6 +451,25 @@ export default function ChatView({
     // Detect if this is an image generation query to display the Gemini neural shimmer
     const isImage = isImageQuery(textToSend);
     setIsImageGenerating(isImage);
+
+    // Detect if this is a document creation query
+    const isDoc = isDocumentCreationRequest(textToSend);
+    setIsDocGenerating(isDoc);
+    if (isDoc) {
+      const inferredTopic = textToSend
+        .replace(/\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?([a-z0-9\s_-]*\s+)?(document|doc|docs|report|spec|specification)?\s*(of|on|about|for|regarding)?\s*/i, '')
+        .trim();
+      const cleanTopic = inferredTopic ? (inferredTopic.charAt(0).toUpperCase() + inferredTopic.slice(1)) : 'Document';
+      setDocTopic(cleanTopic);
+      setIsCanvasOpen(true);
+      setIsLiveGenerating(true);
+      setCanvasArtifact({
+        type: 'document',
+        title: cleanTopic,
+        content: `# ${cleanTopic}\n\n*Drafting document in LAF Canvas...*`,
+        wordCount: 0
+      });
+    }
 
     const baseHistory = overrideHistory !== undefined ? overrideHistory : messages;
 
@@ -491,7 +532,7 @@ export default function ChatView({
           const providerName = data.response.provider || 'LAF AI';
 
           const artifacts = extractCodeArtifacts(fullContent);
-          await streamTextResponse(fullContent, providerName, newHistory, artifacts);
+          await streamTextResponse(fullContent, providerName, newHistory, artifacts, null, null, textToSend);
           answered = true;
           fetchConversations();
         }
@@ -535,10 +576,11 @@ export default function ChatView({
           artifacts = extractCodeArtifacts(res.text);
         }
 
-        await streamTextResponse(aiResultText, providerName, newHistory, artifacts, milestones, executionTimeMs);
+        await streamTextResponse(aiResultText, providerName, newHistory, artifacts, milestones, executionTimeMs, textToSend);
       } catch (clientAiErr) {
         setLoading(false);
         setIsImageGenerating(false);
+        setIsDocGenerating(false);
         setMessages(prev => [
           ...prev,
           { role: 'assistant', content: `Error: ${clientAiErr.message}`, provider: 'System Notice' }
@@ -914,53 +956,132 @@ export default function ChatView({
                         </div>
                       ) : (
                         /* Message Bubble */
-                        <div 
-                          className={isUser ? "user-message-bubble" : "assistant-message-bubble"}
-                          style={{ textAlign: 'left' }}
-                        >
-                          {/* Markdown Rendered Content */}
-                          {m.content && (
-                            <div
-                              className="message-markdown-content"
-                              style={{
-                                fontSize: '0.96rem',
-                                lineHeight: '1.68',
-                                color: 'var(--ds-text-primary)',
-                                textAlign: 'left',
-                                wordBreak: 'break-word'
-                              }}
-                              dangerouslySetInnerHTML={{
-                                __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
-                                  ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
-                                  ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
-                                })
-                              }}
-                            />
-                          )}
+                        (() => {
+                          const docArt = !isUser ? (m.documentArtifact || ((m.isDocument || (extractCanvasArtifact(m.content)?.type === 'document')) ? extractCanvasArtifact(m.content) : null)) : null;
+                          const isDocCreating = docArt && m.isTyping;
+                          const isDocFinished = docArt && !m.isTyping;
 
-                          {/* Streaming Blinking Cursor */}
-                          {m.isTyping && (
-                            <span className="streaming-cursor"></span>
-                          )}
+                          if (isDocCreating) {
+                            return (
+                              <div className="doc-live-creating-box">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <div className="doc-icon-pulse-badge">
+                                    <FileText style={{ width: '20px', height: '20px', color: '#60a5fa' }} />
+                                  </div>
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{ fontSize: '0.94rem', fontWeight: '700', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span>Creating document...</span>
+                                      <span className="live-pulse-dot" style={{ width: '7px', height: '7px' }}></span>
+                                    </div>
+                                    <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      Drafting "{docArt.title || docTopic || 'Document'}" in LAF Canvas
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="doc-shimmer-progress">
+                                  <div className="doc-shimmer-fill"></div>
+                                </div>
+                              </div>
+                            );
+                          }
 
-                          {/* Open in LAF Canvas Button for Code or Documents */}
-                          {!isUser && !m.isTyping && extractCanvasArtifact(m.content) && (
-                            <div style={{ marginTop: '12px' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const art = extractCanvasArtifact(m.content);
-                                  setCanvasArtifact(art);
-                                  setIsCanvasOpen(true);
-                                }}
-                                className="open-canvas-action-pill"
-                              >
-                                <Sparkles style={{ width: '14px', height: '14px', color: '#60a5fa' }} />
-                                <span>Preview in LAF Canvas</span>
-                              </button>
+                          if (isDocFinished) {
+                            return (
+                              <div className="doc-presentation-card">
+                                <div className="doc-presentation-header">
+                                  <div className="doc-presentation-icon">
+                                    <FileText style={{ width: '20px', height: '20px', color: '#fff' }} />
+                                  </div>
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div className="doc-presentation-title">
+                                      {docArt.title || 'LAF Document'}
+                                    </div>
+                                    <div className="doc-presentation-meta">
+                                      Document • {docArt.wordCount || (m.content?.split(/\s+/).filter(Boolean).length || 0)} words • Synthesized by LAF AI
+                                    </div>
+                                  </div>
+                                  <span className="doc-ready-badge">
+                                    <Sparkles style={{ width: '12px', height: '12px' }} />
+                                    <span>In Canvas</span>
+                                  </span>
+                                </div>
+
+                                <div className="doc-presentation-excerpt">
+                                  {extractDocumentExcerpt(m.content)}
+                                </div>
+
+                                <div className="doc-presentation-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCanvasArtifact(docArt);
+                                      setIsCanvasOpen(true);
+                                    }}
+                                    className="doc-open-canvas-btn"
+                                  >
+                                    <ExternalLink style={{ width: '14px', height: '14px' }} />
+                                    <span>Open in LAF Canvas</span>
+                                  </button>
+                                </div>
+
+                                <div className="doc-presentation-footer-note">
+                                  ✨ Document created successfully and displayed in LAF Canvas on the right.
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Default Message Bubble for standard chat responses
+                          return (
+                            <div 
+                              className={isUser ? "user-message-bubble" : "assistant-message-bubble"}
+                              style={{ textAlign: 'left' }}
+                            >
+                              {/* Markdown Rendered Content */}
+                              {m.content && (
+                                <div
+                                  className="message-markdown-content"
+                                  style={{
+                                    fontSize: '0.96rem',
+                                    lineHeight: '1.68',
+                                    color: 'var(--ds-text-primary)',
+                                    textAlign: 'left',
+                                    wordBreak: 'break-word'
+                                  }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
+                                      ADD_TAGS: ['svg', 'path', 'polyline', 'line'],
+                                      ADD_ATTR: ['target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
+                                    })
+                                  }}
+                                />
+                              )}
+
+                              {/* Streaming Blinking Cursor */}
+                              {m.isTyping && (
+                                <span className="streaming-cursor"></span>
+                              )}
+
+                              {/* Open in LAF Canvas Button for Code Artifacts */}
+                              {!isUser && !m.isTyping && extractCanvasArtifact(m.content) && extractCanvasArtifact(m.content).type === 'code' && (
+                                <div style={{ marginTop: '12px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const art = extractCanvasArtifact(m.content);
+                                      setCanvasArtifact(art);
+                                      setIsCanvasOpen(true);
+                                    }}
+                                    className="open-canvas-action-pill"
+                                  >
+                                    <Sparkles style={{ width: '14px', height: '14px', color: '#60a5fa' }} />
+                                    <span>Preview in LAF Canvas</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()
                       )}
 
                       {/* Voice, Copy & Edit Options Under Messages */}
@@ -1025,13 +1146,25 @@ export default function ChatView({
             )}
 
             {/* Thinking... Animated Indicator */}
-            {loading && !isImageGenerating && (
+            {loading && !isImageGenerating && !isDocGenerating && (
               <div className="thinking-animation-container">
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <RefreshCw style={{ width: '14px', height: '14px', color: 'var(--ds-blue)', animation: 'spin 1s linear infinite' }} />
                 </div>
                 <div className="thinking-text-glow">
                   Thinking<span className="thinking-dots"><span>.</span><span>.</span><span>.</span></span>
+                </div>
+              </div>
+            )}
+
+            {/* Document Creating Animated Indicator */}
+            {loading && isDocGenerating && (
+              <div className="thinking-animation-container doc-creating-indicator">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <FileText style={{ width: '15px', height: '15px', color: '#60a5fa' }} />
+                </div>
+                <div className="thinking-text-glow">
+                  Creating document in LAF Canvas<span className="thinking-dots"><span>.</span><span>.</span><span>.</span></span>
                 </div>
               </div>
             )}

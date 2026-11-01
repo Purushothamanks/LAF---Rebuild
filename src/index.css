@@ -888,6 +888,172 @@ p code, li code {
 }
 
 /* ==============================================================
+   DOCUMENT CREATION ANIMATION & PRESENTATION CARD
+   ============================================================== */
+
+/* Live Creation Shimmer Card in Chat */
+.doc-live-creating-box {
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 480px;
+  animation: canvasFadeIn 0.2s ease;
+}
+
+.doc-icon-pulse-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: haloPulse 2s ease-in-out infinite;
+}
+
+.doc-shimmer-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.doc-shimmer-fill {
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #8b5cf6, #38bdf8);
+  border-radius: 9999px;
+  animation: progressSweep 1.5s ease-in-out infinite alternate;
+}
+
+/* Completed Document Presentation Card in Chat Bubble */
+.doc-presentation-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 540px;
+  width: 100%;
+  animation: canvasFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.doc-presentation-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doc-presentation-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 0 14px rgba(79, 117, 255, 0.4);
+}
+
+.doc-presentation-title {
+  font-family: var(--font-title);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-presentation-meta {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.doc-ready-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.doc-presentation-excerpt {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+  word-break: break-word;
+}
+
+.doc-presentation-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.doc-open-canvas-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: none;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
+}
+
+.doc-open-canvas-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+}
+
+.doc-presentation-footer-note {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: -2px;
+}
+
+.doc-creating-indicator {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+}
+
+/* ==============================================================
    MESSAGE BUBBLES & TYPOGRAPHY ALIGNMENT
    ============================================================== */
 .user-message-bubble {
