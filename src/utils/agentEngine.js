@@ -22,14 +22,42 @@ export function extractCodeArtifacts(markdownText = '') {
       code.includes('<script');
 
     artifacts.push({
+      type: 'code',
       language: lang || (code.includes('<html') ? 'html' : 'javascript'),
       code: code.trim(),
       isExecutable,
-      title: lang.toUpperCase() + ' ' + (isExecutable ? 'Executable Component' : 'Source Code')
+      title: lang ? `${lang.toUpperCase()} ${isExecutable ? 'Executable App' : 'Module'}` : 'Code Component'
     });
   }
 
   return artifacts;
+}
+
+export function extractCanvasArtifact(markdownText = '') {
+  if (!markdownText) return null;
+
+  const codeArtifacts = extractCodeArtifacts(markdownText);
+  if (codeArtifacts && codeArtifacts.length > 0) {
+    return {
+      type: 'code',
+      ...codeArtifacts[0],
+      allCode: codeArtifacts
+    };
+  }
+
+  // Detect structured documents (headings + comprehensive text)
+  const headings = (markdownText.match(/^#{1,3}\s+.+/gm) || []);
+  if (headings.length >= 2 && markdownText.length > 250) {
+    const firstHeading = headings[0].replace(/^#+\s*/, '').trim();
+    return {
+      type: 'document',
+      title: firstHeading || 'Technical Document',
+      content: markdownText,
+      wordCount: markdownText.split(/\s+/).filter(Boolean).length
+    };
+  }
+
+  return null;
 }
 
 export function isComplexAgentTask(prompt = '') {

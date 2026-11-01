@@ -46,6 +46,30 @@ export default function App() {
     localStorage.setItem('laf_theme', theme);
   }, [theme]);
 
+  // Fresh initialization migration: clears old session and stale conversation history
+  useEffect(() => {
+    try {
+      const FRESH_KEY = 'laf_v3_fresh_reset';
+      if (typeof window !== 'undefined' && localStorage.getItem(FRESH_KEY) !== 'true') {
+        localStorage.removeItem('laf_username');
+        localStorage.removeItem('laf_token');
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith('laf_db_') || k.startsWith('laf_vault_') || k.startsWith('laf_directives_')) {
+            localStorage.removeItem(k);
+          }
+        });
+        if (window.indexedDB) {
+          try { window.indexedDB.deleteDatabase('LAF_AI_VAULT'); } catch (e) {}
+        }
+        localStorage.setItem(FRESH_KEY, 'true');
+        setUser(null);
+        setToken('');
+        setConversations([]);
+        setMessages([]);
+      }
+    } catch (e) {}
+  }, []);
+
   // Validate session token on mount while maintaining permanent logged-in username
   useEffect(() => {
     const activeName = user?.username || storedUser;

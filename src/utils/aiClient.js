@@ -158,10 +158,10 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
     history.slice(-8).forEach(h => {
       if (h.content && typeof h.content === 'string') {
         const parts = [];
-        if (h.attachment?.isImage && h.attachment?.data) {
+        if (h.attachment?.data && (h.attachment.isImage || h.attachment.isPdf || h.attachment.mimeType === 'application/pdf' || h.attachment.mimeType?.startsWith('image/'))) {
           parts.push({
             inlineData: {
-              mimeType: h.attachment.mimeType || 'image/jpeg',
+              mimeType: h.attachment.mimeType || (h.attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
               data: h.attachment.data
             }
           });
@@ -182,10 +182,10 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
 
   const userParts = [];
   if (attachment) {
-    if (attachment.isImage && attachment.data) {
+    if (attachment.data && (attachment.isImage || attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.mimeType?.startsWith('image/'))) {
       userParts.push({
         inlineData: {
-          mimeType: attachment.mimeType || 'image/jpeg',
+          mimeType: attachment.mimeType || (attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
           data: attachment.data
         }
       });
@@ -196,7 +196,7 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
     }
   }
 
-  const userPrompt = (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail. Describe its contents, any text, graphics, and key insights.' : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation, code/content breakdown, and suggestions.`) : '');
+  const userPrompt = (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail. Describe its contents, any text, graphics, and key insights.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation, code/content breakdown, and suggestions.`)) : '');
   userParts.push({ text: userPrompt });
 
   contents.push({
@@ -283,7 +283,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     if (isImageQuery(cleanPrompt)) {
       const url = generateImageUrl(cleanPrompt);
       return {
-        text: `![${cleanPrompt}](${url})\n\n*Generated via LAF Image Engine.*`,
+        text: `![${cleanPrompt}](${url})\n\n**✨ Powered by LAF Ai**`,
         provider: 'LAF Image Engine'
       };
     }

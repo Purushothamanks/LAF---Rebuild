@@ -340,10 +340,10 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
         history.slice(-6).forEach(h => {
           if (h.content && typeof h.content === 'string') {
             const parts = [];
-            if (h.attachment?.isImage && h.attachment?.data) {
+            if (h.attachment?.data && (h.attachment.isImage || h.attachment.isPdf || h.attachment.mimeType === 'application/pdf' || h.attachment.mimeType?.startsWith('image/'))) {
               parts.push({
                 inlineData: {
-                  mimeType: h.attachment.mimeType || 'image/jpeg',
+                  mimeType: h.attachment.mimeType || (h.attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
                   data: h.attachment.data
                 }
               });
@@ -364,10 +364,10 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
 
       const userParts = [];
       if (attachment) {
-        if (attachment.isImage && attachment.data) {
+        if (attachment.data && (attachment.isImage || attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.mimeType?.startsWith('image/'))) {
           userParts.push({
             inlineData: {
-              mimeType: attachment.mimeType || 'image/jpeg',
+              mimeType: attachment.mimeType || (attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
               data: attachment.data
             }
           });
@@ -379,7 +379,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
       }
 
       userParts.push({
-        text: (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail.' : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation and suggestions.`) : '')
+        text: (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation and suggestions.`)) : '')
       });
 
       contents.push({
@@ -588,7 +588,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     const cloudImage = await callCloudImageGen(formattedPrompt, candidateKeys);
     if (cloudImage && cloudImage.url) {
       return {
-        text: `![${cleanPrompt}](${cloudImage.url})`,
+        text: `![${cleanPrompt}](${cloudImage.url})\n\n**✨ Powered by LAF Ai**`,
         provider: cloudImage.provider
       };
     }
@@ -596,7 +596,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     // Guaranteed High-Resolution FLUX Neural Engine
     const imageUrl = generateImageUrl(formattedPrompt);
     return {
-      text: `![${cleanPrompt}](${imageUrl})`,
+      text: `![${cleanPrompt}](${imageUrl})\n\n**✨ Powered by LAF Ai**`,
       provider: 'LAF FLUX Neural Engine'
     };
   }
