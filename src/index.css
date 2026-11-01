@@ -742,4 +742,48 @@ p code, li code {
   }
 }
 
+/* ==============================================================
+   OMNICHANNEL RESPONSIVE & MOBILE ERGONOMICS (320px - 4K)
+   ============================================================== */
+@media (max-width: 768px) {
+  .modal-floating-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    border-radius: 16px !important;
+  }
+
+  .thinking-animation-container {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-floating-card {
+    width: 96vw !important;
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .modal-overlay {
+    padding: 8px !important;
+  }
+
+  button, input, select {
+    min-height: 44px;
+  }
+
+  .chat-input-wrapper {
+    padding: 8px 10px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal-floating-card {
+    width: 98vw !important;
+    padding: 12px 8px !important;
+  }
+}
+
 
