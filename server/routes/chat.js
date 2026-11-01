@@ -6,7 +6,7 @@ const axios = require('axios');
 const { verifyUserToken } = require('../security/encryption');
 const { sanitizeInput, detectThreats, detectJailbreak } = require('../security/sanitize');
 const { generateResponse } = require('../services/aiEngine');
-const { saveConversation, deleteConversation, readUserDb, searchUserMemory, saveFeedbackRecord } = require('../services/database');
+const { saveConversation, deleteConversation, deleteAllConversations, readUserDb, searchUserMemory, saveFeedbackRecord } = require('../services/database');
 
 // Middleware to enforce user session authentication
 function authMiddleware(req, res, next) {
@@ -194,6 +194,19 @@ router.delete('/conversation/:id', authMiddleware, (req, res) => {
     res.json({ success: true, message: 'Conversation deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete conversation' });
+  }
+});
+
+/**
+ * DELETE /api/chat/conversations/all
+ * Delete all conversations for current user
+ */
+router.delete('/conversations/all', authMiddleware, (req, res) => {
+  try {
+    deleteAllConversations(req.username);
+    res.json({ success: true, message: 'All conversations deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete all conversations' });
   }
 });
 

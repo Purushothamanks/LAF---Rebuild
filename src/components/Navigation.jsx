@@ -13,6 +13,7 @@ export default function Navigation({
   activeConvId,
   loadConversation,
   deleteConversation,
+  onClearAllConversations,
   startNewChat
 }) {
   const [showMenu, setShowMenu] = useState(false);
@@ -218,6 +219,18 @@ export default function Navigation({
               >
                 <HelpCircle style={{ width: '16px', color: 'var(--ds-blue)' }} />
                 <span>Help & Feedback</span>
+              </button>
+
+              <button
+                className="more-options-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  if (onClearAllConversations) onClearAllConversations();
+                }}
+                style={{ color: '#f87171' }}
+              >
+                <Trash2 style={{ width: '16px', color: '#f87171' }} />
+                <span>Clear all chats</span>
               </button>
 
               <button

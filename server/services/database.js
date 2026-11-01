@@ -131,6 +131,33 @@ function deleteConversation(username, conversationId) {
   return true;
 }
 
+/**
+ * Delete all conversations for a user
+ */
+function deleteAllConversations(username) {
+  const db = readUserDb(username);
+  db.conversations = [];
+  saveUserDb(username, db);
+  return true;
+}
+
+/**
+ * Delete all conversation files across all users
+ */
+function clearAllUserDatabases() {
+  if (fs.existsSync(DATA_DIR)) {
+    const files = fs.readdirSync(DATA_DIR);
+    for (const f of files) {
+      if (f.startsWith('user_') && f.endsWith('.json')) {
+        try {
+          fs.unlinkSync(path.join(DATA_DIR, f));
+        } catch (e) {}
+      }
+    }
+  }
+  return true;
+}
+
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -223,6 +250,8 @@ module.exports = {
   saveUserDb,
   saveConversation,
   deleteConversation,
+  deleteAllConversations,
+  clearAllUserDatabases,
   searchUserMemory,
   saveFeedbackRecord
 };
