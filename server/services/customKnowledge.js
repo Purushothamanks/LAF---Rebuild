@@ -11,6 +11,44 @@ const KNOWLEDGE_REPOSITORY = [
     category: 'Temporal Grounding & System Info',
     response: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`
   },
+  // LAF Platform & Technology Overview
+  {
+    keywords: [
+      'laf technology', 'technology of laf', 'tell me about your technology', 'what is your technology',
+      'your technology', 'laf architecture', 'how does laf work', 'laf tech stack'
+    ],
+    category: 'System Architecture & Technology',
+    response: `### 🚀 LAF ("Look At Future") Technology Stack & Architecture
+
+**LAF** is an autonomous, fast, multimodal AI product platform engineered for privacy, speed, and intelligence.
+
+---
+
+### 1. ⚡ AI & Reasoning Engine
+- **Primary LLM Backbone**: Real-time routing via **Google DeepMind Gemini Flash** engines delivering sub-second inference with high contextual accuracy.
+- **24/7 Cloud & Offline Fallback**: Automated multi-tier failover to cloud reasoning matrices (GPT-4o / Groq) and local self-hosted models via **Ollama** (\`laf-v2\` / \`llama3.2\`).
+- **Retrieval-Augmented Generation (RAG)**: In-memory vector index anchoring responses to verified datasets and dynamic temporal grounding for current real-world knowledge.
+
+---
+
+### 2. 🔐 Security, Privacy & Database Isolation
+- **End-to-End Encryption (E2EE)**: Payloads encrypted with **AES-256-GCM** using per-user cryptographic keys derived via **PBKDF2** (10,000 iterations).
+- **Partitioned User Databases**: Zero cross-user data leakage with isolated per-user JSON databases (\`user_{hash}.json\`) alongside SQLite3 persistence.
+- **Threat Shield**: Real-time heuristic scanning to intercept prompt injection, jailbreaks, and XSS attacks.
+
+---
+
+### 3. 🎨 Frontend & Design System
+- **Framework**: **React 19** paired with **Vite** for optimized bundle sizes and instant hot-reloading.
+- **Design Principles**: Built strictly on the **60-30-10 color balance** and **WCAG 2.1 AAA** accessibility standards with full responsiveness down to 320px mobile.
+- **Client Storage Vault**: Multi-tier progressive persistence with **IndexedDB** for large conversation histories and automatic localStorage quota protection.
+
+---
+
+### 4. 🖼️ Multimodal Intelligence
+- **FLUX.1-HD Neural Engine**: High-resolution 1024x1024 photorealistic text-to-image synthesis.
+- **Voice & Media Studio**: Integrated Web Speech API and text-to-speech audio synthesis with animated video preview pipelines.`
+  },
   // Palindrome & Strings
   {
     keywords: ['palindrome', 'check palindrome', 'string palindrome', 'palindrome python'],

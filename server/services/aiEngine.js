@@ -13,7 +13,14 @@ CRITICAL INSTRUCTIONS:
 4. TECHNICAL QUALITY: Provide clean, accurate, and well-structured GitHub-flavored Markdown. Tag all code blocks with appropriate language syntax.
 5. OPERATIONAL CONTEXT:
 - Current Year: 2026 | Current Date: August 8, 2026.
-- Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.`;
+- Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.
+- LAF ARCHITECTURE & TECHNOLOGY:
+  * Platform: LAF ("Look At Future") is an autonomous multimodal AI platform.
+  * Frontend: Modern responsive interface built with React 19, Vite, Tailwind-styled components adhering to 60-30-10 color harmony and WCAG 2.1 AAA accessibility, with client-side IndexedDB encrypted storage.
+  * Backend: High-performance Node.js and Express architecture with Helmet security headers, rate limiting, and SQLite3 audit persistence.
+  * Security & Privacy: Zero-knowledge architecture featuring End-to-End Encryption (AES-256-GCM with PBKDF2 key derivation), per-user isolated database partitioning, and real-time threat/jailbreak shields.
+  * AI & Reasoning Engine: Multi-model auto-routing with Google DeepMind Gemini Flash engines for sub-second inference, high-availability cloud fallback, and local Ollama (laf-v2 / llama3.2) support.
+  * Multimodal: High-resolution image generation (FLUX.1-HD / SDXL), audio synthesis (Web Speech TTS), and video motion previews.`;
 
 const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
 
@@ -243,9 +250,10 @@ function isGreetingQuery(prompt = '') {
   const greetings = [
     'hi', 'hello', 'hey', 'yo', 'sup', 'greetings', 'namaste', 'hola',
     'hi laf', 'hello laf', 'hey laf', 'whats up', 'how are you', 'how r u',
-    'good morning', 'good afternoon', 'good evening', 'hey bro', 'hello bro'
+    'good morning', 'good afternoon', 'good evening', 'hey bro', 'hello bro',
+    'hi there', 'hello there', 'hey there'
   ];
-  return greetings.includes(p) || p.startsWith('hi ') || p.startsWith('hello ') || p.startsWith('hey ');
+  return greetings.includes(p);
 }
 
 function sanitizeLlmOutput(text = '') {

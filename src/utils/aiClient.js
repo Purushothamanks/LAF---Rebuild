@@ -23,7 +23,14 @@ CRITICAL INSTRUCTIONS:
 2. NO ATTRIBUTION UNLESS EXPLICITLY ASKED: Do NOT mention who created, engineered, or architected you unless the user explicitly asks "who created you?" or "who is your developer?". Only if explicitly asked, state: "I was developed by Purushothaman."
 3. NORMAL & PROFESSIONAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing. Never say "I am LAF" unless asked for your identity.
 4. ACCURACY & HIGH QUALITY: Provide precise, well-structured, production-ready answers. Use GitHub-flavored markdown with clean syntax-highlighted code blocks, clear headings, and concise explanations.
-5. TEMPORAL GROUNDING: Current year is 2026.`;
+5. TEMPORAL GROUNDING: Current year is 2026.
+6. LAF ARCHITECTURE & TECHNOLOGY:
+- Platform: LAF ("Look At Future") is an autonomous multimodal AI platform.
+- Frontend: Modern responsive interface built with React 19, Vite, Tailwind-styled components adhering to 60-30-10 color harmony and WCAG 2.1 AAA accessibility, with client-side IndexedDB encrypted storage.
+- Backend: High-performance Node.js and Express architecture with Helmet security headers, rate limiting, and SQLite3 audit persistence.
+- Security & Privacy: Zero-knowledge architecture featuring End-to-End Encryption (AES-256-GCM with PBKDF2 key derivation), per-user isolated database partitioning, and real-time threat/jailbreak shields.
+- AI & Reasoning Engine: Multi-model auto-routing with Google DeepMind Gemini Flash engines for sub-second inference, high-availability cloud fallback, and local Ollama (laf-v2 / llama3.2) support.
+- Multimodal: High-resolution image generation (FLUX.1-HD / SDXL), audio synthesis (Web Speech TTS), and video motion previews.`;
 
 export function getEffectiveSystemInstruction(username = '') {
   let customDirectivesText = '';
@@ -67,9 +74,11 @@ export function isGreetingQuery(prompt = '') {
   const p = prompt.toLowerCase().trim().replace(/[?!.,]/g, '');
   const greetings = [
     'hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening', 'yo', 'sup',
-    'hi laf', 'hello laf', 'hey laf'
+    'hi laf', 'hello laf', 'hey laf', 'whats up', 'how are you', 'how r u',
+    'good morning', 'good afternoon', 'good evening', 'hey bro', 'hello bro',
+    'hi there', 'hello there', 'hey there'
   ];
-  return greetings.includes(p) || p.startsWith('hi ') || p.startsWith('hello ') || p.startsWith('hey ');
+  return greetings.includes(p);
 }
 
 export function getDynamicTemporalResponse() {
