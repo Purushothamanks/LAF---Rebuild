@@ -9,7 +9,11 @@ const KNOWLEDGE_REPOSITORY = [
   {
     keywords: ['what year are we in', 'what year is it', 'what is the current year', 'current year now', 'what year we are now', 'what year is now', 'what year are we now', 'today date'],
     category: 'Temporal Grounding & System Info',
-    response: `We are currently in the year **2026** (Today's date: **August 8, 2026**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`
+    response: () => {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      return `We are currently in the year **${now.getFullYear()}** (Today's date: **${dateStr}**).\n\nLAF (Look At The Future) operates on a verified **${now.getFullYear()} Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`;
+    }
   },
   // LAF Platform & Technology Overview
   {

@@ -34,15 +34,18 @@ export function extractCodeArtifacts(markdownText = '') {
 }
 
 /**
- * Checks if a user's prompt is explicitly asking to draft or create a document
+ * Checks if a user's prompt is explicitly asking to draft or create a document or file in Canvas
  */
 export function isDocumentCreationRequest(prompt = '') {
   if (!prompt || typeof prompt !== 'string') return false;
   const p = prompt.toLowerCase().trim();
   const docCreationPatterns = [
-    /\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?([a-z0-9\s_-]*\s+)?(document|doc|docs|documentation|report|whitepaper|proposal|spec|specification|handbook|manual|memo|brief|paper|summary)\b/i,
+    /\b(give|show|export|output|save)\s+(me\s+)?(as|in)\s+(a\s+)?(doc|document|canvas|file)\b/i,
+    /\b(generate|create|make|build|prepare|draft|compose|write)\s+(me\s+)?(as\s+|into\s+)?(a\s+|an\s+|the\s+)?(document|doc|docs|documentation|report|whitepaper|proposal|spec|specification|file|canvas)\b/i,
+    /\b(give|make|generate)\s+me\s+as\s+(doc|file|document)\b/i,
     /\b(document|doc|report|whitepaper|spec|specification)\s+(on|about|for|of|regarding)\b/i,
     /\b(technical\s+spec|architecture\s+spec|system\s+design\s+doc|requirements\s+doc)\b/i,
+    /\b(show|open)\s+(as|in)\s+canvas\b/i,
     /^doc(ument)?\s*:\s*.+/i
   ];
   return docCreationPatterns.some(pattern => pattern.test(p));
@@ -81,14 +84,14 @@ export function extractCanvasArtifact(markdownText = '', userPrompt = '') {
     };
   }
 
-  // Detect structured documents (headings + comprehensive text) OR explicit document request
-  const headings = (markdownText.match(/^#{1,3}\s+.+/gm) || []);
-  if (isDocRequest || (headings.length >= 2 && markdownText.length > 200) || (headings.length >= 1 && markdownText.length > 350)) {
+  // Detect structured documents ONLY if explicitly requested by the user
+  if (isDocRequest) {
+    const headings = (markdownText.match(/^#{1,3}\s+.+/gm) || []);
     const firstHeading = headings[0] ? headings[0].replace(/^#+\s*/, '').trim() : '';
     let title = firstHeading;
     if (!title && userPrompt) {
       title = userPrompt
-        .replace(/\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?(document|doc|docs|report|spec|specification)?\s*(of|on|about|for|regarding)?\s*/i, '')
+        .replace(/\b(create|write|draft|generate|make|build|prepare|compose|give me as|generate me as a)\s+(a\s+|an\s+|the\s+)?(document|doc|docs|report|spec|specification|file)?\s*(of|on|about|for|regarding)?\s*/i, '')
         .trim();
       title = title ? (title.charAt(0).toUpperCase() + title.slice(1)) : 'Document';
     }
@@ -113,15 +116,12 @@ export function extractCanvasArtifact(markdownText = '', userPrompt = '') {
 
 /**
  * Canvas auto-open rule:
- * Canvas only automatically opens for Web UI apps or full document previews.
- * Normal code snippets stay in chat with the option to click "Preview in LAF Canvas".
+ * Canvas auto-opens when user explicitly asks for document generation ("give me as doc", "generate me as a file", etc.)
+ * Normal file uploads or chat answers stay in chat.
  */
-export function shouldAutoOpenCanvas(artifact) {
+export function shouldAutoOpenCanvas(artifact, userPrompt = '') {
   if (!artifact) return false;
-  if (artifact.type === 'code' && artifact.isExecutable) {
-    return true;
-  }
-  if (artifact.type === 'document') {
+  if (artifact.type === 'document' && userPrompt && isDocumentCreationRequest(userPrompt)) {
     return true;
   }
   return false;

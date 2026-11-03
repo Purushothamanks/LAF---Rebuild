@@ -34,6 +34,10 @@ CRITICAL INSTRUCTIONS:
 7. DOCUMENT CREATION: When the user asks to write, create, draft, or generate a document, report, or specification, format it as a complete, comprehensive, well-structured document starting with a clear top-level heading (# Document Title), followed by organized sections (## Section), tables, and actionable insights for display in LAF Canvas.`;
 
 export function getEffectiveSystemInstruction(username = '') {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const year = now.getFullYear();
+
   let customDirectivesText = '';
   if (typeof window !== 'undefined') {
     try {
@@ -47,7 +51,11 @@ export function getEffectiveSystemInstruction(username = '') {
       }
     } catch (e) {}
   }
-  return LAF_SYSTEM_INSTRUCTION + customDirectivesText;
+  const dynamicInstruction = LAF_SYSTEM_INSTRUCTION.replace(
+    '5. TEMPORAL GROUNDING: Current year is 2026.',
+    `5. TEMPORAL GROUNDING: Current year is ${year} | Current date is ${dateStr}. Always use this exact current date when citing document timestamps or temporal milestones.`
+  );
+  return dynamicInstruction + customDirectivesText;
 }
 
 export function isIdentityQuery(prompt = '') {
@@ -144,10 +152,9 @@ function sanitizeLafResponse(text = '') {
 }
 
 const CANDIDATE_GEMINI_MODELS = [
-  'gemini-flash-lite-latest',
-  'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
-  'gemini-3-flash-preview',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest',
   'gemini-flash-latest',
   'gemini-3.8-flash'
 ];
@@ -302,9 +309,12 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
   }
 
   // 5. Primary Engine: Google Gemini (Fast, sub-second, accurate, professional, multimodal)
+  const clientViteKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) ||
+    (typeof process !== 'undefined' && (process.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY)) || '';
+
   const candidateGeminiKey = (customApiKey && (customApiKey.startsWith('AQ.') || customApiKey.startsWith('AIza')))
     ? customApiKey
-    : (process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '');
+    : clientViteKey;
 
   if (candidateGeminiKey) {
     try {
@@ -446,6 +456,7 @@ function sanitizeForLocalStorage(messages) {
         formattedSize: copy.attachment.formattedSize || '',
         mimeType: copy.attachment.mimeType || '',
         isImage: !!copy.attachment.isImage,
+        isPdf: !!copy.attachment.isPdf || copy.attachment.mimeType === 'application/pdf' || (copy.attachment.name && copy.attachment.name.toLowerCase().endsWith('.pdf')),
         // Preserve lightweight preview URL only if NOT a massive base64 data string
         previewUrl: (typeof copy.attachment.previewUrl === 'string' && copy.attachment.previewUrl.length < 500)
           ? copy.attachment.previewUrl

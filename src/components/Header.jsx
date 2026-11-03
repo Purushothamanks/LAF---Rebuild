@@ -9,6 +9,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
         <img
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
           alt="LAF Logo"
+          className="laf-logo-intro-spin"
           style={{
             width: '28px',
             height: '28px',

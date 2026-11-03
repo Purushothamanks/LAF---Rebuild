@@ -82,6 +82,7 @@ router.post('/send', authMiddleware, async (req, res) => {
           formattedSize: attachment.formattedSize,
           mimeType: attachment.mimeType,
           isImage: attachment.isImage,
+          isPdf: !!attachment.isPdf || attachment.mimeType === 'application/pdf' || (attachment.name && attachment.name.toLowerCase().endsWith('.pdf')),
           previewUrl: attachment.previewUrl,
           data: attachment.data,
           textContent: attachment.textContent

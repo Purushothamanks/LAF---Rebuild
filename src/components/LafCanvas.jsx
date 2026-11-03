@@ -262,247 +262,236 @@ export default function LafCanvas({
       <div 
         className="laf-canvas-header"
       >
-        {/* Left Title & Status */}
-        <div className="laf-canvas-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-          <div 
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              flexShrink: 0,
-              boxShadow: '0 0 14px rgba(79, 117, 255, 0.45)'
-            }}
-          >
-            {isCode ? <Code style={{ width: '16px', height: '16px' }} /> : <FileText style={{ width: '16px', height: '16px' }} />}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '220px' }}>
-                {artifact.title || (isCode ? 'LAF Canvas Code' : 'LAF Canvas Document')}
-              </span>
-              {isLiveUpdating && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                  <span className="live-pulse-dot"></span> Live
-                </span>
-              )}
+        {/* Top/Main Row: Left Title & Right Dismissal Close Button */}
+        <div className="laf-canvas-header-top-row">
+          <div className="laf-canvas-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div 
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                flexShrink: 0,
+                boxShadow: '0 0 14px rgba(79, 117, 255, 0.45)'
+              }}
+            >
+              {isCode ? <Code style={{ width: '16px', height: '16px' }} /> : <FileText style={{ width: '16px', height: '16px' }} />}
             </div>
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              LAF Canvas • {isCode ? (artifact.language || 'Code').toUpperCase() : 'Document'} • {wordCount}
-            </span>
+
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px' }}>
+                  {artifact.title || (isCode ? 'LAF Canvas Code' : 'LAF Canvas Document')}
+                </span>
+                {isLiveUpdating && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+                    <span className="live-pulse-dot"></span> Live
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                LAF Canvas • {isCode ? (artifact.language || 'Code').toUpperCase() : 'Document'} • {wordCount}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Center Tabs */}
-        <div 
-          className="laf-canvas-header-tabs"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(0,0,0,0.35)',
-            borderRadius: '9999px',
-            padding: '3px',
-            border: '1px solid rgba(255,255,255,0.08)'
-          }}
-        >
-          {isCode && artifact.isExecutable && (
-            <button
-              type="button"
-              onClick={() => setActiveTab('preview')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                fontSize: '0.76rem',
-                fontWeight: '600',
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'preview' ? 'var(--ds-blue)' : 'transparent',
-                color: activeTab === 'preview' ? '#fff' : 'var(--ds-text-secondary)',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Eye style={{ width: '13px', height: '13px' }} />
-              <span>Preview</span>
-            </button>
-          )}
-
-          {isCode ? (
-            <button
-              type="button"
-              onClick={() => setActiveTab('code')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                fontSize: '0.76rem',
-                fontWeight: '600',
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'code' ? 'var(--ds-blue)' : 'transparent',
-                color: activeTab === 'code' ? '#fff' : 'var(--ds-text-secondary)',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Code style={{ width: '13px', height: '13px' }} />
-              <span>Code</span>
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setActiveTab('document')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '4px 12px',
-                  borderRadius: '9999px',
-                  fontSize: '0.76rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: activeTab === 'document' ? 'var(--ds-blue)' : 'transparent',
-                  color: activeTab === 'document' ? '#fff' : 'var(--ds-text-secondary)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Eye style={{ width: '13px', height: '13px' }} />
-                <span>Document</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('markdown')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '4px 12px',
-                  borderRadius: '9999px',
-                  fontSize: '0.76rem',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: activeTab === 'markdown' ? 'var(--ds-blue)' : 'transparent',
-                  color: activeTab === 'markdown' ? '#fff' : 'var(--ds-text-secondary)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <FileText style={{ width: '13px', height: '13px' }} />
-                <span>Markdown</span>
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Right Action Tools */}
-        <div className="laf-canvas-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {/* Export Notice Badge */}
-          {exportNotice && (
-            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10b981', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              {exportNotice}
-            </span>
-          )}
-
-          {/* Copy Button */}
-          <button
-            type="button"
-            onClick={handleCopy}
-            title="Copy content"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 10px',
-              borderRadius: '7px',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: copied ? '#10b981' : '#cbd5e1',
-              cursor: 'pointer',
-              fontSize: '0.76rem',
-              fontWeight: '600',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            {copied ? <Check style={{ width: '13px', height: '13px' }} /> : <Copy style={{ width: '13px', height: '13px' }} />}
-            <span className="hide-on-mobile">{copied ? 'Copied' : 'Copy'}</span>
-          </button>
-
-          {/* Export Button - Opens Format Selector Modal */}
-          <button
-            type="button"
-            onClick={() => setShowExportModal(true)}
-            title="Choose format to export document"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '6px 12px',
-              borderRadius: '7px',
-              background: 'rgba(79, 117, 255, 0.18)',
-              border: '1px solid rgba(79, 117, 255, 0.45)',
-              color: '#93c5fd',
-              cursor: 'pointer',
-              fontSize: '0.76rem',
-              fontWeight: '700',
-              transition: 'all 0.15s ease',
-              boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)'
-            }}
-          >
-            <Download style={{ width: '13px', height: '13px' }} />
-            <span>Export</span>
-            <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.8 }} />
-          </button>
-
-          {/* Fullscreen Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-            style={{
-              padding: '6px',
-              borderRadius: '7px',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: '#cbd5e1',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {isFullscreen ? <Minimize2 style={{ width: '14px', height: '14px' }} /> : <Maximize2 style={{ width: '14px', height: '14px' }} />}
-          </button>
-
-          {/* Close Canvas */}
+          {/* Close Canvas - Distinct Top-Right Dismissal Button (Always accessible and separated) */}
           <button
             type="button"
             onClick={onClose}
             title="Close LAF Canvas"
+            className="laf-canvas-close-btn"
             style={{
-              padding: '6px',
-              borderRadius: '7px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              padding: '6px 8px',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
               color: '#f87171',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginLeft: '4px'
+              flexShrink: 0,
+              transition: 'all 0.15s ease'
             }}
           >
-            <X style={{ width: '14px', height: '14px' }} />
+            <X style={{ width: '16px', height: '16px' }} />
           </button>
+        </div>
+
+        {/* Toolbar: Center Tabs & Action Tools */}
+        <div className="laf-canvas-header-toolbar">
+          {/* Center Tabs */}
+          <div 
+            className="laf-canvas-header-tabs"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'rgba(0,0,0,0.35)',
+              borderRadius: '9999px',
+              padding: '3px',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}
+          >
+            {isCode && artifact.isExecutable && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('preview')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  fontSize: '0.76rem',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'preview' ? 'var(--ds-blue)' : 'transparent',
+                  color: activeTab === 'preview' ? '#fff' : 'var(--ds-text-secondary)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Eye style={{ width: '13px', height: '13px' }} />
+                <span>Preview</span>
+              </button>
+            )}
+
+            {isCode ? (
+              <button
+                type="button"
+                onClick={() => setActiveTab('code')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  fontSize: '0.76rem',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'code' ? 'var(--ds-blue)' : 'transparent',
+                  color: activeTab === 'code' ? '#fff' : 'var(--ds-text-secondary)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Code style={{ width: '13px', height: '13px' }} />
+                <span>Code</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('document')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '0.76rem',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: activeTab === 'document' ? 'var(--ds-blue)' : 'transparent',
+                    color: activeTab === 'document' ? '#fff' : 'var(--ds-text-secondary)',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <Eye style={{ width: '13px', height: '13px' }} />
+                  <span>Document</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('markdown')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '0.76rem',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: activeTab === 'markdown' ? 'var(--ds-blue)' : 'transparent',
+                    color: activeTab === 'markdown' ? '#fff' : 'var(--ds-text-secondary)',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <FileText style={{ width: '13px', height: '13px' }} />
+                  <span>Markdown</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Right Action Tools: Copy & Export */}
+          <div className="laf-canvas-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Export Notice Badge */}
+            {exportNotice && (
+              <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10b981', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                {exportNotice}
+              </span>
+            )}
+
+            {/* Copy Button */}
+            <button
+              type="button"
+              onClick={handleCopy}
+              title="Copy content"
+              className="laf-canvas-action-btn laf-canvas-copy-btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: copied ? '#10b981' : '#cbd5e1',
+                cursor: 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: '600',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {copied ? <Check style={{ width: '13px', height: '13px' }} /> : <Copy style={{ width: '13px', height: '13px' }} />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+
+            {/* Export Button - Opens Format Selector Modal */}
+            <button
+              type="button"
+              onClick={() => setShowExportModal(true)}
+              title="Choose format to export document"
+              className="laf-canvas-action-btn laf-canvas-export-btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                background: 'rgba(79, 117, 255, 0.18)',
+                border: '1px solid rgba(79, 117, 255, 0.45)',
+                color: '#93c5fd',
+                cursor: 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: '700',
+                transition: 'all 0.15s ease',
+                boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)'
+              }}
+            >
+              <Download style={{ width: '13px', height: '13px' }} />
+              <span>Export</span>
+              <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.8 }} />
+            </button>
+          </div>
         </div>
       </div>
 

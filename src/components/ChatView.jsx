@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, 
   Bot, Sparkles, ChevronDown, ChevronUp, Layers, CheckCircle2, Play, 
-  Paperclip, X, FileText, Image as ImageIcon, ExternalLink, Code, Eye
+  Paperclip, X, FileText, Image as ImageIcon, ExternalLink, Code, Eye, Download
 } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -133,6 +133,82 @@ marked.setOptions({
   gfm: true
 });
 
+function TypewriterHeroSubheading() {
+  const fullText = "Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.";
+  const [displayText, setDisplayText] = useState('');
+  const [phase, setPhase] = useState('typing'); // 'typing' | 'holding' | 'snapping' | 'void'
+
+  useEffect(() => {
+    let timer;
+
+    if (phase === 'typing') {
+      if (displayText.length < fullText.length) {
+        timer = setTimeout(() => {
+          setDisplayText(fullText.slice(0, displayText.length + 1));
+        }, 34); // natural live writing speed
+      } else {
+        timer = setTimeout(() => {
+          setPhase('holding');
+        }, 200);
+      }
+    } else if (phase === 'holding') {
+      // Hold for 2.8 seconds so user can read comfortably
+      timer = setTimeout(() => {
+        setPhase('snapping');
+      }, 2800);
+    } else if (phase === 'snapping') {
+      // Thanos snap dissolution sweeps across text (2.2 seconds total)
+      timer = setTimeout(() => {
+        setPhase('void');
+        setDisplayText('');
+      }, 2200);
+    } else if (phase === 'void') {
+      // Brief pause in void before live typing restarts
+      timer = setTimeout(() => {
+        setPhase('typing');
+      }, 600);
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, phase, fullText]);
+
+  if (phase === 'snapping') {
+    return (
+      <p className="laf-hero-subheading gemini-animated-subheading typewriter-subheading thanos-snap-active">
+        {fullText.split(' ').map((word, wIdx) => (
+          <span key={wIdx} style={{ display: 'inline-block', whiteSpace: 'nowrap', margin: '0 2.5px' }}>
+            {word.split('').map((char, cIdx) => {
+              const globalIdx = wIdx * 8 + cIdx;
+              return (
+                <span
+                  key={cIdx}
+                  className="thanos-ash-particle"
+                  style={{
+                    display: 'inline-block',
+                    animationDelay: `${globalIdx * 12}ms`,
+                    '--dx': `${((globalIdx % 5) - 2) * 8 + 10}px`,
+                    '--dy': `${-(((globalIdx * 2) % 6) + 3) * 6}px`,
+                    '--rot': `${((globalIdx % 4) - 2) * 8}deg`
+                  }}
+                >
+                  {char}
+                </span>
+              );
+            })}
+          </span>
+        ))}
+      </p>
+    );
+  }
+
+  return (
+    <p className="laf-hero-subheading gemini-animated-subheading typewriter-subheading">
+      <span>{displayText}</span>
+      {phase === 'typing' && <span className="typewriter-cursor">|</span>}
+    </p>
+  );
+}
+
 export default function ChatView({
   user,
   token,
@@ -157,6 +233,7 @@ export default function ChatView({
   const [canvasArtifact, setCanvasArtifact] = useState(null);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
   const [isLiveGenerating, setIsLiveGenerating] = useState(false);
+  const [viewingFileModal, setViewingFileModal] = useState(null);
 
   // Live Typing & Streaming State
   const [isImageGenerating, setIsImageGenerating] = useState(false);
@@ -176,6 +253,7 @@ export default function ChatView({
   const recognitionRef = useRef(null);
   const fileInputWelcomeRef = useRef(null);
   const fileInputBottomRef = useRef(null);
+  const attachmentCacheRef = useRef({});
 
   const formatFileSize = (bytes) => {
     if (!bytes || bytes === 0) return '0 B';
@@ -196,22 +274,25 @@ export default function ChatView({
     const formattedSize = formatFileSize(file.size);
     const isImg = file.type.startsWith('image/');
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const blobUrl = URL.createObjectURL(file);
 
     if (isImg) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target.result;
         const base64Data = dataUrl.split(',')[1];
-        setAttachment({
+        const attObj = {
           name: file.name,
           size: file.size,
           formattedSize,
           mimeType: file.type || 'image/jpeg',
           isImage: true,
           isPdf: false,
-          previewUrl: dataUrl,
+          previewUrl: blobUrl || dataUrl,
           data: base64Data
-        });
+        };
+        attachmentCacheRef.current[file.name] = attObj;
+        setAttachment(attObj);
       };
       reader.readAsDataURL(file);
     } else if (isPdf) {
@@ -230,33 +311,37 @@ export default function ChatView({
           }
         } catch(err) {}
 
-        setAttachment({
+        const attObj = {
           name: file.name,
           size: file.size,
           formattedSize,
           mimeType: 'application/pdf',
           isImage: false,
           isPdf: true,
-          previewUrl: null,
+          previewUrl: blobUrl,
           data: base64Data,
           textContent: extractedSnippet || null
-        });
+        };
+        attachmentCacheRef.current[file.name] = attObj;
+        setAttachment(attObj);
       };
       reader.readAsDataURL(file);
     } else {
       // Text, Code, JSON, Markdown, CSV, etc.
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAttachment({
+        const attObj = {
           name: file.name,
           size: file.size,
           formattedSize,
           mimeType: file.type || 'text/plain',
           isImage: false,
           isPdf: false,
-          previewUrl: null,
+          previewUrl: blobUrl,
           textContent: e.target.result
-        });
+        };
+        attachmentCacheRef.current[file.name] = attObj;
+        setAttachment(attObj);
       };
       reader.readAsText(file);
     }
@@ -535,9 +620,9 @@ export default function ChatView({
     setIsDocGenerating(isDoc);
     if (isDoc) {
       const inferredTopic = textToSend
-        .replace(/\b(create|write|draft|generate|make|build|prepare|compose)\s+(a\s+|an\s+|the\s+)?([a-z0-9\s_-]*\s+)?(document|doc|docs|report|spec|specification)?\s*(of|on|about|for|regarding)?\s*/i, '')
+        .replace(/\b(create|write|draft|generate|make|build|prepare|compose|give me as|generate me as a)\s+(a\s+|an\s+|the\s+)?([a-z0-9\s_-]*\s+)?(document|doc|docs|report|spec|specification|file)?\s*(of|on|about|for|regarding)?\s*/i, '')
         .trim();
-      const cleanTopic = inferredTopic ? (inferredTopic.charAt(0).toUpperCase() + inferredTopic.slice(1)) : 'Document';
+      const cleanTopic = inferredTopic ? (inferredTopic.charAt(0).toUpperCase() + inferredTopic.slice(1)) : (currentAttachment ? currentAttachment.name.replace(/\.[^/.]+$/, '') : 'Document');
       setDocTopic(cleanTopic);
       setIsCanvasOpen(true);
       setIsLiveGenerating(true);
@@ -551,6 +636,10 @@ export default function ChatView({
 
     const baseHistory = overrideHistory !== undefined ? overrideHistory : messages;
 
+    if (currentAttachment?.name) {
+      attachmentCacheRef.current[currentAttachment.name] = currentAttachment;
+    }
+
     // Append user message
     const newHistory = [
       ...baseHistory,
@@ -563,7 +652,7 @@ export default function ChatView({
           formattedSize: currentAttachment.formattedSize,
           mimeType: currentAttachment.mimeType,
           isImage: currentAttachment.isImage,
-          isPdf: currentAttachment.isPdf,
+          isPdf: !!currentAttachment.isPdf || currentAttachment.mimeType === 'application/pdf' || currentAttachment.name?.toLowerCase().endsWith('.pdf'),
           previewUrl: currentAttachment.previewUrl,
           data: currentAttachment.data,
           textContent: currentAttachment.textContent
@@ -580,7 +669,7 @@ export default function ChatView({
     // 1. Try sending to backend if reachable
     try {
       const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 12000);
+      const tid = setTimeout(() => controller.abort(), 40000);
 
       const res = await fetch(apiUrl('/api/chat/send'), {
         method: 'POST',
@@ -742,32 +831,27 @@ export default function ChatView({
             flexDirection: 'column' 
           }}
         >
-          <div style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '26px' }}>
+          <div className="chat-messages-inner" style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '26px' }}>
             
             {messages.length === 0 ? (
               /* Unique Futuristic Welcome Hero Screen */
               <div className="laf-hero-container">
-                <div className="laf-hero-emblem-wrap">
-                  <img
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
-                    alt="LAF Logo"
-                    className="laf-hero-emblem"
-                  />
-                  <div className="laf-hero-glow-ring"></div>
-                </div>
+                <div className="laf-hero-header-group">
+                  <div className="laf-hero-emblem-wrap">
+                    <img
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
+                      alt="LAF Logo"
+                      className="laf-hero-emblem laf-logo-intro-spin"
+                    />
+                    <div className="laf-hero-glow-ring"></div>
+                  </div>
 
-                <div className="laf-hero-badge">
-                  <Sparkles style={{ width: '13px', height: '13px', color: '#60a5fa' }} />
-                  <span>Look At Future • 2026 Engine</span>
+                  <h1 className="laf-hero-heading gemini-animated-heading">
+                    Where Imagination Meets Intelligence.
+                  </h1>
+                  
+                  <TypewriterHeroSubheading />
                 </div>
-
-                <h1 className="laf-hero-heading">
-                  Where Imagination Meets Intelligence.
-                </h1>
-                
-                <p className="laf-hero-subheading">
-                  Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
-                </p>
 
                 {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
                 <form
@@ -790,7 +874,19 @@ export default function ChatView({
                   {/* Selected File/Image/PDF Preview Chip */}
                   {attachment && (
                     <div className="attachment-chip-bar">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div 
+                        onClick={() => {
+                          const cached = attachmentCacheRef.current[attachment.name];
+                          setViewingFileModal({
+                            ...attachment,
+                            ...(cached || {}),
+                            isPdf: attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.name?.toLowerCase().endsWith('.pdf'),
+                            isImage: attachment.isImage || attachment.mimeType?.startsWith('image/')
+                          });
+                        }}
+                        title="Click to view and verify file"
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, cursor: 'pointer' }}
+                      >
                         {attachment.isImage ? (
                           <img
                             src={attachment.previewUrl}
@@ -890,8 +986,8 @@ export default function ChatView({
                       disabled={loading || (!inputPrompt.trim() && !attachment)}
                       className="chat-icon-action-btn send-btn"
                       style={{
-                        background: (inputPrompt.trim() || attachment) ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
-                        cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default'
+                        cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                        opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
                       }}
                     >
                       <Send style={{ width: '16px', height: '16px', transform: 'translate(-1px, 1px)' }} />
@@ -958,8 +1054,16 @@ export default function ChatView({
                         <div style={{ marginBottom: '10px', display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
                           {m.attachment.isImage && m.attachment.previewUrl ? (
                             <div
-                              onClick={() => window.open(m.attachment.previewUrl, '_blank')}
-                              title="Click to view full image"
+                              onClick={() => {
+                                const cached = attachmentCacheRef.current[m.attachment.name];
+                                setViewingFileModal({
+                                  ...m.attachment,
+                                  ...(cached || {}),
+                                  isPdf: m.attachment.isPdf || m.attachment.mimeType === 'application/pdf' || m.attachment.name?.toLowerCase().endsWith('.pdf'),
+                                  isImage: true
+                                });
+                              }}
+                              title="Click to view and verify full image"
                               style={{
                                 borderRadius: '12px',
                                 overflow: 'hidden',
@@ -979,6 +1083,16 @@ export default function ChatView({
                             </div>
                           ) : (
                             <div
+                              onClick={() => {
+                                const cached = attachmentCacheRef.current[m.attachment.name];
+                                setViewingFileModal({
+                                  ...m.attachment,
+                                  ...(cached || {}),
+                                  isPdf: m.attachment.isPdf || m.attachment.mimeType === 'application/pdf' || m.attachment.name?.toLowerCase().endsWith('.pdf'),
+                                  isImage: m.attachment.isImage || m.attachment.mimeType?.startsWith('image/')
+                                });
+                              }}
+                              title="Click to view and verify document"
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -988,10 +1102,11 @@ export default function ChatView({
                                 background: 'rgba(30, 41, 59, 0.85)',
                                 border: '1px solid rgba(79, 117, 255, 0.3)',
                                 color: '#f8fafc',
-                                fontSize: '0.82rem'
+                                fontSize: '0.82rem',
+                                cursor: 'pointer'
                               }}
                             >
-                              <FileText style={{ width: '15px', height: '15px', color: m.attachment.isPdf ? '#f87171' : '#60a5fa' }} />
+                              <FileText style={{ width: '15px', height: '15px', color: (m.attachment.isPdf || m.attachment.name?.toLowerCase().endsWith('.pdf')) ? '#f87171' : '#60a5fa' }} />
                               <span style={{ fontWeight: '600', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {m.attachment.name}
                               </span>
@@ -1035,7 +1150,7 @@ export default function ChatView({
                       ) : (
                         /* Message Bubble */
                         (() => {
-                          const docArt = !isUser ? (m.documentArtifact || ((m.isDocument || (extractCanvasArtifact(m.content)?.type === 'document')) ? extractCanvasArtifact(m.content) : null)) : null;
+                          const docArt = !isUser && m.isDocument ? (m.documentArtifact || extractCanvasArtifact(m.content, 'doc')) : null;
                           const isDocCreating = docArt && m.isTyping;
                           const isDocFinished = docArt && !m.isTyping;
 
@@ -1275,7 +1390,19 @@ export default function ChatView({
               {/* Selected File/Image Preview Chip */}
               {attachment && (
                 <div className="attachment-chip-bar">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <div 
+                    onClick={() => {
+                      const cached = attachmentCacheRef.current[attachment.name];
+                      setViewingFileModal({
+                        ...attachment,
+                        ...(cached || {}),
+                        isPdf: attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.name?.toLowerCase().endsWith('.pdf'),
+                        isImage: attachment.isImage || attachment.mimeType?.startsWith('image/')
+                      });
+                    }}
+                    title="Click to view and verify file"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, cursor: 'pointer' }}
+                  >
                     {attachment.isImage ? (
                       <img
                         src={attachment.previewUrl}
@@ -1375,8 +1502,8 @@ export default function ChatView({
                   disabled={loading || isStreaming || (!inputPrompt.trim() && !attachment)}
                   className="chat-icon-action-btn send-btn"
                   style={{
-                    background: (inputPrompt.trim() || attachment) ? 'var(--ds-blue)' : 'var(--ds-bg-card)',
-                    cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default'
+                    cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                    opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
                   }}
                 >
                   <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
@@ -1385,6 +1512,14 @@ export default function ChatView({
             </form>
           </div>
         )}
+
+        {/* Authentic Gemini Bottom Blue Glow Aura (Fluid luminous gradient glow: dark at bottom, lite animation at half-screen) */}
+        <div className="gemini-ambient-bottom-glow" aria-hidden="true">
+          <div className="gemini-glow-dark-base" />
+          <div className="gemini-glow-core" />
+          <div className="gemini-glow-orb" />
+          <div className="gemini-glow-beam" />
+        </div>
 
       </div>
 
@@ -1404,6 +1539,223 @@ export default function ChatView({
               artifact={canvasArtifact}
               isLiveUpdating={isLiveGenerating}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Uploaded File & Image Verification Viewer Modal */}
+      {viewingFileModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setViewingFileModal(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(5, 8, 16, 0.88)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '16px'
+          }}
+        >
+          <div
+            className="modal-floating-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '860px',
+              width: '100%',
+              maxHeight: '90vh',
+              background: 'rgba(15, 23, 42, 0.96)',
+              border: '1px solid rgba(79, 117, 255, 0.4)',
+              borderRadius: '18px',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(79, 117, 255, 0.25)'
+            }}
+          >
+            {/* Header */}
+            {(() => {
+              const isPdf = viewingFileModal.isPdf || viewingFileModal.mimeType === 'application/pdf' || viewingFileModal.name?.toLowerCase().endsWith('.pdf');
+              const isImage = viewingFileModal.isImage || viewingFileModal.mimeType?.startsWith('image/');
+
+              let resolvedUrl = viewingFileModal.previewUrl;
+              if (!resolvedUrl && viewingFileModal.data) {
+                if (isImage) {
+                  resolvedUrl = `data:${viewingFileModal.mimeType || 'image/jpeg'};base64,${viewingFileModal.data}`;
+                } else if (isPdf) {
+                  try {
+                    const byteCharacters = atob(viewingFileModal.data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                      byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                    resolvedUrl = URL.createObjectURL(blob);
+                  } catch (e) {
+                    resolvedUrl = `data:application/pdf;base64,${viewingFileModal.data}`;
+                  }
+                }
+              }
+
+              let displayText = viewingFileModal.textContent;
+              if (!displayText && viewingFileModal.data && !isImage && !isPdf) {
+                try {
+                  displayText = atob(viewingFileModal.data);
+                } catch (e) {}
+              }
+
+              return (
+                <>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '14px 18px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: 'rgba(15, 23, 42, 0.8)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          background: isImage ? 'rgba(59, 130, 246, 0.2)' : (isPdf ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)'),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: isImage ? '#60a5fa' : (isPdf ? '#f87171' : '#c084fc'),
+                          flexShrink: 0
+                        }}
+                      >
+                        {isImage ? <ImageIcon style={{ width: '16px', height: '16px' }} /> : <FileText style={{ width: '16px', height: '16px' }} />}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.92rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '420px' }}>
+                          {viewingFileModal.name}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                          {viewingFileModal.formattedSize || ''} • {isImage ? 'Image' : (isPdf ? 'PDF Document' : 'Document / Code')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {resolvedUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.open(resolvedUrl, '_blank')}
+                            title="Open in new window"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.06)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              color: '#cbd5e1',
+                              cursor: 'pointer',
+                              fontSize: '0.78rem',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px'
+                            }}
+                          >
+                            <ExternalLink style={{ width: '14px', height: '14px' }} />
+                            <span>Open</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = resolvedUrl;
+                              link.download = viewingFileModal.name || 'file';
+                              link.click();
+                            }}
+                            title="Download file"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.06)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              color: '#cbd5e1',
+                              cursor: 'pointer',
+                              fontSize: '0.78rem',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px'
+                            }}
+                          >
+                            <Download style={{ width: '14px', height: '14px' }} />
+                            <span>Download</span>
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setViewingFileModal(null)}
+                        title="Close viewer"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '8px',
+                          padding: '6px',
+                          color: '#f87171',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <X style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Viewer Content Body */}
+                  <div
+                    style={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      padding: '16px',
+                      background: '#090d16',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '300px'
+                    }}
+                  >
+                    {isImage && resolvedUrl ? (
+                      <img
+                        src={resolvedUrl}
+                        alt={viewingFileModal.name}
+                        style={{ maxWidth: '100%', maxHeight: '68vh', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+                      />
+                    ) : isPdf && resolvedUrl ? (
+                      <iframe
+                        src={`${resolvedUrl}#toolbar=1`}
+                        title={viewingFileModal.name}
+                        style={{ width: '100%', height: '68vh', border: 'none', borderRadius: '8px', background: '#fff' }}
+                      />
+                    ) : (
+                      <div style={{ width: '100%', maxHeight: '68vh', overflowY: 'auto', textAlign: 'left', background: '#0d1322', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.84rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', wordBreak: 'normal', overflowWrap: 'break-word' }}>
+                          <code>{displayText || 'No text preview available for this file type.'}</code>
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -4,7 +4,12 @@ const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
 
-const SYSTEM_PROMPT = `You are a helpful, accurate, and professional AI assistant named LAF operating in 2026.
+function getSystemPrompt() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const year = now.getFullYear();
+
+  return `You are a helpful, accurate, and professional AI assistant named LAF operating in ${year}.
 
 CRITICAL INSTRUCTIONS:
 1. DIRECT & PROFESSIONAL ANSWERS: Answer questions directly and concisely. Do NOT begin responses with self-introductions, such as "I am LAF", "As an AI...", or grand proclamations like "Systems are fully operational".
@@ -12,7 +17,7 @@ CRITICAL INSTRUCTIONS:
 3. NORMAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing.
 4. TECHNICAL QUALITY: Provide clean, accurate, and well-structured GitHub-flavored Markdown. Tag all code blocks with appropriate language syntax.
 5. OPERATIONAL CONTEXT:
-- Current Year: 2026 | Current Date: August 8, 2026.
+- Current Year: ${year} | Current Date: ${dateStr}.
 - Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.
 - LAF ARCHITECTURE & TECHNOLOGY:
   * Platform: LAF ("Look At Future") is an autonomous multimodal AI platform.
@@ -21,7 +26,10 @@ CRITICAL INSTRUCTIONS:
   * Security & Privacy: Zero-knowledge architecture featuring End-to-End Encryption (AES-256-GCM with PBKDF2 key derivation), per-user isolated database partitioning, and real-time threat/jailbreak shields.
   * AI & Reasoning Engine: Multi-model auto-routing with Google DeepMind Gemini Flash engines for sub-second inference, high-availability cloud fallback, and local Ollama (laf-v2 / llama3.2) support.
   * Multimodal: High-resolution image generation (FLUX.1-HD / SDXL), audio synthesis (Web Speech TTS), and video motion previews.
-6. DOCUMENT CREATION: When the user asks to write, create, draft, or generate a document, report, or specification, format it as a complete, comprehensive, well-structured document starting with a clear top-level heading (# Document Title), followed by organized sections (## Section), tables, and actionable insights for display in LAF Canvas.`;
+6. DOCUMENT CREATION: When the user asks to write, create, draft, or generate a document, report, or specification, format it as a complete, comprehensive, well-structured document starting with a clear top-level heading (# Document Title), followed by organized sections (## Section), tables, and actionable insights for display in LAF Canvas. When specifying timestamps or creation dates, always use the real current date: ${dateStr}.`;
+}
+
+const SYSTEM_PROMPT = getSystemPrompt();
 
 const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
 
@@ -324,10 +332,9 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
 async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, attachment = null }) {
   if (!apiKey) return null;
   const models = [
-    'gemini-flash-lite-latest',
-    'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
-    'gemini-3-flash-preview',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-lite-latest',
     'gemini-flash-latest',
     'gemini-3.8-flash'
   ];
@@ -399,7 +406,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
             maxOutputTokens: 4096
           }
         },
-        { timeout: 25000 }
+        { timeout: 12000 }
       );
 
       const raw = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -564,8 +571,16 @@ function detectOptimalModel(prompt = '') {
  * Rebuilt Clean AI Engine: 24/7 Auto-Switching Architecture + Local Ollama AI Platform + FLUX.1 Image Engine
  */
 async function generateResponse({ username, prompt, history = [], selectedModel = 'auto', customApiKey = '', attachment = null }) {
-  const cleanPrompt = (prompt || '').trim();
-  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt}" (Attachment: ${attachment ? attachment.name : 'None'})`);
+  let cleanPrompt = (prompt || '').trim();
+  if (!cleanPrompt && attachment) {
+    cleanPrompt = attachment.isImage
+      ? `Analyze and describe this uploaded image (${attachment.name || 'Image'}) in comprehensive detail. Break down all visual elements, text, objects, and key information.`
+      : (attachment.isPdf
+          ? `Analyze this uploaded PDF document (${attachment.name || 'Document'}) in detail. Extract and present all key information, company/sender details, dates, items, numbers, tables, summaries, and important takeaways.`
+          : `Analyze this uploaded file (${attachment.name || 'File'}). Provide a comprehensive explanation, breakdown of its contents, and key insights.`
+        );
+  }
+  console.log(`[AI-ENGINE] Incoming Prompt for user "${username}": "${cleanPrompt.substring(0, 80)}" (Attachment: ${attachment ? attachment.name : 'None'})`);
 
   // Collect candidate API keys right at start
   const candidateKeys = [];
