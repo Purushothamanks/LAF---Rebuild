@@ -29,29 +29,19 @@
 
 ---
 
-### 1.2 Omnichannel Mobile-First Viewport Lock
-- **Elimination of Mobile Up/Down Screen Dragging:**
-  - Root containers (`html, body, #root`) are pinned to:
-    ```css
-    width: 100%;
-    height: 100%;
-    height: 100dvh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    position: fixed;
-    inset: 0;
-    touch-action: pan-x pan-y;
-    overscroll-behavior: none;
-    ```
-  - Internal message scroll (`.chat-messages-scroll`) has `overscroll-behavior-y: contain;` and `-webkit-overflow-scrolling: touch;`.
-  - Swiping or scrolling inside the app on mobile never rubberbands or moves the screen itself.
+### 1.2 Omnichannel Mobile-First Viewport Lock & Dynamic Keyboard Handling
+- **Mobile Keyboard & Viewport Synchronization:**
+  - Added `interactive-widget=resizes-content` to `meta[name="viewport"]` in `index.html`.
+  - Root containers: `html, body` have `overflow: hidden; height: 100%;` and `#root` has `height: 100dvh; display: flex; flex-direction: column;`.
+  - On mobile, `.chat-bottom-input-anchor` is structured as a relative flex item (`position: relative; flex-shrink: 0; z-index: 50;`) at the base of the chat column.
+  - When the virtual keyboard opens or user sends an input, the input bar docks firmly directly above the keyboard and NEVER hides or slips below the screen.
+  - Converted message scrolling from global `scrollIntoView()` to container-scoped `chatMessagesScrollRef.current.scrollTo(...)`, ensuring zero document or window displacement.
 
 ---
 
 ### 1.3 Chat Input Ergonomics & Dynamic Send Button
-- **Desktop Positioning:** Anchored with `bottom: 24px; z-index: 50;` for modern breathing room.
-- **Mobile Positioning:** Anchored with `bottom: calc(20px + env(safe-area-inset-bottom, 10px)); z-index: 50;`.
+- **Desktop Positioning:** Floating clean anchor with `bottom: 24px; z-index: 50;` for modern breathing room.
+- **Mobile Positioning:** Docked flex base with `padding: 6px 12px calc(8px + env(safe-area-inset-bottom, 8px)) 12px; z-index: 50;`.
 - **Dynamic Themed Send Button:**
   - Auto-adapts based on active theme (`dark`, `cyber`, `light`).
   - Active state lights up with blue accent (`#3b82f6`) when prompt text or an attachment is present.

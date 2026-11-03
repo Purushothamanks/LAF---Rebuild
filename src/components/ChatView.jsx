@@ -249,6 +249,7 @@ export default function ChatView({
     setExpandedMilestones(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const chatMessagesScrollRef = useRef(null);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
   const fileInputWelcomeRef = useRef(null);
@@ -776,7 +777,12 @@ export default function ChatView({
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatMessagesScrollRef.current) {
+      chatMessagesScrollRef.current.scrollTo({
+        top: chatMessagesScrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [messages, loading, isStreaming, isImageGenerating]);
 
   const handleCopy = (text, idx) => {
@@ -830,9 +836,11 @@ export default function ChatView({
 
         {/* Messages Scroll Area with Generous Bottom Clearance (Layer 2: Above glow, crisp text, zero blur/interference) */}
         <div 
+          ref={chatMessagesScrollRef}
           className="chat-messages-scroll"
           style={{ 
             flex: 1, 
+            minHeight: 0,
             overflowY: 'auto', 
             overscrollBehaviorY: 'contain',
             padding: '20px 0 160px 0', 
