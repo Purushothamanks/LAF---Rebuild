@@ -820,15 +820,26 @@ export default function ChatView({
         }}
       >
         
-        {/* Messages Scroll Area with Generous Bottom Clearance */}
+        {/* Authentic Gemini Ambient Bottom Glow Aura (Layer 1: Behind text, light animation at bottom, fading to top half) */}
+        <div className="gemini-ambient-bottom-glow" aria-hidden="true">
+          <div className="gemini-glow-base" />
+          <div className="gemini-glow-core" />
+          <div className="gemini-glow-orb" />
+          <div className="gemini-glow-beam" />
+        </div>
+
+        {/* Messages Scroll Area with Generous Bottom Clearance (Layer 2: Above glow, crisp text, zero blur/interference) */}
         <div 
           className="chat-messages-scroll"
           style={{ 
             flex: 1, 
             overflowY: 'auto', 
+            overscrollBehaviorY: 'contain',
             padding: '20px 0 160px 0', 
             display: 'flex', 
-            flexDirection: 'column' 
+            flexDirection: 'column',
+            position: 'relative',
+            zIndex: 2
           }}
         >
           <div className="chat-messages-inner" style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '26px' }}>
@@ -1512,14 +1523,6 @@ export default function ChatView({
             </form>
           </div>
         )}
-
-        {/* Authentic Gemini Bottom Blue Glow Aura (Fluid luminous gradient glow: dark at bottom, lite animation at half-screen) */}
-        <div className="gemini-ambient-bottom-glow" aria-hidden="true">
-          <div className="gemini-glow-dark-base" />
-          <div className="gemini-glow-core" />
-          <div className="gemini-glow-orb" />
-          <div className="gemini-glow-beam" />
-        </div>
 
       </div>
 

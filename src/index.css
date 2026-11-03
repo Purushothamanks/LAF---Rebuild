@@ -79,11 +79,24 @@
   -webkit-font-smoothing: antialiased;
 }
 
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  touch-action: pan-x pan-y;
+  overscroll-behavior: none;
+}
+
 body {
   background-color: var(--ds-bg-main);
   color: var(--ds-text-primary);
-  overflow-x: hidden;
-  min-height: 100vh;
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Floating Sidebar Container */
@@ -1475,83 +1488,98 @@ p code, li code {
 }
 
 /* ==============================================================
-   GEMINI AMBIENT BOTTOM GLOW (HALF-SCREEN WAVE IN BOTH DESKTOP & MOBILE)
-   At bottom: richer/darker blue anchor. At half-screen: soft lite animated aura.
+   GEMINI AMBIENT BOTTOM GLOW (FITS BOTH DESKTOP & MOBILE)
+   Light glow animation at bottom edge that fades gracefully to 0
+   at top half screen, strictly on Layer 1 behind all chat text.
    ============================================================== */
 .gemini-ambient-bottom-glow {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50vh;
-  min-height: 360px;
-  max-height: 560px;
+  width: 100%;
+  height: 45vh;
+  max-height: 440px;
   pointer-events: none;
-  z-index: 15;
+  z-index: 1;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  /* Smooth vertical mask: 100% visible at bottom, fading smoothly to completely transparent at top half */
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.85) 20%,
+    rgba(0, 0, 0, 0.4) 55%,
+    rgba(0, 0, 0, 0.08) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.85) 20%,
+    rgba(0, 0, 0, 0.4) 55%,
+    rgba(0, 0, 0, 0.08) 80%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
-/* Deeper, darker blue base right at the bottom edge */
-.gemini-glow-dark-base {
+/* Light luminous blue base right at the bottom edge */
+.gemini-glow-base {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 180px;
+  height: 110px;
   background: linear-gradient(
     to top,
-    rgba(10, 16, 30, 0.96) 0%,
-    rgba(15, 28, 64, 0.8) 28%,
-    rgba(29, 78, 216, 0.45) 65%,
+    rgba(37, 99, 235, 0.22) 0%,
+    rgba(59, 130, 246, 0.12) 45%,
     transparent 100%
   );
   filter: blur(14px);
   z-index: 1;
 }
 
-/* Primary Core Aura - Reaches up to half-screen with smooth horizontal travel */
+/* Primary Core Aura - Soft luminous sweep across screen width */
 .gemini-glow-core {
   position: absolute;
-  bottom: -10%;
-  width: 175%;
-  max-width: 1700px;
-  height: 110%;
+  bottom: -5%;
+  width: 140%;
+  max-width: 1300px;
+  height: 100%;
   border-radius: 50% 50% 0 0;
   background: radial-gradient(
-    ellipse 85% 75% at 50% 100%,
-    rgba(29, 78, 216, 0.65) 0%,
-    rgba(37, 99, 235, 0.45) 25%,
-    rgba(59, 130, 246, 0.3) 50%,
-    rgba(147, 197, 253, 0.16) 72%,
-    rgba(192, 132, 252, 0.08) 88%,
-    transparent 96%
+    ellipse 80% 60% at 50% 100%,
+    rgba(59, 130, 246, 0.32) 0%,
+    rgba(96, 165, 250, 0.2) 32%,
+    rgba(147, 197, 253, 0.1) 62%,
+    transparent 85%
   );
-  filter: blur(48px);
-  animation: geminiCoreSweepAcross 7.5s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  filter: blur(38px);
+  animation: geminiCoreSweepAcross 7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
   will-change: transform, opacity;
   z-index: 2;
 }
 
-/* Lite Accent Orb - Dynamic soft luminous shimmer */
+/* Lite Accent Orb - Dynamic soft luminous shimmer that travels smoothly */
 .gemini-glow-orb {
   position: absolute;
-  bottom: -5%;
-  width: 52vw;
-  min-width: 320px;
-  max-width: 720px;
-  height: 85%;
+  bottom: 0;
+  width: 48vw;
+  min-width: 280px;
+  max-width: 620px;
+  height: 75%;
   border-radius: 50%;
   background: radial-gradient(
-    ellipse 75% 65% at 50% 100%,
-    rgba(56, 189, 248, 0.5) 0%,
-    rgba(99, 102, 241, 0.35) 40%,
-    rgba(168, 85, 247, 0.18) 70%,
-    transparent 92%
+    ellipse 70% 55% at 50% 100%,
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(129, 140, 248, 0.18) 45%,
+    rgba(192, 132, 252, 0.08) 75%,
+    transparent 90%
   );
-  filter: blur(34px);
+  filter: blur(28px);
   animation: geminiOrbSweepAcross 5.5s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
   will-change: transform, opacity;
   z-index: 3;
@@ -1563,51 +1591,49 @@ p code, li code {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1.5px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(30, 58, 138, 0.8) 15%,
-    rgba(59, 130, 246, 0.9) 35%,
-    rgba(147, 197, 253, 1) 50%,
-    rgba(168, 85, 247, 0.9) 65%,
-    rgba(30, 58, 138, 0.8) 85%,
+    rgba(59, 130, 246, 0.35) 15%,
+    rgba(147, 197, 253, 0.75) 50%,
+    rgba(168, 85, 247, 0.45) 85%,
     transparent 100%
   );
   background-size: 200% auto;
   filter: blur(1px);
-  animation: geminiBeamSweepAcross 4s linear infinite;
-  opacity: 0.85;
+  animation: geminiBeamSweepAcross 4.5s linear infinite;
+  opacity: 0.7;
   z-index: 4;
 }
 
 @keyframes geminiCoreSweepAcross {
   0% {
-    transform: translateX(-20%) scaleY(0.95);
+    transform: translateX(-18%) scaleY(0.96);
     opacity: 0.75;
   }
   50% {
-    transform: translateX(0%) scaleY(1.05);
+    transform: translateX(0%) scaleY(1.04);
     opacity: 0.95;
   }
   100% {
-    transform: translateX(20%) scaleY(0.95);
+    transform: translateX(18%) scaleY(0.96);
     opacity: 0.75;
   }
 }
 
 @keyframes geminiOrbSweepAcross {
   0% {
-    transform: translateX(-25vw) scale(0.92);
-    opacity: 0.65;
+    transform: translateX(-22vw) scale(0.92);
+    opacity: 0.7;
   }
   50% {
-    transform: translateX(0vw) scale(1.12);
-    opacity: 0.95;
+    transform: translateX(0vw) scale(1.08);
+    opacity: 1;
   }
   100% {
-    transform: translateX(25vw) scale(0.92);
-    opacity: 0.65;
+    transform: translateX(22vw) scale(0.92);
+    opacity: 0.7;
   }
 }
 
@@ -2241,53 +2267,45 @@ p code, li code {
     pointer-events: none !important;
   }
 
-  /* Gemini Mobile Bottom Blue Glow Aura (Half-Screen & Screen-Travelling) */
+  /* Gemini Mobile Bottom Blue Glow Aura (Fits seamlessly, layer 1 behind text, zero screen displacement) */
   .gemini-ambient-bottom-glow {
-    height: 50vh !important;
-    max-height: 500px !important;
-    z-index: 15 !important;
+    height: 38vh !important;
+    max-height: 300px !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
   }
 
-  .gemini-glow-dark-base {
-    height: 140px !important;
+  .gemini-glow-base {
+    height: 75px !important;
+    background: linear-gradient(
+      to top,
+      rgba(37, 99, 235, 0.22) 0%,
+      rgba(59, 130, 246, 0.1) 45%,
+      transparent 100%
+    ) !important;
+    filter: blur(10px) !important;
   }
 
   .gemini-glow-core {
-    bottom: -10% !important;
-    width: 190% !important;
-    height: 110% !important;
+    bottom: -5% !important;
+    width: 140% !important;
+    height: 100% !important;
     background: radial-gradient(
-      ellipse 85% 75% at 50% 100%,
-      rgba(29, 78, 216, 0.65) 0%,
-      rgba(37, 99, 235, 0.45) 25%,
-      rgba(59, 130, 246, 0.3) 50%,
-      rgba(147, 197, 253, 0.16) 72%,
-      rgba(192, 132, 252, 0.08) 88%,
-      transparent 96%
+      ellipse 80% 60% at 50% 100%,
+      rgba(59, 130, 246, 0.3) 0%,
+      rgba(96, 165, 250, 0.18) 35%,
+      rgba(147, 197, 253, 0.08) 65%,
+      transparent 85%
     ) !important;
-    filter: blur(36px) !important;
-    animation: geminiCoreSweepAcross 6.5s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate !important;
+    filter: blur(24px) !important;
+    animation: geminiCoreSweepAcross 6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate !important;
   }
 
   .gemini-glow-orb {
-    width: 70vw !important;
-    height: 80% !important;
-    animation: geminiOrbSweepAcross 5s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate !important;
-  }
-
-  @keyframes geminiOrbTravelAcrossMobile {
-    0% {
-      transform: translateX(-40vw) scale(0.9);
-      opacity: 0.65;
-    }
-    50% {
-      transform: translateX(0vw) scale(1.15);
-      opacity: 1;
-    }
-    100% {
-      transform: translateX(40vw) scale(0.9);
-      opacity: 0.65;
-    }
+    width: 60vw !important;
+    height: 65% !important;
+    filter: blur(18px) !important;
+    animation: geminiOrbSweepAcross 4.8s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate !important;
   }
 
   .floating-input-card {

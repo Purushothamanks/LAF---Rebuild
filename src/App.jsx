@@ -311,7 +311,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
