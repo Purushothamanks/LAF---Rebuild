@@ -45,21 +45,25 @@ async function generateImage({ prompt, apiKey }) {
     }
   }
 
-  // 2. High-Performance FLUX Neural Engine
+  // 2. High-Performance Unlimited Vision Engine
   const seed = Math.floor(Math.random() * 10000000);
-  const isTechnicalVisual = /blue-?prit|blueprint|graph|ghaph|diagram|flow-?chart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline/i.test(cleanPrompt);
+  const normalized = cleanPrompt
+    .replace(/blue-?prit|blue\s+prit/gi, 'blueprint')
+    .replace(/\bghaph\b|\bgrap\b|\bgraff\b|\bgraf\b/gi, 'graph')
+    .replace(/\bflow-?chart\b/gi, 'flowchart')
+    .replace(/\bwire-?frame\b/gi, 'wireframe');
 
-  let styledPrompt = `${cleanPrompt}, 8k resolution, stunning visual composition, sharp focus, vibrant colors, ultra-detailed masterpiece`;
-  let negative = 'girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed';
+  const isTechnicalVisual = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(normalized);
 
-  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(cleanPrompt)) {
-    styledPrompt = `detailed technical blueprint architecture flowchart and workflow graph showing ${cleanPrompt}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution`;
-    negative = 'girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted';
+  let styledPrompt = `${normalized}, 8k resolution, stunning visual composition, sharp focus, vibrant colors, ultra-detailed masterpiece, no watermark, no text`;
+
+  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(normalized)) {
+    styledPrompt = `detailed technical blueprint architecture flowchart and workflow schematic for ${normalized}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution, no humans, no people, no portraits, no faces`;
   }
 
   const encodedPrompt = encodeURIComponent(styledPrompt);
-  const encodedNeg = encodeURIComponent(negative);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${encodedNeg}`;
+  // Default to unmetered endpoint (tongyi-mai/z-image-turbo, 60 RPM per user) to guarantee zero rate limit
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true&private=true&enhance=true`;
 
   return {
     success: true,

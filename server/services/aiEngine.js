@@ -134,8 +134,18 @@ function isImageCapabilityQuery(prompt = '') {
   return capKeywords.some(k => p.includes(k)) || (p.startsWith('can you') && p.includes('image') && !p.includes(' of '));
 }
 
+function normalizeImagePromptText(raw = '') {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .replace(/blue-?prit|blue\s+prit/gi, 'blueprint')
+    .replace(/\bghaph\b|\bgrap\b|\bgraff\b|\bgraf\b/gi, 'graph')
+    .replace(/\bflow-?chart\b/gi, 'flowchart')
+    .replace(/\bwire-?frame\b/gi, 'wireframe');
+}
+
 function isImageGenerationQuery(prompt = '') {
-  const p = prompt.toLowerCase().trim();
+  if (!prompt || typeof prompt !== 'string') return false;
+  const p = normalizeImagePromptText(prompt.toLowerCase().trim());
 
   // Negative checks: exclude capability or coding questions
   if (
@@ -151,17 +161,28 @@ function isImageGenerationQuery(prompt = '') {
     return false;
   }
 
-  // Common colloquial image / diagram / blueprint triggers
-  if (/(blue-?prit|blueprint|flow-?chart|graph|ghaph|diagram|wireframe|infographic|schematic)\b/i.test(p) && /(give|show|create|draw|make|generate|provide|render|sketch)\b/i.test(p)) {
+  // 1. Direct follow-up keyword requests (e.g. "blueprint", "graph", "diagram", "blue-prit", "ghaph", "grap")
+  if (/^(blueprint|graph|diagram|flowchart|wireframe|schematic|architecture diagram)$/i.test(p)) {
     return true;
   }
-  if (/\b(as image|give me image|show me image|give as image|show as image|generate image|create image)\b/i.test(p)) {
+  if (/^(blueprint\s*,\s*graph|graph\s*,\s*blueprint|blueprint\s+and\s+graph)$/i.test(p)) {
     return true;
   }
 
-  // 1. Action verbs + image nouns: "create a bike image", "generate sports car photo", "make wallpaper of mountains"
+  // 2. Carrier phrases like "give me as image", "show as image", "give as image", "as image", "give me blueprint", "give me graph"
+  if (/\b(as image|give me as image|give as image|show me as image|show as image|give me image|show me image|create image|generate image)\b/i.test(p)) {
+    return true;
+  }
+  if (/\b(give me as|give as|show as)\s+(a\s+)?(blueprint|graph|diagram|flowchart|wireframe|schematic|image|picture)\b/i.test(p)) {
+    return true;
+  }
+  if (/\b(give me|show me|send me|display)\s+(a\s+)?(blueprint|graph|diagram|flowchart|wireframe|schematic|image|picture)\b/i.test(p)) {
+    return true;
+  }
+
+  // 3. Action verbs + image nouns: "create a bike image", "generate sports car photo", "make wallpaper of mountains"
   const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce', 'show as', 'give as', 'give'];
-  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render', 'blueprint', 'blue-prit', 'blue print', 'graph', 'ghaph', 'diagram', 'chart', 'flowchart', 'flow-chart', 'wireframe', 'infographic', 'schematic'];
+  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render', 'blueprint', 'graph', 'diagram', 'chart', 'flowchart', 'wireframe', 'infographic', 'schematic'];
 
   const hasVerb = imageVerbs.some(v => new RegExp(`\\b${v}\\b`, 'i').test(p));
   const hasNoun = imageNouns.some(n => new RegExp(`\\b${n}s?\\b`, 'i').test(p));
@@ -170,17 +191,17 @@ function isImageGenerationQuery(prompt = '') {
     return true;
   }
 
-  // 2. Starts with image noun of/for: "image of a bike", "photo of lion", "picture for..."
+  // 4. Starts with image noun of/for: "image of a bike", "photo of lion", "picture for..."
   if (imageNouns.some(n => p.startsWith(`${n} of `) || p.startsWith(`a ${n} of `) || p.startsWith(`an ${n} of `) || p.startsWith(`${n} for `))) {
     return true;
   }
 
-  // 3. Ends with image noun: "bike image", "sports car photo", "sunset wallpaper"
+  // 5. Ends with image noun: "bike image", "sports car photo", "sunset wallpaper"
   if (imageNouns.some(n => p.endsWith(` ${n}`) || p.endsWith(` ${n}s`))) {
     return true;
   }
 
-  // 4. "draw a ...", "paint a ...", "sketch a ..." (e.g. "draw a bicycle", "paint a landscape")
+  // 6. "draw a ...", "paint a ...", "sketch a ..."
   if (/^(draw|paint|sketch|render)\s+(an?\s+)?/i.test(p) && !p.includes('code') && !p.includes('function') && !p.includes('html')) {
     return true;
   }
@@ -189,33 +210,35 @@ function isImageGenerationQuery(prompt = '') {
 }
 
 function buildContextualImagePrompt(userPrompt = '', history = []) {
-  let p = userPrompt.trim();
-  const lower = p.toLowerCase();
+  const normalized = normalizeImagePromptText(userPrompt.trim());
+  const lower = normalized.toLowerCase();
 
   // 1. Detect if this is a technical blueprint / graph / diagram / flowchart request
-  const isTechnicalVisual = /blue-?prit|blueprint|graph|ghaph|diagram|flow-?chart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|system design|pipeline/i.test(lower);
+  const isTechnicalVisual = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower);
 
   // 2. Normalize common colloquial phrases & typos
-  let cleaned = p
+  let cleaned = normalized
     .replace(/^please\s+/i, '')
     .replace(/^can you\s+/i, '')
-    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give)\s+(an?\s+)?/i, '')
-    .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s+(of|about|showing|with|for)?\s*/i, '')
+    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give|send me|display)\s+(an?\s+|the\s+)?/i, '')
+    .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s*(of|about|showing|with|for)?\s*/i, '')
     .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
-    .replace(/blue-prit|blue\s+prit/gi, 'blueprint')
-    .replace(/ghaph|grap\b/gi, 'graph')
     .replace(/,\s*etc\.*$/i, '')
     .trim();
 
-  // 3. Extract context from previous conversation if this is a follow-up or lacks standalone topic
-  // e.g. "give me as image blue-prit , ghaph" or "show this as image"
-  const isFollowUp = 
-    cleaned.length < 15 || 
-    /^(blueprint|graph|diagram|chart|flowchart|wireframe|workflow|this|that|it|as image)/i.test(cleaned) ||
-    /^(blueprint\s*,?\s*graph|graph\s*,?\s*blueprint)/i.test(cleaned);
+  // Also remove standalone "as" if left at the beginning
+  cleaned = cleaned.replace(/^as\s+/i, '').trim();
+
+  // 3. Check if what is left is purely format tokens or empty (e.g. "blueprint", "graph", "blueprint , graph", "this", "that", "it")
+  const strippedOfFormatTokens = cleaned
+    .replace(/\b(blueprint|graph|diagram|flowchart|chart|wireframe|schematic|architecture|image|picture|drawing)\b/gi, '')
+    .replace(/[\s,.-]+/g, '')
+    .trim();
+
+  const isPureFollowUp = !strippedOfFormatTokens || /^(this|that|it|same|above)$/i.test(strippedOfFormatTokens);
 
   let contextTopic = '';
-  if (isFollowUp && Array.isArray(history) && history.length > 0) {
+  if (isPureFollowUp && Array.isArray(history) && history.length > 0) {
     for (let i = history.length - 1; i >= 0; i--) {
       const msg = history[i];
       if (msg.role === 'user' && msg.content && !isImageGenerationQuery(msg.content)) {
@@ -224,6 +247,7 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
           .replace(/^can you\s+/i, '')
           .replace(/^explain\s+/i, '')
           .replace(/^what is\s+/i, '')
+          .replace(/^tell me about\s+/i, '')
           .trim();
         break;
       }
@@ -240,30 +264,28 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   }
 
   // 4. Synthesize final subject
-  let finalSubject = cleaned;
-  if (contextTopic) {
-    if (cleaned && !cleaned.toLowerCase().includes(contextTopic.toLowerCase())) {
-      finalSubject = `${cleaned} for ${contextTopic}`;
-    } else if (!cleaned) {
-      finalSubject = contextTopic;
-    }
+  let finalSubject = '';
+  if (isPureFollowUp && contextTopic) {
+    finalSubject = contextTopic;
+  } else if (contextTopic && cleaned && !cleaned.toLowerCase().includes(contextTopic.toLowerCase())) {
+    finalSubject = `${cleaned} for ${contextTopic}`;
+  } else {
+    finalSubject = cleaned || contextTopic || userPrompt;
   }
 
-  if (!finalSubject) {
-    finalSubject = p;
-  }
-
-  // 5. Stylize: Technical Blueprint/Graph vs General Image
-  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(finalSubject)) {
+  // 5. Stylize: Technical Blueprint/Graph vs General Image (with strict negative prompt against humans/faces)
+  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system|ai|machine learning/i.test(finalSubject)) {
     return {
-      prompt: `detailed technical blueprint architecture flowchart and workflow graph showing ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution`,
-      negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`
+      prompt: `detailed technical blueprint architecture flowchart and workflow schematic for ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution, no humans, no people, no portraits, no faces`,
+      negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`,
+      isTechnical: true
     };
   }
 
   return {
-    prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art`,
-    negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`
+    prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art, no watermark, no text`,
+    negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`,
+    isTechnical: false
   };
 }
 
@@ -272,11 +294,15 @@ function cleanImagePrompt(userPrompt = '', history = []) {
   return result.prompt;
 }
 
-function generateImageUrl(promptText, customNegative) {
+/**
+ * Generate Unlimited High-Speed AI Image URL
+ * Defaults to unmetered endpoint (tongyi-mai/z-image-turbo, 60 RPM per user) to guarantee zero quota limits.
+ */
+function generateImageUrl(promptText, customNegative, preferredModel = '') {
   const seed = Math.floor(Math.random() * 10000000);
   const encodedPrompt = encodeURIComponent(promptText);
-  const negative = encodeURIComponent(customNegative || 'watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${negative}`;
+  const modelParam = preferredModel ? `&model=${encodeURIComponent(preferredModel)}` : '';
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true&private=true&enhance=true${modelParam}`;
 }
 
 async function callCloudImageGen(promptText, candidateKeys = []) {

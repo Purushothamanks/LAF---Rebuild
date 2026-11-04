@@ -112,7 +112,8 @@ renderer.image = function ({ href, title, text }) {
   const encodedHref = encodeURIComponent(href);
   return `<div class="laf-image-card">
     <div class="laf-img-wrapper">
-      <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" />
+      <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" 
+        onerror="if(!this.dataset.retried){this.dataset.retried='1';const u=new URL(this.src);u.searchParams.delete('model');this.src=u.toString();}else if(this.dataset.retried==='1'){this.dataset.retried='2';const u=new URL(this.src);u.searchParams.set('model','sana');this.src=u.toString();}else if(this.dataset.retried==='2'){this.dataset.retried='3';const u=new URL(this.src);u.searchParams.set('model','flux-klein');this.src=u.toString();}" />
       <button data-download-url="${encodedHref}" class="laf-img-download-icon" title="Download Image" type="button" aria-label="Download Image">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

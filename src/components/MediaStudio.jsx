@@ -6,7 +6,7 @@ export default function MediaStudio({ token }) {
   
   // Image State
   const [imgPrompt, setImgPrompt] = useState('');
-  const [imgModel, setImgModel] = useState('flux');
+  const [imgModel, setImgModel] = useState('z-image-turbo');
   const [aspectRatio, setAspectRatio] = useState('1024x1024');
   const [imgResult, setImgResult] = useState(null);
   const [imgLoading, setImgLoading] = useState(false);
@@ -30,13 +30,26 @@ export default function MediaStudio({ token }) {
     setImgLoading(true);
     try {
       const seed = Math.floor(Math.random() * 1000000);
-      const encodedPrompt = encodeURIComponent(imgPrompt.trim() + ', 8k resolution, photorealistic, masterclass');
+      const rawPrompt = imgPrompt.trim();
+      const normalizedPrompt = rawPrompt
+        .replace(/blue-?prit|blue\s+prit/gi, 'blueprint')
+        .replace(/\bghaph\b|\bgrap\b|\bgraff\b|\bgraf\b/gi, 'graph')
+        .replace(/\bflow-?chart\b/gi, 'flowchart')
+        .replace(/\bwire-?frame\b/gi, 'wireframe');
+
+      const isTechnical = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic)\b/i.test(normalizedPrompt);
+      const styledPrompt = isTechnical
+        ? `detailed technical blueprint architecture flowchart and workflow schematic for ${normalizedPrompt}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution, no humans, no people, no portraits, no faces`
+        : `${normalizedPrompt}, 8k resolution, stunning visual composition, sharp focus, vibrant colors, ultra-detailed masterpiece, no watermark, no text`;
+
+      const encodedPrompt = encodeURIComponent(styledPrompt);
       const [w, h] = aspectRatio.split('x');
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w || 1024}&height=${h || 1024}&seed=${seed}&model=${imgModel || 'flux'}&nologo=true&enhance=true`;
+      const modelQuery = imgModel && imgModel !== 'z-image-turbo' ? `&model=${encodeURIComponent(imgModel)}` : '';
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w || 1024}&height=${h || 1024}&seed=${seed}${modelQuery}&nologo=true&enhance=true`;
       
       setImgResult({
         url: imageUrl,
-        prompt: imgPrompt,
+        prompt: rawPrompt,
         seed,
         model: imgModel
       });
@@ -202,8 +215,10 @@ export default function MediaStudio({ token }) {
                     borderRadius: 'var(--radius-sm)'
                   }}
                 >
+                  <option value="z-image-turbo">Z-Image Turbo (Fast & Unlimited)</option>
+                  <option value="sana">Sana (Vector & Illustration)</option>
+                  <option value="flux-klein">Klein 4B (Photorealistic)</option>
                   <option value="flux">FLUX.1-HD (Ultra Quality)</option>
-                  <option value="turbo">SDXL Turbo (Instant)</option>
                 </select>
               </div>
 
