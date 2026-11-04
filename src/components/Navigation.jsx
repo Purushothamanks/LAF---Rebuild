@@ -1,14 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Plus, User, MoreHorizontal, Smartphone, Share2, Settings, HelpCircle, LogOut, PanelLeftClose, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, PanelLeftClose, Trash2 } from 'lucide-react';
 
 export default function Navigation({
   sidebarOpen,
   setSidebarOpen,
-  user,
-  onLogout,
-  onOpenSettings,
-  onOpenDownloadApp,
-  onOpenHelpFeedback,
   conversations,
   activeConvId,
   loadConversation,
@@ -16,39 +11,20 @@ export default function Navigation({
   onClearAllConversations,
   startNewChat
 }) {
-  const [showMenu, setShowMenu] = useState(false);
   const [hoveredConvId, setHoveredConvId] = useState(null);
-  const menuRef = useRef(null);
-
-  const isAppMode = typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true ||
-    document.referrer.includes('android-app://')
-  );
-
-  // Close popup menu on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setShowMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <aside className={`floating-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       
       {/* Top Header: Logo + Title + Close Button */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px 14px 2px', borderBottom: '1px solid var(--ds-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 2px 10px 2px', borderBottom: '1px solid var(--ds-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgPneYG2HNT8jsgsviQT-3j0Mj4tN_xUqwl9a9KYP9YE5Bu8TVGPXSLDI&s=10"
             alt="LAF Logo"
             style={{
-              width: '28px',
-              height: '28px',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
               objectFit: 'cover',
               border: '2px solid var(--ds-blue)',
@@ -56,36 +32,39 @@ export default function Navigation({
               flexShrink: 0
             }}
           />
-          <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#fff', letterSpacing: '0.5px', fontFamily: 'var(--font-title)', lineHeight: '1' }}>
+          <span style={{ fontSize: '1rem', fontWeight: '800', color: '#fff', letterSpacing: '0.5px', fontFamily: 'var(--font-title)', lineHeight: '1' }}>
             LAF
           </span>
         </div>
 
         <button
+          type="button"
           onClick={() => setSidebarOpen(false)}
-          style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--ds-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
           title="Close sidebar"
+          aria-label="Close sidebar"
         >
-          <PanelLeftClose style={{ width: '18px' }} />
+          <PanelLeftClose style={{ width: '16px', height: '16px' }} />
         </button>
       </div>
 
       {/* New Chat Button */}
       <button
+        type="button"
         className="ds-new-chat-btn"
-        style={{ marginTop: '12px' }}
+        style={{ marginTop: '10px' }}
         onClick={() => {
           startNewChat();
           setSidebarOpen(false);
         }}
       >
-        <Plus style={{ width: '18px', color: 'var(--ds-blue)' }} />
+        <Plus style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />
         <span>New chat</span>
       </button>
 
       {/* Recent Chats History Section */}
-      <div style={{ flex: 1, overflowY: 'auto', margin: '16px 0', borderTop: '1px solid var(--ds-border)', paddingTop: '12px' }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: '600', color: 'var(--ds-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 6px 8px 6px' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', margin: '12px 0 8px 0', borderTop: '1px solid var(--ds-border)', paddingTop: '10px' }}>
+        <div style={{ fontSize: '0.68rem', fontWeight: '600', color: 'var(--ds-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 4px 6px 4px' }}>
           Recent Chats
         </div>
 
@@ -100,19 +79,20 @@ export default function Navigation({
               onMouseEnter={() => setHoveredConvId(c.id)}
               onMouseLeave={() => setHoveredConvId(null)}
               style={{
-                padding: '8px 12px',
-                borderRadius: '12px',
-                marginBottom: '4px',
+                padding: '7px 10px',
+                borderRadius: '8px',
+                marginBottom: '3px',
                 background: activeConvId === c.id ? 'var(--ds-bg-card-hover)' : 'transparent',
                 border: activeConvId === c.id ? '1px solid var(--ds-border)' : '1px solid transparent',
                 cursor: 'pointer',
-                fontSize: '0.84rem',
+                fontSize: '0.82rem',
                 color: activeConvId === c.id ? '#fff' : 'var(--ds-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '8px',
-                position: 'relative'
+                gap: '6px',
+                position: 'relative',
+                transition: 'all 0.15s ease'
               }}
             >
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
@@ -122,6 +102,7 @@ export default function Navigation({
               {/* Delete Icon on Hover or Active Conversation */}
               {(hoveredConvId === c.id || activeConvId === c.id) && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteConversation(c.id);
@@ -134,120 +115,57 @@ export default function Navigation({
                     padding: '2px',
                     display: 'flex',
                     alignItems: 'center',
-                    justify: 'center',
+                    justifyContent: 'center',
                     borderRadius: '4px',
-                    opacity: 0.8
+                    opacity: 0.85
                   }}
                   title="Delete conversation"
+                  aria-label="Delete conversation"
                 >
-                  <Trash2 style={{ width: '14px', height: '14px' }} />
+                  <Trash2 style={{ width: '13px', height: '13px' }} />
                 </button>
               )}
             </div>
           ))
         ) : (
-          <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-muted)', padding: '8px', textAlign: 'center' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--ds-text-muted)', padding: '12px 6px', textAlign: 'center' }}>
             No recent chats
           </div>
         )}
       </div>
 
-      {/* User Profile at Bottom + (...) More Options Menu */}
-      <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ds-blue-bg)', border: '1px solid var(--ds-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <User style={{ width: '16px', color: 'var(--ds-blue)' }} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff', lineHeight: '1.2' }}>{user?.username}</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--ds-text-muted)' }}>@{user?.username?.toLowerCase()}</div>
-          </div>
-        </div>
-
-        {/* (...) More Options Trigger Button */}
-        <div ref={menuRef} style={{ position: 'relative' }}>
+      {/* Clear All Chats Footer Button (Only visible when chats exist) */}
+      {conversations && conversations.length > 0 && onClearAllConversations && (
+        <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '8px', marginTop: 'auto' }}>
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            type="button"
+            onClick={() => {
+              onClearAllConversations();
+            }}
+            className="sidebar-clear-chats-btn"
             style={{
-              background: showMenu ? 'var(--ds-blue-bg)' : 'transparent',
-              border: showMenu ? '1px solid var(--ds-blue)' : 'none',
-              color: showMenu ? '#fff' : 'var(--ds-text-secondary)',
+              width: '100%',
+              background: 'transparent',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              color: '#f87171',
+              fontSize: '0.76rem',
+              fontWeight: '500',
               cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justify: 'center',
+              justifyContent: 'center',
+              gap: '6px',
               transition: 'all 0.15s ease'
             }}
-            title="More Options (...)"
+            title="Clear all conversations"
           >
-            <MoreHorizontal style={{ width: '20px', height: '20px' }} />
+            <Trash2 style={{ width: '12px', height: '12px' }} />
+            <span>Clear all chats</span>
           </button>
-
-          {/* (...) Popover Dropdown Menu */}
-          {showMenu && (
-            <div className="more-options-popover">
-              <button
-                className="more-options-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  onOpenDownloadApp();
-                }}
-              >
-                {isAppMode ? <Share2 style={{ width: '16px', color: 'var(--ds-blue)' }} /> : <Smartphone style={{ width: '16px', color: 'var(--ds-blue)' }} />}
-                <span>{isAppMode ? 'Share app' : 'Download app'}</span>
-              </button>
-
-              <button
-                className="more-options-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  onOpenSettings();
-                }}
-              >
-                <Settings style={{ width: '16px', color: 'var(--ds-blue)' }} />
-                <span>Settings</span>
-              </button>
-
-              <button
-                className="more-options-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  onOpenHelpFeedback();
-                }}
-              >
-                <HelpCircle style={{ width: '16px', color: 'var(--ds-blue)' }} />
-                <span>Help & Feedback</span>
-              </button>
-
-              <button
-                className="more-options-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  if (onClearAllConversations) onClearAllConversations();
-                }}
-                style={{ color: '#f87171' }}
-              >
-                <Trash2 style={{ width: '16px', color: '#f87171' }} />
-                <span>Clear all chats</span>
-              </button>
-
-              <button
-                className="more-options-item logout-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  onLogout();
-                }}
-              >
-                <LogOut style={{ width: '16px' }} />
-                <span>Log out</span>
-              </button>
-            </div>
-          )}
         </div>
-
-      </div>
+      )}
 
     </aside>
   );

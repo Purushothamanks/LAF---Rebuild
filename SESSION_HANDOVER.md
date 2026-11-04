@@ -5,7 +5,7 @@
 > **Repository:** [https://github.com/Purushothamanks/LAF---Rebuild.git](https://github.com/Purushothamanks/LAF---Rebuild.git) (Branch: `main`)  
 > **Live Production:** [https://lafsai.web.app](https://lafsai.web.app) | [https://lafsai.firebaseapp.com](https://lafsai.firebaseapp.com)  
 > **Last Verified Date:** Wednesday, November 4, 2026 (IST)  
-> **Latest Git Commits:** `634689f` & `905f69d`
+> **Latest Git Commits:** `883dc57`
 
 ---
 
@@ -82,10 +82,29 @@
 
 ---
 
+### 1.8 Top-Right User Circle Avatar & Settings Menu, and Compact Floating Sidebar
+- **User Profile & Settings Removed from Sidebar:**
+  - Removed user profile card and Settings option from inside the floating sidebar (`src/components/Navigation.jsx`), keeping the sidebar focused purely on new chats and conversation history.
+- **Top-Right Circular User Avatar (`src/components/UserMenu.jsx`):**
+  - Renders an elegant circular avatar button displaying the user's uppercase first initial (e.g., `P` for Purushothaman).
+  - High-end aesthetics with gradient blue background, 1.5px border, and ambient glow.
+  - Clicking triggers a responsive floating dropdown popover displaying the user profile header and the **Settings** option (which opens `SettingsModal`), along with Help & Feedback, Download/Share app, Clear all chats, and Log out.
+  - Symmetrically aligned with the top-left bar (`top: 16px; right: 16px;` on desktop; `top: 12px; right: 12px;` on mobile).
+- **Floating Sidebar Size Reduction:**
+  - Reduced sidebar width from `260px` to `210px` on desktop and `195px` on mobile.
+  - Reduced padding from `18px 16px` to `12px 10px` on desktop and `10px 8px` on mobile.
+  - Re-proportioned inner action buttons and recent chat history items with sleek, compact typography.
+- **Local WiFi Network Binding:**
+  - Configured `vite.config.js` with `host: '0.0.0.0'` alongside Express `server/index.js` listening on `0.0.0.0:3000` for multi-device testing over WiFi.
+
+---
+
 ## 2. Key File Directory Map
 
 | Path | Purpose |
 | :--- | :--- |
+| `src/components/UserMenu.jsx` | Top-right circular user initial button, popover dropdown menu, Settings trigger |
+| `src/components/Navigation.jsx` | Compact floating sidebar, new chat button, recent conversations, clear all chats |
 | `src/components/ChatView.jsx` | Primary chat pane, ambient glow container, hero header, messages scroll, sticky input, and file viewer modal |
 | `src/components/LafCanvas.jsx` | LAF Canvas document viewer, live markdown editor, export & copy controls |
 | `src/index.css` | Design system variables, layout constraints, ambient glow animations, media queries |

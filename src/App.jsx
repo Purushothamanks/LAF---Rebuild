@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import UserMenu from './components/UserMenu';
 import Navigation from './components/Navigation';
 import ChatView from './components/ChatView';
 import MediaStudio from './components/MediaStudio';
@@ -325,18 +326,23 @@ export default function App() {
         />
       )}
 
-      {/* Collapsible Floating Sidebar */}
+      {/* Floating Top-Right User Circle Avatar & Settings Menu */}
+      {user && (
+        <UserMenu
+          user={user}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenDownloadApp={() => setIsDownloadAppOpen(true)}
+          onOpenHelpFeedback={() => setIsHelpFeedbackOpen(true)}
+          onClearAllConversations={handleClearAllConversations}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {/* Collapsible Floating Sidebar (Reduced Size, User Profile & Settings Moved to Top Right) */}
       {user && (
         <Navigation
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          user={user}
-          onLogout={handleLogout}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenDownloadApp={() => setIsDownloadAppOpen(true)}
-          onOpenHelpFeedback={() => setIsHelpFeedbackOpen(true)}
           conversations={conversations}
           activeConvId={activeConvId}
           loadConversation={loadConversation}
