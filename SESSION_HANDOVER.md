@@ -100,6 +100,18 @@
 
 ---
 
+### 1.9 Unified LAF Model Branding & Context-Aware Blueprint/Graph Image Engine
+- **Unified Clean Model Naming (`LAF 1.0 Lite`, `LAF 1.5 Lite`, `LAF 1.0 Flash`, `LAF 2.0 Flash`):**
+  - Replaced legacy provider labels such as `LAF Antigravity Matrix (Gemini gemini-3.1-flash-lite)` with clean LAF branding (`LAF 1.0 Lite`, `LAF 1.5 Lite`, `LAF 1.0 Flash`, `LAF 2.0 Flash`).
+  - Added centralized model name formatter `getLafModelDisplayName` in both backend (`server/services/aiEngine.js`) and frontend (`src/utils/aiClient.js`).
+  - Added frontend sanitizer `formatLafProvider` in `src/components/ChatView.jsx` to dynamically sanitize existing chat messages and new responses, guaranteeing zero "Gemini" mentions across all message headers.
+- **Root-Cause Elimination of Irrelevant Girl/Portrait Images on Technical Requests:**
+  - *Identified Root Cause:* Previous image generator was context-blind (ignored `history`), had typos like `blue-prit` and colloquialisms like `give me as image` unhandled, blindly appended photographic portrait tokens (`photorealistic, professional photography, realistic texture`), and had `text, words` in negative prompt. Flux diffusion defaulted to portrait photos of a girl when given empty or vague photo prompts without context.
+  - *Contextual Topic Extraction:* Implemented `buildContextualImagePrompt(userPrompt, history)`: when a follow-up image request arrives (e.g. "how to deploy a project in github" followed by "give me as image blue-prit , ghaph"), the engine automatically extracts the prior subject ("deploy a project in github") from conversation history.
+  - *Technical Visual Categorization:* Queries for blueprints, graphs, flowcharts, architectures, or technical workflows receive dedicated schematic prompts (`detailed technical blueprint architecture flowchart and workflow graph, system architecture diagram, clean blueprint grid line aesthetic, high resolution technical illustration`) and enforce a strict negative prompt against humans/faces/models (`girl, woman, human face, portrait, model, person, selfie, character, anime, photography`).
+
+---
+
 ## 2. Key File Directory Map
 
 | Path | Purpose |

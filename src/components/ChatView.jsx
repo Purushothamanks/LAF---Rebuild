@@ -133,6 +133,24 @@ marked.setOptions({
   gfm: true
 });
 
+export function formatLafProvider(provider) {
+  if (!provider) return 'LAF 1.0 Lite';
+  let p = String(provider).trim();
+  if (p.includes('gemini-3.1-flash-lite') || p.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
+  if (p.includes('gemini-3.5-flash-lite') || p.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
+  if (p.includes('gemini-flash-lite') || p.includes('flash-lite')) return 'LAF 1.0 Lite';
+  if (p.includes('gemini-3.8-flash') || p.includes('3.8-flash')) return 'LAF 2.0 Flash';
+  if (p.includes('gemini-flash') || p.includes('flash-latest')) return 'LAF 1.0 Flash';
+  if (p.includes('Gemini') || p.includes('gemini')) {
+    p = p.replace(/LAF Antigravity Matrix \([^\)]+\)/gi, 'LAF 1.0 Lite')
+         .replace(/Google Gemini/gi, 'LAF')
+         .replace(/Gemini\s*/gi, 'LAF ')
+         .replace(/gemini-[a-z0-9.-]+/gi, 'LAF 1.0');
+  }
+  if (p === 'LAF AI') return 'LAF 1.0 Lite';
+  return p;
+}
+
 function TypewriterHeroSubheading() {
   const fullText = "Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.";
   const [displayText, setDisplayText] = useState('');
@@ -1065,7 +1083,7 @@ export default function ChatView({
                       }}
                     >
                       <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isUser ? 'var(--ds-text-secondary)' : 'var(--ds-blue)', marginBottom: '5px' }}>
-                        {isUser ? user.username : (m.provider || 'LAF AI')}
+                        {isUser ? user.username : formatLafProvider(m.provider)}
                       </div>
 
                       {/* Render User Attached Image or File Badge if present */}

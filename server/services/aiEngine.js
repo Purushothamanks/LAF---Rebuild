@@ -151,9 +151,17 @@ function isImageGenerationQuery(prompt = '') {
     return false;
   }
 
+  // Common colloquial image / diagram / blueprint triggers
+  if (/(blue-?prit|blueprint|flow-?chart|graph|ghaph|diagram|wireframe|infographic|schematic)\b/i.test(p) && /(give|show|create|draw|make|generate|provide|render|sketch)\b/i.test(p)) {
+    return true;
+  }
+  if (/\b(as image|give me image|show me image|give as image|show as image|generate image|create image)\b/i.test(p)) {
+    return true;
+  }
+
   // 1. Action verbs + image nouns: "create a bike image", "generate sports car photo", "make wallpaper of mountains"
-  const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce'];
-  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render'];
+  const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce', 'show as', 'give as', 'give'];
+  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render', 'blueprint', 'blue-prit', 'blue print', 'graph', 'ghaph', 'diagram', 'chart', 'flowchart', 'flow-chart', 'wireframe', 'infographic', 'schematic'];
 
   const hasVerb = imageVerbs.some(v => new RegExp(`\\b${v}\\b`, 'i').test(p));
   const hasNoun = imageNouns.some(n => new RegExp(`\\b${n}s?\\b`, 'i').test(p));
@@ -173,30 +181,101 @@ function isImageGenerationQuery(prompt = '') {
   }
 
   // 4. "draw a ...", "paint a ...", "sketch a ..." (e.g. "draw a bicycle", "paint a landscape")
-  if (/^(draw|paint|sketch|render)\s+(an?\s+)?/i.test(p) && !p.includes('code') && !p.includes('function') && !p.includes('diagram')) {
+  if (/^(draw|paint|sketch|render)\s+(an?\s+)?/i.test(p) && !p.includes('code') && !p.includes('function') && !p.includes('html')) {
     return true;
   }
 
   return false;
 }
 
-function cleanImagePrompt(userPrompt = '') {
-  let cleaned = userPrompt
+function buildContextualImagePrompt(userPrompt = '', history = []) {
+  let p = userPrompt.trim();
+  const lower = p.toLowerCase();
+
+  // 1. Detect if this is a technical blueprint / graph / diagram / flowchart request
+  const isTechnicalVisual = /blue-?prit|blueprint|graph|ghaph|diagram|flow-?chart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|system design|pipeline/i.test(lower);
+
+  // 2. Normalize common colloquial phrases & typos
+  let cleaned = p
     .replace(/^please\s+/i, '')
     .replace(/^can you\s+/i, '')
-    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce)\s+(an?\s+)?/i, '')
-    .replace(/^(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s+(of|about|showing|with|for)?\s*/i, '')
-    .replace(/\s+(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
+    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give)\s+(an?\s+)?/i, '')
+    .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s+(of|about|showing|with|for)?\s*/i, '')
+    .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
+    .replace(/blue-prit|blue\s+prit/gi, 'blueprint')
+    .replace(/ghaph|grap\b/gi, 'graph')
+    .replace(/,\s*etc\.*$/i, '')
     .trim();
 
-  if (!cleaned) cleaned = userPrompt;
-  return `${cleaned}, ultra-detailed masterpiece, 8k resolution, photorealistic, professional photography, realistic texture, cinematic lighting, sharp focus`;
+  // 3. Extract context from previous conversation if this is a follow-up or lacks standalone topic
+  // e.g. "give me as image blue-prit , ghaph" or "show this as image"
+  const isFollowUp = 
+    cleaned.length < 15 || 
+    /^(blueprint|graph|diagram|chart|flowchart|wireframe|workflow|this|that|it|as image)/i.test(cleaned) ||
+    /^(blueprint\s*,?\s*graph|graph\s*,?\s*blueprint)/i.test(cleaned);
+
+  let contextTopic = '';
+  if (isFollowUp && Array.isArray(history) && history.length > 0) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msg = history[i];
+      if (msg.role === 'user' && msg.content && !isImageGenerationQuery(msg.content)) {
+        contextTopic = msg.content
+          .replace(/^how to\s+/i, '')
+          .replace(/^can you\s+/i, '')
+          .replace(/^explain\s+/i, '')
+          .replace(/^what is\s+/i, '')
+          .trim();
+        break;
+      }
+    }
+    if (!contextTopic) {
+      const lastAssistant = history.slice().reverse().find(m => m.role === 'assistant' && m.content);
+      if (lastAssistant) {
+        const firstLine = lastAssistant.content.split('\n')[0].replace(/^[#*\s-]+/, '').trim();
+        if (firstLine && firstLine.length > 5 && firstLine.length < 80) {
+          contextTopic = firstLine;
+        }
+      }
+    }
+  }
+
+  // 4. Synthesize final subject
+  let finalSubject = cleaned;
+  if (contextTopic) {
+    if (cleaned && !cleaned.toLowerCase().includes(contextTopic.toLowerCase())) {
+      finalSubject = `${cleaned} for ${contextTopic}`;
+    } else if (!cleaned) {
+      finalSubject = contextTopic;
+    }
+  }
+
+  if (!finalSubject) {
+    finalSubject = p;
+  }
+
+  // 5. Stylize: Technical Blueprint/Graph vs General Image
+  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(finalSubject)) {
+    return {
+      prompt: `detailed technical blueprint architecture flowchart and workflow graph showing ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution`,
+      negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`
+    };
+  }
+
+  return {
+    prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art`,
+    negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`
+  };
 }
 
-function generateImageUrl(promptText) {
+function cleanImagePrompt(userPrompt = '', history = []) {
+  const result = buildContextualImagePrompt(userPrompt, history);
+  return result.prompt;
+}
+
+function generateImageUrl(promptText, customNegative) {
   const seed = Math.floor(Math.random() * 10000000);
   const encodedPrompt = encodeURIComponent(promptText);
-  const negative = encodeURIComponent('watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
+  const negative = encodeURIComponent(customNegative || 'watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
   return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${negative}`;
 }
 
@@ -326,8 +405,21 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
  * Connection to Cloud LLM Endpoints (using User Custom API Key or Server API Key)
  */
 
+function getLafModelDisplayName(modelKey) {
+  if (!modelKey) return 'LAF 1.0 Lite';
+  const m = String(modelKey).toLowerCase();
+  if (m.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
+  if (m.includes('flash-lite-latest') || m.includes('2.5-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('flash-latest')) return 'LAF 1.0 Flash';
+  if (m.includes('3.8-flash')) return 'LAF 2.0 Flash';
+  if (m.includes('flash')) return 'LAF 1.0 Flash';
+  if (m.includes('pro')) return 'LAF 1.0 Pro';
+  return 'LAF 1.0 Lite';
+}
+
 /**
- * Direct Connection to Google DeepMind Gemini API (Antigravity Matrix)
+ * Direct Connection to LAF Neural Core (High-Speed Multimodal Intelligence)
  */
 async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, attachment = null }) {
   if (!apiKey) return null;
@@ -341,7 +433,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
 
   for (const m of models) {
     try {
-      console.log(`[AI-ENGINE] Connecting to Google Gemini (${m}) with Antigravity Directives...`);
+      console.log(`[AI-ENGINE] Connecting to LAF Engine (${getLafModelDisplayName(m)})...`);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
 
       const contents = [];
@@ -414,7 +506,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
         const sanitized = sanitizeLlmOutput(raw.trim());
         return {
           text: sanitized,
-          provider: `LAF Antigravity Matrix (Gemini ${m})`
+          provider: getLafModelDisplayName(m)
         };
       }
     } catch (err) {
@@ -598,7 +690,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
 
   // 1. Image Generation Handler (Cloud API Key / High-Resolution FLUX Neural Engine)
   if (!attachment && isImageGenerationQuery(cleanPrompt)) {
-    const formattedPrompt = cleanImagePrompt(cleanPrompt);
+    const { prompt: formattedPrompt, negative: negativePrompt } = buildContextualImagePrompt(cleanPrompt, history);
     console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}"`);
 
     // Try Cloud Image API with API key first
@@ -606,15 +698,15 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     if (cloudImage && cloudImage.url) {
       return {
         text: `![${cleanPrompt}](${cloudImage.url})`,
-        provider: cloudImage.provider
+        provider: 'LAF 1.0 Vision Engine'
       };
     }
 
     // Guaranteed High-Resolution FLUX Neural Engine
-    const imageUrl = generateImageUrl(formattedPrompt);
+    const imageUrl = generateImageUrl(formattedPrompt, negativePrompt);
     return {
       text: `![${cleanPrompt}](${imageUrl})`,
-      provider: 'LAF FLUX Neural Engine'
+      provider: 'LAF 1.0 Vision Engine'
     };
   }
 

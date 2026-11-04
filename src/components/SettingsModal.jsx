@@ -344,7 +344,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     type="password"
                     value={keyInput}
                     onChange={(e) => setKeyInput(e.target.value)}
-                    placeholder="Paste Gemini / OpenRouter API Key"
+                    placeholder="Paste LAF / OpenRouter API Key"
                     style={{
                       flex: 1,
                       padding: '12px 16px',

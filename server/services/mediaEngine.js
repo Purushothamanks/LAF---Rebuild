@@ -47,14 +47,25 @@ async function generateImage({ prompt, apiKey }) {
 
   // 2. High-Performance FLUX Neural Engine
   const seed = Math.floor(Math.random() * 10000000);
-  const encodedPrompt = encodeURIComponent(`${cleanPrompt}, 8k resolution, photorealistic, cinematic lighting, ultra-detailed masterpiece`);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
+  const isTechnicalVisual = /blue-?prit|blueprint|graph|ghaph|diagram|flow-?chart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline/i.test(cleanPrompt);
+
+  let styledPrompt = `${cleanPrompt}, 8k resolution, stunning visual composition, sharp focus, vibrant colors, ultra-detailed masterpiece`;
+  let negative = 'girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed';
+
+  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(cleanPrompt)) {
+    styledPrompt = `detailed technical blueprint architecture flowchart and workflow graph showing ${cleanPrompt}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution`;
+    negative = 'girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted';
+  }
+
+  const encodedPrompt = encodeURIComponent(styledPrompt);
+  const encodedNeg = encodeURIComponent(negative);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${encodedNeg}`;
 
   return {
     success: true,
     type: 'image',
     url: imageUrl,
-    provider: 'LAF FLUX Neural Engine',
+    provider: 'LAF 1.0 Vision Engine',
     prompt: cleanPrompt
   };
 }

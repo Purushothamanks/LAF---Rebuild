@@ -118,22 +118,125 @@ export function isTemporalQuery(prompt = '') {
 
 export function isImageQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
-  const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me'];
-  const imageNouns = ['image', 'picture', 'photo', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait'];
+
+  // Negative checks
+  if (
+    p.includes('can you generate image') ||
+    p.includes('can you make image') ||
+    p.includes('can you create image') ||
+    p.includes('do you support image') ||
+    p.includes('how to generate image') ||
+    p.includes('code to generate') ||
+    p.includes('code for image') ||
+    p.includes('html image')
+  ) {
+    return false;
+  }
+
+  // Common colloquial image / diagram / blueprint triggers
+  if (/(blue-?prit|blueprint|flow-?chart|graph|ghaph|diagram|wireframe|infographic|schematic)\b/i.test(p) && /(give|show|create|draw|make|generate|provide|render|sketch)\b/i.test(p)) {
+    return true;
+  }
+  if (/\b(as image|give me image|show me image|give as image|show as image|generate image|create image)\b/i.test(p)) {
+    return true;
+  }
+
+  const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce', 'show as', 'give as', 'give'];
+  const imageNouns = ['image', 'picture', 'photo', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'blueprint', 'blue-prit', 'blue print', 'graph', 'ghaph', 'diagram', 'chart', 'flowchart', 'flow-chart', 'wireframe', 'infographic', 'schematic'];
   return imageVerbs.some(v => p.includes(v)) && imageNouns.some(n => p.includes(n));
 }
 
-export function generateImageUrl(promptText) {
-  const cleaned = promptText
+export function buildContextualImagePrompt(userPrompt = '', history = []) {
+  let p = userPrompt.trim();
+  const lower = p.toLowerCase();
+
+  const isTechnicalVisual = /blue-?prit|blueprint|graph|ghaph|diagram|flow-?chart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|system design|pipeline/i.test(lower);
+
+  let cleaned = p
     .replace(/^please\s+/i, '')
-    .replace(/^(generate|create|make|draw|paint|render|sketch)\s+(an?\s+)?/i, '')
-    .replace(/^(image|picture|photo)\s+(of|for)?\s*/i, '')
-    .trim() || promptText;
+    .replace(/^can you\s+/i, '')
+    .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give)\s+(an?\s+)?/i, '')
+    .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s+(of|about|showing|with|for)?\s*/i, '')
+    .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
+    .replace(/blue-prit|blue\s+prit/gi, 'blueprint')
+    .replace(/ghaph|grap\b/gi, 'graph')
+    .replace(/,\s*etc\.*$/i, '')
+    .trim();
+
+  const isFollowUp = 
+    cleaned.length < 15 || 
+    /^(blueprint|graph|diagram|chart|flowchart|wireframe|workflow|this|that|it|as image)/i.test(cleaned) ||
+    /^(blueprint\s*,?\s*graph|graph\s*,?\s*blueprint)/i.test(cleaned);
+
+  let contextTopic = '';
+  if (isFollowUp && Array.isArray(history) && history.length > 0) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msg = history[i];
+      if (msg.role === 'user' && msg.content && !isImageQuery(msg.content)) {
+        contextTopic = msg.content
+          .replace(/^how to\s+/i, '')
+          .replace(/^can you\s+/i, '')
+          .replace(/^explain\s+/i, '')
+          .replace(/^what is\s+/i, '')
+          .trim();
+        break;
+      }
+    }
+    if (!contextTopic) {
+      const lastAssistant = history.slice().reverse().find(m => m.role === 'assistant' && m.content);
+      if (lastAssistant) {
+        const firstLine = lastAssistant.content.split('\n')[0].replace(/^[#*\s-]+/, '').trim();
+        if (firstLine && firstLine.length > 5 && firstLine.length < 80) {
+          contextTopic = firstLine;
+        }
+      }
+    }
+  }
+
+  let finalSubject = cleaned;
+  if (contextTopic) {
+    if (cleaned && !cleaned.toLowerCase().includes(contextTopic.toLowerCase())) {
+      finalSubject = `${cleaned} for ${contextTopic}`;
+    } else if (!cleaned) {
+      finalSubject = contextTopic;
+    }
+  }
+
+  if (!finalSubject) {
+    finalSubject = p;
+  }
+
+  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system/i.test(finalSubject)) {
+    return {
+      prompt: `detailed technical blueprint architecture flowchart and workflow graph showing ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution`,
+      negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`
+    };
+  }
+
+  return {
+    prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art`,
+    negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`
+  };
+}
+
+export function generateImageUrl(promptText, customNegative) {
   const seed = Math.floor(Math.random() * 10000000);
-  const cleanPrompt = `${cleaned}, ultra-detailed masterpiece, 8k resolution, photorealistic, professional photography, realistic texture, cinematic lighting, sharp focus`;
-  const encoded = encodeURIComponent(cleanPrompt);
-  const negative = encodeURIComponent('watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
+  const encoded = encodeURIComponent(promptText);
+  const negative = encodeURIComponent(customNegative || 'watermark, text, logo, signature, words, letters, brand, username, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts');
   return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true&negative_prompt=${negative}`;
+}
+
+export function getLafModelDisplayName(modelKey) {
+  if (!modelKey) return 'LAF 1.0 Lite';
+  const m = String(modelKey).toLowerCase();
+  if (m.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
+  if (m.includes('flash-lite-latest') || m.includes('2.5-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('flash-latest')) return 'LAF 1.0 Flash';
+  if (m.includes('3.8-flash')) return 'LAF 2.0 Flash';
+  if (m.includes('flash')) return 'LAF 1.0 Flash';
+  if (m.includes('pro')) return 'LAF 1.0 Pro';
+  return 'LAF 1.0 Lite';
 }
 
 function sanitizeLafResponse(text = '') {
@@ -144,6 +247,7 @@ function sanitizeLafResponse(text = '') {
     .replace(/^(Hello!\s*)?I am (LAF AI|LAF)[\s\S]*?(engineered|architected) by Purushothaman\.\s*/i, '')
     .replace(/^(Hello!\s*)?I am Gemini[\s\S]*?built by Google\.\s*/i, '')
     .replace(/^(Hello!\s*)?I am (LAF AI|LAF),?\s*(an autonomous|\(Look At Future\))[^.\n]*\.\s*/i, '')
+    .replace(/\b(Google Gemini|Google DeepMind Gemini|Gemini Flash|Gemini Pro|Gemini)\b/gi, 'LAF')
     .replace(/^Output:\s*/i, '')
     .replace(/<THOUGHT>[\s\S]*?<\/THOUGHT>/gi, '')
     .replace(/<THINKING>[\s\S]*?<\/THINKING>/gi, '')
@@ -249,7 +353,10 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
       const data = await res.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (rawText && rawText.trim()) {
-        return sanitizeLafResponse(rawText.trim());
+        return {
+          text: sanitizeLafResponse(rawText.trim()),
+          provider: getLafModelDisplayName(modelName)
+        };
       }
     } catch (err) {
       lastErr = err;
@@ -257,7 +364,7 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
     }
   }
 
-  throw lastErr || new Error('All Gemini candidate models failed to return content');
+  throw lastErr || new Error('All candidate models failed to return content');
 }
 
 /**
@@ -291,10 +398,11 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
     // 3. Image Generation
     if (isImageQuery(cleanPrompt)) {
-      const url = generateImageUrl(cleanPrompt);
+      const { prompt: formattedPrompt, negative: negativePrompt } = buildContextualImagePrompt(cleanPrompt, history);
+      const url = generateImageUrl(formattedPrompt, negativePrompt);
       return {
         text: `![${cleanPrompt}](${url})`,
-        provider: 'LAF Image Engine'
+        provider: 'LAF 1.0 Vision Engine'
       };
     }
 
@@ -308,7 +416,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
     }
   }
 
-  // 5. Primary Engine: Google Gemini (Fast, sub-second, accurate, professional, multimodal)
+  // 5. Primary Engine: LAF Neural Core (Fast, sub-second, accurate, professional, multimodal)
   const clientViteKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) ||
     (typeof process !== 'undefined' && (process.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY)) || '';
 
@@ -318,7 +426,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
   if (candidateGeminiKey) {
     try {
-      const geminiText = await callGeminiApi({
+      const geminiRes = await callGeminiApi({
         prompt: cleanPrompt,
         history,
         apiKey: candidateGeminiKey,
@@ -326,16 +434,16 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
         attachment
       });
 
-      let provider = 'LAF AI';
-      if (attachment?.isImage) provider = 'LAF Vision Engine';
-      else if (attachment) provider = 'LAF File Intelligence';
+      let provider = geminiRes.provider || 'LAF 1.0 Lite';
+      if (attachment?.isImage) provider = 'LAF 1.0 Vision Engine';
+      else if (attachment) provider = 'LAF 1.0 Document Core';
 
       return {
-        text: geminiText,
+        text: geminiRes.text || geminiRes,
         provider
       };
     } catch (geminiErr) {
-      console.warn('Gemini candidate chain note:', geminiErr.message);
+      console.warn('LAF Engine candidate chain note:', geminiErr.message);
     }
   }
 
