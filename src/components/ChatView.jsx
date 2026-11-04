@@ -940,148 +940,6 @@ export default function ChatView({
                   
                   <HeroSubheading />
                 </div>
-
-                {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
-                <form
-                  onSubmit={handleSend}
-                  className="floating-input-card hero-input-card"
-                  style={{
-                    background: 'rgba(23, 28, 38, 0.95)',
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'stretch',
-                    borderRadius: attachment ? '22px' : 'var(--radius-oval)',
-                    padding: attachment ? '12px 18px 10px 18px' : '10px 18px',
-                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                    width: '100%',
-                    maxWidth: '720px',
-                    margin: '0 auto 28px auto'
-                  }}
-                >
-                  {/* Selected File/Image/PDF Preview Chip */}
-                  {attachment && (
-                    <div className="attachment-chip-bar">
-                      <div 
-                        onClick={() => {
-                          const cached = attachmentCacheRef.current[attachment.name];
-                          setViewingFileModal({
-                            ...attachment,
-                            ...(cached || {}),
-                            isPdf: attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.name?.toLowerCase().endsWith('.pdf'),
-                            isImage: attachment.isImage || attachment.mimeType?.startsWith('image/')
-                          });
-                        }}
-                        title="Click to view and verify file"
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, cursor: 'pointer' }}
-                      >
-                        {attachment.isImage ? (
-                          <img
-                            src={attachment.previewUrl}
-                            alt={attachment.name}
-                            style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '8px',
-                            background: attachment.isPdf ? 'rgba(239, 68, 68, 0.15)' : 'rgba(79, 117, 255, 0.15)',
-                            border: `1px solid ${attachment.isPdf ? 'rgba(239, 68, 68, 0.4)' : 'rgba(79, 117, 255, 0.3)'}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: attachment.isPdf ? '#f87171' : '#60a5fa'
-                          }}>
-                            <FileText style={{ width: '18px', height: '18px' }} />
-                          </div>
-                        )}
-                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, textAlign: 'left' }}>
-                          <span style={{ fontSize: '0.84rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px' }}>
-                            {attachment.name}
-                          </span>
-                          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                            {attachment.formattedSize} • {attachment.isImage ? 'Image' : (attachment.isPdf ? 'PDF Document' : 'Document / Code')}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveAttachment}
-                        title="Remove attachment"
-                        className="chip-remove-btn"
-                      >
-                        <X style={{ width: '13px', height: '13px' }} />
-                      </button>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
-                    <input
-                      type="file"
-                      ref={fileInputWelcomeRef}
-                      onChange={handleFileSelect}
-                      accept="image/*,text/*,.pdf,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.csv,.md,.txt,.xml,.yml,.yaml,.sql"
-                      style={{ display: 'none' }}
-                    />
-
-                    {/* Attachment Button */}
-                    <button
-                      type="button"
-                      onClick={() => fileInputWelcomeRef.current?.click()}
-                      title="Attach image or PDF"
-                      className="chat-icon-action-btn"
-                      style={{
-                        background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
-                        border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
-                        color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)'
-                      }}
-                    >
-                      <Paperclip style={{ width: '17px', height: '17px' }} />
-                    </button>
-
-                    <textarea
-                      value={inputPrompt}
-                      onChange={(e) => setInputPrompt(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSend();
-                        }
-                      }}
-                      placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
-                      rows={1}
-                      className="chat-prompt-textarea"
-                    />
-
-                    {/* Voice Typing Mic Button */}
-                    <button
-                      type="button"
-                      onClick={toggleVoiceTyping}
-                      title={isListening ? "Stop Voice Typing" : "Voice Typing"}
-                      className="chat-icon-action-btn"
-                      style={{
-                        background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
-                        animation: isListening ? 'micPulse 1.5s infinite' : 'none'
-                      }}
-                    >
-                      {isListening ? <MicOff style={{ width: '17px', height: '17px', color: '#fff' }} /> : <Mic style={{ width: '17px', height: '17px', color: 'var(--ds-blue)' }} />}
-                    </button>
-
-                    {/* Send Button */}
-                    <button
-                      type="submit"
-                      disabled={loading || (!inputPrompt.trim() && !attachment)}
-                      className="chat-icon-action-btn send-btn"
-                      style={{
-                        cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
-                        opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
-                      }}
-                    >
-                      <Send style={{ width: '16px', height: '16px', transform: 'translate(-1px, 1px)' }} />
-                    </button>
-                  </div>
-                </form>
               </div>
             ) : (
               /* Active Conversation Messages List with Left-Aligned Clean Typography */
@@ -1522,147 +1380,145 @@ export default function ChatView({
           </div>
         </div>
 
-        {/* Floating Bottom Input Card with Fixed Bottom Padding */}
-        {messages.length > 0 && (
-          <div className="chat-bottom-input-anchor">
-            <form
-              onSubmit={handleSend}
-              className="floating-input-card bottom-card-form"
-              style={{
-                background: 'rgba(23, 28, 38, 0.95)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'stretch',
-                borderRadius: attachment ? '20px' : 'var(--radius-oval)',
-                padding: attachment ? '10px 16px 8px 16px' : '8px 16px',
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-            >
-              {/* Selected File/Image Preview Chip */}
-              {attachment && (
-                <div className="attachment-chip-bar">
-                  <div 
-                    onClick={() => {
-                      const cached = attachmentCacheRef.current[attachment.name];
-                      setViewingFileModal({
-                        ...attachment,
-                        ...(cached || {}),
-                        isPdf: attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.name?.toLowerCase().endsWith('.pdf'),
-                        isImage: attachment.isImage || attachment.mimeType?.startsWith('image/')
-                      });
-                    }}
-                    title="Click to view and verify file"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, cursor: 'pointer' }}
-                  >
-                    {attachment.isImage ? (
-                      <img
-                        src={attachment.previewUrl}
-                        alt={attachment.name}
-                        style={{ width: '34px', height: '34px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '6px',
-                        background: attachment.isPdf ? 'rgba(239, 68, 68, 0.15)' : 'rgba(79, 117, 255, 0.15)',
-                        border: `1px solid ${attachment.isPdf ? 'rgba(239, 68, 68, 0.4)' : 'rgba(79, 117, 255, 0.3)'}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: attachment.isPdf ? '#f87171' : '#60a5fa'
-                      }}>
-                        <FileText style={{ width: '16px', height: '16px' }} />
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, textAlign: 'left' }}>
-                      <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
-                        {attachment.name}
-                      </span>
-                      <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                        {attachment.formattedSize} • {attachment.isImage ? 'Image' : (attachment.isPdf ? 'PDF Document' : 'Document / Code')}
-                      </span>
+        {/* Permanent Floating Bottom Input Card */}
+        <div className="chat-bottom-input-anchor">
+          <form
+            onSubmit={handleSend}
+            className="floating-input-card bottom-card-form"
+            style={{
+              background: 'rgba(23, 28, 38, 0.95)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              borderRadius: attachment ? '20px' : 'var(--radius-oval)',
+              padding: attachment ? '10px 16px 8px 16px' : '8px 16px',
+              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            {/* Selected File/Image Preview Chip */}
+            {attachment && (
+              <div className="attachment-chip-bar">
+                <div 
+                  onClick={() => {
+                    const cached = attachmentCacheRef.current[attachment.name];
+                    setViewingFileModal({
+                      ...attachment,
+                      ...(cached || {}),
+                      isPdf: attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.name?.toLowerCase().endsWith('.pdf'),
+                      isImage: attachment.isImage || attachment.mimeType?.startsWith('image/')
+                    });
+                  }}
+                  title="Click to view and verify file"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, cursor: 'pointer' }}
+                >
+                  {attachment.isImage ? (
+                    <img
+                      src={attachment.previewUrl}
+                      alt={attachment.name}
+                      style={{ width: '34px', height: '34px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      background: attachment.isPdf ? 'rgba(239, 68, 68, 0.15)' : 'rgba(79, 117, 255, 0.15)',
+                      border: `1px solid ${attachment.isPdf ? 'rgba(239, 68, 68, 0.4)' : 'rgba(79, 117, 255, 0.3)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: attachment.isPdf ? '#f87171' : '#60a5fa'
+                    }}>
+                      <FileText style={{ width: '16px', height: '16px' }} />
                     </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, textAlign: 'left' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }}>
+                      {attachment.name}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                      {attachment.formattedSize} • {attachment.isImage ? 'Image' : (attachment.isPdf ? 'PDF Document' : 'Document / Code')}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveAttachment}
-                    title="Remove attachment"
-                    className="chip-remove-btn"
-                  >
-                    <X style={{ width: '12px', height: '12px' }} />
-                  </button>
                 </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
-                <input
-                  type="file"
-                  ref={fileInputBottomRef}
-                  onChange={handleFileSelect}
-                  accept="image/*,text/*,.pdf,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.csv,.md,.txt,.xml,.yml,.yaml,.sql"
-                  style={{ display: 'none' }}
-                />
-
-                {/* Attachment Button */}
                 <button
                   type="button"
-                  onClick={() => fileInputBottomRef.current?.click()}
-                  title="Attach image or PDF"
-                  className="chat-icon-action-btn"
-                  style={{
-                    background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
-                    border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
-                    color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)'
-                  }}
+                  onClick={handleRemoveAttachment}
+                  title="Remove attachment"
+                  className="chip-remove-btn"
                 >
-                  <Paperclip style={{ width: '16px', height: '16px' }} />
-                </button>
-
-                <textarea
-                  value={inputPrompt}
-                  onChange={(e) => setInputPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
-                  rows={1}
-                  className="chat-prompt-textarea"
-                />
-
-                {/* Voice Typing Mic Button */}
-                <button
-                  type="button"
-                  onClick={toggleVoiceTyping}
-                  title={isListening ? "Stop Voice Typing" : "Voice Typing"}
-                  className="chat-icon-action-btn"
-                  style={{
-                    background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
-                    animation: isListening ? 'micPulse 1.5s infinite' : 'none'
-                  }}
-                >
-                  {isListening ? <MicOff style={{ width: '16px', height: '16px', color: '#fff' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />}
-                </button>
-
-                {/* Send Button */}
-                <button
-                  type="submit"
-                  disabled={loading || isStreaming || (!inputPrompt.trim() && !attachment)}
-                  className="chat-icon-action-btn send-btn"
-                  style={{
-                    cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
-                    opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
-                  }}
-                >
-                  <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
+                  <X style={{ width: '12px', height: '12px' }} />
                 </button>
               </div>
-            </form>
-          </div>
-        )}
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+              <input
+                type="file"
+                ref={fileInputBottomRef}
+                onChange={handleFileSelect}
+                accept="image/*,text/*,.pdf,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.csv,.md,.txt,.xml,.yml,.yaml,.sql"
+                style={{ display: 'none' }}
+              />
+
+              {/* Attachment Button */}
+              <button
+                type="button"
+                onClick={() => fileInputBottomRef.current?.click()}
+                title="Attach image or PDF"
+                className="chat-icon-action-btn"
+                style={{
+                  background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
+                  border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
+                  color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)'
+                }}
+              >
+                <Paperclip style={{ width: '16px', height: '16px' }} />
+              </button>
+
+              <textarea
+                value={inputPrompt}
+                onChange={(e) => setInputPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
+                rows={1}
+                className="chat-prompt-textarea"
+              />
+
+              {/* Voice Typing Mic Button */}
+              <button
+                type="button"
+                onClick={toggleVoiceTyping}
+                title={isListening ? "Stop Voice Typing" : "Voice Typing"}
+                className="chat-icon-action-btn"
+                style={{
+                  background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
+                  animation: isListening ? 'micPulse 1.5s infinite' : 'none'
+                }}
+              >
+                {isListening ? <MicOff style={{ width: '16px', height: '16px', color: '#fff' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />}
+              </button>
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={loading || isStreaming || (!inputPrompt.trim() && !attachment)}
+                className="chat-icon-action-btn send-btn"
+                style={{
+                  cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                  opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
+                }}
+              >
+                <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
+              </button>
+            </div>
+          </form>
+        </div>
 
       </div>
 
