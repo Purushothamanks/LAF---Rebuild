@@ -41,7 +41,8 @@
 
 ### 1.3 Chat Input Ergonomics & Dynamic Send Button
 - **Desktop Positioning:** Floating clean anchor with `bottom: 24px; z-index: 50;` for modern breathing room.
-- **Mobile Positioning:** Docked flex base with `padding: 6px 12px calc(8px + env(safe-area-inset-bottom, 8px)) 12px; z-index: 50;`.
+- **Mobile Positioning:** Elevated floating pill card with `bottom: calc(20px + env(safe-area-inset-bottom, 12px)); z-index: 50;` lifted cleanly above the bottom edge and home gesture indicator, accompanied by `padding: 0 12px;`, `border-radius: 28px;`, and ambient blue drop-shadow.
+- **Scroll Clearance:** `.chat-messages-scroll` configured with `calc(115px + env(safe-area-inset-bottom, 16px))` bottom padding on mobile so the latest conversation messages remain fully visible above the floating bar.
 - **Dynamic Themed Send Button:**
   - Auto-adapts based on active theme (`dark`, `cyber`, `light`).
   - Active state lights up with blue accent (`#3b82f6`) when prompt text or an attachment is present.
