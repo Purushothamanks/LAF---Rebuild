@@ -143,6 +143,12 @@ export function isImageQuery(prompt = '') {
     return false;
   }
 
+  // 0. Clarity, regeneration, and quality queries (e.g. "The image is not clear", "image not clear", "regenerate image")
+  if (/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/i.test(p)) return true;
+  if (/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/i.test(p)) return true;
+  if (/\b(regenerate|re-generate|again|another|better|clearer)\b/i.test(p) && /\b(image|picture|blueprint|graph|diagram|flowchart)\b/i.test(p)) return true;
+  if (/^the image is not clear/i.test(p) || /^image is not clear/i.test(p) || /^not clear/i.test(p)) return true;
+
   // 1. Direct follow-up keyword requests (e.g. "blueprint", "graph", "diagram", "blue-prit", "ghaph", "grap")
   if (/^(blueprint|graph|diagram|flowchart|wireframe|schematic|architecture diagram)$/i.test(p)) {
     return true;
@@ -164,7 +170,7 @@ export function isImageQuery(prompt = '') {
 
   // 3. Action verbs + image nouns
   const imageVerbs = ['generate', 'create', 'make', 'draw', 'paint', 'render', 'sketch', 'design', 'show me', 'give me', 'produce', 'show as', 'give as', 'give'];
-  const imageNouns = ['image', 'picture', 'photo', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render', 'blueprint', 'graph', 'diagram', 'chart', 'flowchart', 'wireframe', 'infographic', 'schematic'];
+  const imageNouns = ['image', 'picture', 'photo', 'photograph', 'drawing', 'painting', 'wallpaper', 'illustration', 'sketch', 'portrait', 'artwork', 'pic', 'render', 'blueprint', 'graph', 'diagram', 'chart', 'flowchart', 'wireframe', 'infographic', 'schematic'];
 
   const hasVerb = imageVerbs.some(v => new RegExp(`\\b${v}\\b`, 'i').test(p));
   const hasNoun = imageNouns.some(n => new RegExp(`\\b${n}s?\\b`, 'i').test(p));
@@ -173,7 +179,7 @@ export function isImageQuery(prompt = '') {
     return true;
   }
 
-  // 4. Starts with noun of/for or ends with noun
+  // 4. Starts with image noun of/for or ends with noun
   if (imageNouns.some(n => p.startsWith(`${n} of `) || p.startsWith(`a ${n} of `) || p.startsWith(`an ${n} of `) || p.startsWith(`${n} for `))) {
     return true;
   }
@@ -194,7 +200,8 @@ export function buildContextualImagePrompt(userPrompt = '', history = []) {
   const lower = normalized.toLowerCase();
 
   // 1. Detect if this is a technical blueprint / graph / diagram / flowchart request
-  const isTechnicalVisual = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower);
+  const isTechnicalVisual = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower) ||
+    (Array.isArray(history) && history.some(m => /\b(blueprint|graph|architecture|system|deploy|github|ai)\b/i.test(m.content || '')));
 
   // 2. Normalize common colloquial phrases & typos
   let cleaned = normalized
@@ -203,6 +210,9 @@ export function buildContextualImagePrompt(userPrompt = '', history = []) {
     .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give|send me|display)\s+(an?\s+|the\s+)?/i, '')
     .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s*(of|about|showing|with|for)?\s*/i, '')
     .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
+    .replace(/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/gi, '')
+    .replace(/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/gi, '')
+    .replace(/\b(regenerate|re-generate|again|another|better|clearer|not clear|blurry)\b/gi, '')
     .replace(/,\s*etc\.*$/i, '')
     .trim();
 
@@ -221,15 +231,23 @@ export function buildContextualImagePrompt(userPrompt = '', history = []) {
   if (isPureFollowUp && Array.isArray(history) && history.length > 0) {
     for (let i = history.length - 1; i >= 0; i--) {
       const msg = history[i];
-      if (msg.role === 'user' && msg.content && !isImageQuery(msg.content)) {
-        contextTopic = msg.content
-          .replace(/^how to\s+/i, '')
-          .replace(/^can you\s+/i, '')
-          .replace(/^explain\s+/i, '')
-          .replace(/^what is\s+/i, '')
-          .replace(/^tell me about\s+/i, '')
-          .trim();
-        break;
+      if (msg.role === 'user' && msg.content) {
+        const cleanContent = msg.content.trim();
+        // Skip clarity queries or follow-up carrier queries to find the real subject
+        if (
+          !isImageQuery(cleanContent) ||
+          cleanContent.length > 20
+        ) {
+          contextTopic = cleanContent
+            .replace(/^how to\s+/i, '')
+            .replace(/^can you\s+/i, '')
+            .replace(/^explain\s+/i, '')
+            .replace(/^what is\s+/i, '')
+            .replace(/^tell me about\s+/i, '')
+            .replace(/^(give me as|give as|show as)\s+(a\s+)?(blueprint|graph|diagram|flowchart|image)\s*(for|of)?\s*/i, '')
+            .trim();
+          break;
+        }
       }
     }
     if (!contextTopic) {

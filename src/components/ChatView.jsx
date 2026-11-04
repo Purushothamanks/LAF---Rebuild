@@ -112,8 +112,7 @@ renderer.image = function ({ href, title, text }) {
   const encodedHref = encodeURIComponent(href);
   return `<div class="laf-image-card">
     <div class="laf-img-wrapper">
-      <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" 
-        onerror="if(!this.dataset.retried){this.dataset.retried='1';const u=new URL(this.src);u.searchParams.delete('model');this.src=u.toString();}else if(this.dataset.retried==='1'){this.dataset.retried='2';const u=new URL(this.src);u.searchParams.set('model','sana');this.src=u.toString();}else if(this.dataset.retried==='2'){this.dataset.retried='3';const u=new URL(this.src);u.searchParams.set('model','flux-klein');this.src=u.toString();}" />
+      <img src="${href}" alt="${altText}" class="laf-generated-img" loading="lazy" />
       <button data-download-url="${encodedHref}" class="laf-img-download-icon" title="Download Image" type="button" aria-label="Download Image">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -450,6 +449,35 @@ export default function ChatView({
     return () => document.removeEventListener('click', handleGlobalClick);
   }, []);
 
+  // Global Image Error Fallback Handler (Rotates models seamlessly if any image network error occurs)
+  useEffect(() => {
+    const handleImgError = (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('laf-generated-img')) {
+        const img = e.target;
+        try {
+          if (!img.dataset.retried) {
+            img.dataset.retried = '1';
+            const u = new URL(img.src);
+            u.searchParams.delete('model');
+            img.src = u.toString();
+          } else if (img.dataset.retried === '1') {
+            img.dataset.retried = '2';
+            const u = new URL(img.src);
+            u.searchParams.set('model', 'sana');
+            img.src = u.toString();
+          } else if (img.dataset.retried === '2') {
+            img.dataset.retried = '3';
+            const u = new URL(img.src);
+            u.searchParams.set('model', 'flux-klein');
+            img.src = u.toString();
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('error', handleImgError, true);
+    return () => window.removeEventListener('error', handleImgError, true);
+  }, []);
+
   const toggleVoiceTyping = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -533,6 +561,37 @@ export default function ChatView({
     }
 
     const assistantMsgIndex = baseHistory.length;
+    // Immediate rendering for generated image responses (bypasses typewriter lag & raw markdown code display)
+    const cleanFullText = (fullText || '').replace(/```(?:markdown|md|image)?\s*(!\[.*?\]\(https?:\/\/[^\s)]+\))\s*```/gs, '$1').trim();
+    const isImageResponse = /^!\[.*?\]\(https?:\/\/[^\s)]+\)$/.test(cleanFullText);
+
+    if (isImageResponse) {
+      const finalMessages = [...baseHistory, {
+        role: 'assistant',
+        content: cleanFullText,
+        documentArtifact: null,
+        isDocument: false,
+        provider: providerName,
+        artifacts: [],
+        milestones,
+        executionTimeMs,
+        isTyping: false
+      }];
+
+      setMessages(finalMessages);
+      setIsStreaming(false);
+      setIsLiveGenerating(false);
+      setIsImageGenerating(false);
+
+      const convId = activeConvId || `conv_${Date.now()}`;
+      setActiveConvId(convId);
+      try {
+        saveLocalConversation(user?.username, convId, undefined, finalMessages);
+        fetchConversations();
+      } catch (e) {}
+      return;
+    }
+
     const initialAssistantMsg = {
       role: 'assistant',
       content: fullText,
@@ -1263,34 +1322,91 @@ export default function ChatView({
                           }
 
                           // Default Message Bubble for standard chat responses
+                          const rawContent = m.content || '';
+                          const cleanContent = rawContent.replace(/```(?:markdown|md|image)?\s*(!\[.*?\]\(https?:\/\/[^\s)]+\))\s*```/gs, '$1').trim();
+                          const singleImgMatch = cleanContent.match(/^!\[(.*?)\]\((https?:\/\/[^\s)]+)\)$/);
+
                           return (
                             <div 
                               className={isUser ? "user-message-bubble" : "assistant-message-bubble"}
                               style={{ textAlign: 'left' }}
                             >
-                              {/* Markdown Rendered Content */}
-                              {m.content && (
-                                <div
-                                  className="message-markdown-content"
-                                  style={{
-                                    fontSize: '0.96rem',
-                                    lineHeight: '1.68',
-                                    color: 'var(--ds-text-primary)',
-                                    textAlign: 'left',
-                                    wordBreak: 'break-word'
-                                  }}
-                                  dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(marked.parse(m.content || ''), {
-                                      ADD_TAGS: ['svg', 'path', 'polyline', 'line', 'button'],
-                                      ADD_ATTR: [
-                                        'target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 
-                                        'stroke-width', 'stroke-linecap', 'stroke-linejoin', 
-                                        'data-download-url', 'data-copy-text', 'class', 'title', 'type', 'aria-label'
-                                      ],
-                                      ALLOW_DATA_ATTR: true
-                                    })
-                                  }}
-                                />
+                              {singleImgMatch ? (
+                                <div className="laf-image-card">
+                                  <div className="laf-img-wrapper">
+                                    <img
+                                      src={singleImgMatch[2]}
+                                      alt={singleImgMatch[1] || 'LAF AI Image'}
+                                      className="laf-generated-img"
+                                      loading="lazy"
+                                      onError={(e) => {
+                                        const target = e.currentTarget;
+                                        try {
+                                          if (!target.dataset.retried) {
+                                            target.dataset.retried = '1';
+                                            const u = new URL(target.src);
+                                            u.searchParams.delete('model');
+                                            target.src = u.toString();
+                                          } else if (target.dataset.retried === '1') {
+                                            target.dataset.retried = '2';
+                                            const u = new URL(target.src);
+                                            u.searchParams.set('model', 'sana');
+                                            target.src = u.toString();
+                                          } else if (target.dataset.retried === '2') {
+                                            target.dataset.retried = '3';
+                                            const u = new URL(target.src);
+                                            u.searchParams.set('model', 'flux-klein');
+                                            target.src = u.toString();
+                                          }
+                                        } catch (err) {}
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="laf-img-download-icon"
+                                      title="Download Image"
+                                      aria-label="Download Image"
+                                      onClick={() => {
+                                        if (window.downloadLafImage) {
+                                          window.downloadLafImage(singleImgMatch[2], 'laf_ai_image.jpg');
+                                        }
+                                      }}
+                                    >
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y3="3"/>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <div className="laf-image-badge-caption">
+                                    <span className="laf-image-badge-sparkle">✨</span> Image generated successfully !
+                                  </div>
+                                </div>
+                              ) : (
+                                cleanContent && (
+                                  <div
+                                    className="message-markdown-content"
+                                    style={{
+                                      fontSize: '0.96rem',
+                                      lineHeight: '1.68',
+                                      color: 'var(--ds-text-primary)',
+                                      textAlign: 'left',
+                                      wordBreak: 'break-word'
+                                    }}
+                                    dangerouslySetInnerHTML={{
+                                      __html: DOMPurify.sanitize(marked.parse(cleanContent), {
+                                        ADD_TAGS: ['svg', 'path', 'polyline', 'line', 'button'],
+                                        ADD_ATTR: [
+                                          'target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 
+                                          'stroke-width', 'stroke-linecap', 'stroke-linejoin', 
+                                          'data-download-url', 'data-copy-text', 'class', 'title', 'type', 'aria-label'
+                                        ],
+                                        ALLOW_DATA_ATTR: true
+                                      })
+                                    }}
+                                  />
+                                )
                               )}
 
                               {/* Streaming Blinking Cursor */}
@@ -1299,7 +1415,7 @@ export default function ChatView({
                               )}
 
                               {/* Open in LAF Canvas Button for Code Artifacts */}
-                              {!isUser && !m.isTyping && extractCanvasArtifact(m.content) && extractCanvasArtifact(m.content).type === 'code' && (
+                              {!isUser && !m.isTyping && !singleImgMatch && extractCanvasArtifact(m.content) && extractCanvasArtifact(m.content).type === 'code' && (
                                 <div style={{ marginTop: '12px' }}>
                                   <button
                                     type="button"

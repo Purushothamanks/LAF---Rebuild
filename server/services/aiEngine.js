@@ -161,6 +161,12 @@ function isImageGenerationQuery(prompt = '') {
     return false;
   }
 
+  // 0. Clarity, regeneration, and quality queries (e.g. "The image is not clear", "image not clear", "regenerate image")
+  if (/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/i.test(p)) return true;
+  if (/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/i.test(p)) return true;
+  if (/\b(regenerate|re-generate|again|another|better|clearer)\b/i.test(p) && /\b(image|picture|blueprint|graph|diagram|flowchart)\b/i.test(p)) return true;
+  if (/^the image is not clear/i.test(p) || /^image is not clear/i.test(p) || /^not clear/i.test(p)) return true;
+
   // 1. Direct follow-up keyword requests (e.g. "blueprint", "graph", "diagram", "blue-prit", "ghaph", "grap")
   if (/^(blueprint|graph|diagram|flowchart|wireframe|schematic|architecture diagram)$/i.test(p)) {
     return true;
@@ -223,6 +229,9 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
     .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give|send me|display)\s+(an?\s+|the\s+)?/i, '')
     .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s*(of|about|showing|with|for)?\s*/i, '')
     .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
+    .replace(/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/gi, '')
+    .replace(/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/gi, '')
+    .replace(/\b(regenerate|re-generate|again|another|better|clearer|not clear|blurry)\b/gi, '')
     .replace(/,\s*etc\.*$/i, '')
     .trim();
 
@@ -241,15 +250,22 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   if (isPureFollowUp && Array.isArray(history) && history.length > 0) {
     for (let i = history.length - 1; i >= 0; i--) {
       const msg = history[i];
-      if (msg.role === 'user' && msg.content && !isImageGenerationQuery(msg.content)) {
-        contextTopic = msg.content
-          .replace(/^how to\s+/i, '')
-          .replace(/^can you\s+/i, '')
-          .replace(/^explain\s+/i, '')
-          .replace(/^what is\s+/i, '')
-          .replace(/^tell me about\s+/i, '')
-          .trim();
-        break;
+      if (msg.role === 'user' && msg.content) {
+        const cleanContent = msg.content.trim();
+        if (
+          !isImageGenerationQuery(cleanContent) ||
+          cleanContent.length > 20
+        ) {
+          contextTopic = cleanContent
+            .replace(/^how to\s+/i, '')
+            .replace(/^can you\s+/i, '')
+            .replace(/^explain\s+/i, '')
+            .replace(/^what is\s+/i, '')
+            .replace(/^tell me about\s+/i, '')
+            .replace(/^(give me as|give as|show as)\s+(a\s+)?(blueprint|graph|diagram|flowchart|image)\s*(for|of)?\s*/i, '')
+            .trim();
+          break;
+        }
       }
     }
     if (!contextTopic) {
