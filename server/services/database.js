@@ -286,10 +286,23 @@ function saveFeedbackRecord(username, text, userEmail = '') {
 
 /**
  * Get all context memories for a user
+ * Features self-healing fallback to past conversations if memories are not yet compiled
  */
 function getUserMemories(username) {
   const db = readUserDb(username);
-  return Array.isArray(db.contextMemories) ? db.contextMemories : [];
+  let mems = Array.isArray(db.contextMemories) ? db.contextMemories : [];
+  if (mems.length === 0 && Array.isArray(db.conversations) && db.conversations.length > 0) {
+    try {
+      const { scanHistoryForUserMemories } = require('./userMemoryEngine');
+      const recovered = scanHistoryForUserMemories(db.conversations);
+      if (recovered && recovered.length > 0) {
+        db.contextMemories = recovered;
+        saveUserDb(username, db);
+        return recovered;
+      }
+    } catch (e) {}
+  }
+  return mems;
 }
 
 /**

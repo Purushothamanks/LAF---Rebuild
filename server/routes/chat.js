@@ -77,9 +77,9 @@ router.post('/send', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Security Shield: Potential malicious injection pattern blocked.' });
     }
 
-    // 1. Autonomous User Context Memory Extraction
+    // 1. Autonomous User Context Memory Extraction (from Prompt, Resume attachments, or About Me text)
     try {
-      const extractedMemories = extractUserMemories(cleanPrompt);
+      const extractedMemories = extractUserMemories(cleanPrompt, attachment?.textContent, attachment?.name);
       if (extractedMemories && extractedMemories.length > 0) {
         saveUserMemory(req.username, extractedMemories);
         console.log(`[USER-MEMORY] Autonomously saved ${extractedMemories.length} facts for @${req.username}:`, extractedMemories.map(m => `${m.key}=${m.value}`).join(' | '));

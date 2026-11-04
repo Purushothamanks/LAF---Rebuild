@@ -18,6 +18,7 @@ import {
   formatUserMemoriesForPrompt,
   isMemoryQuery,
   isMemoryDeleteQuery,
+  scanHistoryForUserMemories,
   buildMemoryRecallResponse
 } from './userMemoryEngine.js';
 
@@ -40,7 +41,11 @@ CRITICAL INSTRUCTIONS:
 - Security & Privacy: Zero-knowledge architecture featuring End-to-End Encryption (AES-256-GCM with PBKDF2 key derivation), per-user isolated database partitioning, and real-time threat/jailbreak shields.
 - AI & Reasoning Engine: Multi-model auto-routing with Google DeepMind Gemini Flash engines for sub-second inference, high-availability cloud fallback, and local Ollama (laf-v2 / llama3.2) support.
 - Multimodal: High-resolution image generation (FLUX.1-HD / SDXL), audio synthesis (Web Speech TTS), and video motion previews.
-7. DOCUMENT CREATION: When the user asks to write, create, draft, or generate a document, report, or specification, format it as a complete, comprehensive, well-structured document starting with a clear top-level heading (# Document Title), followed by organized sections (## Section), tables, and actionable insights for display in LAF Canvas.`;
+7. DOCUMENT CREATION: When the user asks to write, create, draft, or generate a document, report, or specification, format it as a complete, comprehensive, well-structured document starting with a clear top-level heading (# Document Title), followed by organized sections (## Section), tables, and actionable insights for display in LAF Canvas.
+8. USER CONTEXT & RESUME PRIVACY COMPLIANCE:
+- You have FULL authorization and cryptographic permission to recall, summarize, and discuss the user's background, profile, uploaded resume, tech stack, and personal facts stored in your local context vault.
+- NEVER state "I don't have permission to access your information", "I do not have access to your personal files", or "As an AI I cannot remember".
+- When the user asks "tell about me", "what did you know about me", or asks for insights on their resume/profile, summarize their profile, skills, projects, and background warmly and concisely using the learned context memory provided below.`;
 
 export function getEffectiveSystemInstruction(username = '') {
   const now = new Date();
@@ -475,7 +480,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
   // Autonomous User Context Memory Extraction (Client-Side)
   try {
-    const extracted = extractUserMemories(cleanPrompt);
+    const extracted = extractUserMemories(cleanPrompt, attachment?.textContent, attachment?.name);
     if (extracted && extracted.length > 0) {
       saveLocalUserMemory(username, extracted);
     }
@@ -921,14 +926,26 @@ export function getLocalUserMemories(username = '') {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (e) {}
 
   const db = getLocalUserDb(username);
-  if (db && Array.isArray(db.contextMemories)) {
+  if (db && Array.isArray(db.contextMemories) && db.contextMemories.length > 0) {
     return db.contextMemories;
   }
+
+  // Self-healing recovery: If memories are empty, scan past conversations for resume/profile
+  if (db && Array.isArray(db.conversations) && db.conversations.length > 0) {
+    try {
+      const recovered = scanHistoryForUserMemories(db.conversations);
+      if (recovered && recovered.length > 0) {
+        saveLocalUserMemory(username, recovered);
+        return recovered;
+      }
+    } catch (e) {}
+  }
+
   return [];
 }
 

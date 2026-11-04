@@ -759,9 +759,9 @@ export default function ChatView({
       }
     ];
 
-    // Autonomously learn and persist user context memories immediately
+    // Autonomously learn and persist user context memories immediately (from prompt or resume attachment)
     try {
-      const extractedMems = extractUserMemories(textToSend);
+      const extractedMems = extractUserMemories(textToSend, currentAttachment?.textContent, currentAttachment?.name);
       if (extractedMems && extractedMems.length > 0) {
         saveLocalUserMemory(user?.username, extractedMems);
       }
