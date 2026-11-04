@@ -262,7 +262,7 @@ export default function LafCanvas({
       <div 
         className="laf-canvas-header"
       >
-        {/* Top/Main Row: Left Title & Right Dismissal Close Button */}
+        {/* Top/Main Row: Left Title & Mobile Dismissal Button */}
         <div className="laf-canvas-header-top-row">
           <div className="laf-canvas-header-left" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div 
@@ -299,31 +299,47 @@ export default function LafCanvas({
             </div>
           </div>
 
-          {/* Close Canvas - Distinct Top-Right Dismissal Button (Always accessible and separated) */}
-          <button
-            type="button"
-            onClick={onClose}
-            title="Close LAF Canvas"
-            className="laf-canvas-close-btn"
-            style={{
-              padding: '6px 8px',
-              borderRadius: '8px',
-              background: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              color: '#f87171',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <X style={{ width: '16px', height: '16px' }} />
-          </button>
+          {/* Mobile-only Action Cluster: Fullscreen & Close */}
+          <div className="laf-canvas-mobile-controls" style={{ display: 'none', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? "Restore" : "Fullscreen"}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#cbd5e1',
+                cursor: 'pointer'
+              }}
+            >
+              {isFullscreen ? <Minimize2 style={{ width: '14px', height: '14px' }} /> : <Maximize2 style={{ width: '14px', height: '14px' }} />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              title="Close LAF Canvas"
+              className="laf-canvas-close-btn"
+              style={{
+                padding: '6px 8px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                color: '#f87171',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <X style={{ width: '16px', height: '16px' }} />
+            </button>
+          </div>
         </div>
 
-        {/* Toolbar: Center Tabs & Action Tools */}
+        {/* Center Tabs & Desktop Toolbar */}
         <div className="laf-canvas-header-toolbar">
           {/* Center Tabs */}
           <div 
@@ -431,9 +447,8 @@ export default function LafCanvas({
             )}
           </div>
 
-          {/* Right Action Tools: Copy & Export */}
+          {/* Right Action Tools: Copy, Export, Fullscreen & Desktop Close */}
           <div className="laf-canvas-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Export Notice Badge */}
             {exportNotice && (
               <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10b981', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                 {exportNotice}
@@ -491,6 +506,49 @@ export default function LafCanvas({
               <span>Export</span>
               <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.8 }} />
             </button>
+
+            {/* Desktop Fullscreen Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? "Restore window" : "Expand fullscreen"}
+              className="laf-canvas-action-btn laf-canvas-desktop-only"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px 8px',
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#cbd5e1',
+                cursor: 'pointer'
+              }}
+            >
+              {isFullscreen ? <Minimize2 style={{ width: '14px', height: '14px' }} /> : <Maximize2 style={{ width: '14px', height: '14px' }} />}
+            </button>
+
+            {/* Desktop Close Button (Always positioned on far right of header) */}
+            <button
+              type="button"
+              onClick={onClose}
+              title="Close LAF Canvas"
+              className="laf-canvas-close-btn laf-canvas-desktop-only"
+              style={{
+                padding: '6px 8px',
+                borderRadius: '8px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                color: '#f87171',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <X style={{ width: '16px', height: '16px' }} />
+            </button>
           </div>
         </div>
       </div>
@@ -499,6 +557,7 @@ export default function LafCanvas({
       <div 
         style={{ 
           flex: 1, 
+          minHeight: 0,
           overflow: 'hidden', 
           position: 'relative', 
           display: 'flex', 
@@ -510,11 +569,12 @@ export default function LafCanvas({
       >
         {/* Tab 1: Interactive Preview for Web Code */}
         {activeTab === 'preview' && isCode && (
-          <div style={{ width: '100%', height: '100%', background: 'transparent' }}>
+          <div style={{ width: '100%', height: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'transparent' }}>
             <AgentSandbox
               code={artifact.code}
               language={artifact.language || 'html'}
               title={artifact.title || 'LAF Canvas Live Preview'}
+              embedded={true}
             />
           </div>
         )}
