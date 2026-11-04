@@ -388,7 +388,7 @@ export default function App() {
           {activeTab === 'media' && <div style={{ paddingTop: '60px', height: '100%' }}><MediaStudio token={token} /></div>}
           {activeTab === 'trends' && <div style={{ paddingTop: '60px', height: '100%' }}><TrendsView /></div>}
           {activeTab === 'memory' && (
-            <div style={{ paddingTop: '60px', height: '100%', overflow: 'hidden' }}>
+            <div className="memory-vault-wrapper">
               <MemoryVault user={user} token={token} onBackToChat={() => setActiveTab('chat')} />
             </div>
           )}
