@@ -6,7 +6,24 @@ const axios = require('axios');
 const { verifyUserToken } = require('../security/encryption');
 const { sanitizeInput, detectThreats, detectJailbreak } = require('../security/sanitize');
 const { generateResponse } = require('../services/aiEngine');
-const { saveConversation, deleteConversation, deleteAllConversations, readUserDb, searchUserMemory, saveFeedbackRecord } = require('../services/database');
+const { 
+  saveConversation, 
+  deleteConversation, 
+  deleteAllConversations, 
+  readUserDb, 
+  searchUserMemory, 
+  saveFeedbackRecord,
+  getUserMemories,
+  saveUserMemory,
+  deleteUserMemory,
+  clearUserMemories
+} = require('../services/database');
+const {
+  extractUserMemories,
+  isMemoryQuery,
+  isMemoryDeleteQuery,
+  buildMemoryRecallResponse
+} = require('../services/userMemoryEngine');
 
 // Middleware to enforce user session authentication
 function authMiddleware(req, res, next) {
@@ -58,6 +75,71 @@ router.post('/send', authMiddleware, async (req, res) => {
 
     if (cleanPrompt && detectThreats(cleanPrompt)) {
       return res.status(400).json({ error: 'Security Shield: Potential malicious injection pattern blocked.' });
+    }
+
+    // 1. Autonomous User Context Memory Extraction
+    try {
+      const extractedMemories = extractUserMemories(cleanPrompt);
+      if (extractedMemories && extractedMemories.length > 0) {
+        saveUserMemory(req.username, extractedMemories);
+        console.log(`[USER-MEMORY] Autonomously saved ${extractedMemories.length} facts for @${req.username}:`, extractedMemories.map(m => `${m.key}=${m.value}`).join(' | '));
+      }
+    } catch (memErr) {
+      console.warn('[USER-MEMORY] Auto-extraction notice:', memErr.message);
+    }
+
+    // 2. Direct Recall Query Handler (e.g., "What do you know about me?", "Who am I?", "What is my tech stack?")
+    if (isMemoryQuery(cleanPrompt)) {
+      const currentMemories = getUserMemories(req.username);
+      const recallText = buildMemoryRecallResponse(currentMemories, req.username);
+
+      const updatedHistory = [
+        ...history,
+        { role: 'user', content: cleanPrompt, timestamp: new Date().toISOString() },
+        { role: 'assistant', content: recallText, provider: 'LAF Context Vault', timestamp: new Date().toISOString() }
+      ];
+
+      const title = history.length === 0 ? cleanPrompt.substring(0, 35) + '...' : undefined;
+      const savedConv = saveConversation(req.username, conversationId, title, updatedHistory);
+
+      return res.json({
+        success: true,
+        conversationId: savedConv.id,
+        title: savedConv.title,
+        response: {
+          role: 'assistant',
+          content: recallText,
+          provider: 'LAF Context Vault',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    // 3. Direct Memory Deletion Request (e.g., "Clear my memory", "Forget my project")
+    if (isMemoryDeleteQuery(cleanPrompt)) {
+      clearUserMemories(req.username);
+      const wipedText = `🗑️ **[LAF Context Vault]** All autonomous context memories for **@${req.username}** have been erased from your isolated vault.`;
+
+      const updatedHistory = [
+        ...history,
+        { role: 'user', content: cleanPrompt, timestamp: new Date().toISOString() },
+        { role: 'assistant', content: wipedText, provider: 'LAF Context Vault', timestamp: new Date().toISOString() }
+      ];
+
+      const title = history.length === 0 ? cleanPrompt.substring(0, 35) + '...' : undefined;
+      const savedConv = saveConversation(req.username, conversationId, title, updatedHistory);
+
+      return res.json({
+        success: true,
+        conversationId: savedConv.id,
+        title: savedConv.title,
+        response: {
+          role: 'assistant',
+          content: wipedText,
+          provider: 'LAF Context Vault',
+          timestamp: new Date().toISOString()
+        }
+      });
     }
 
     // Generate AI response
@@ -222,6 +304,71 @@ router.get('/memory-search', authMiddleware, (req, res) => {
     res.json({ success: true, memoryResults });
   } catch (err) {
     res.status(500).json({ error: 'Failed to search memory logs' });
+  }
+});
+
+/**
+ * GET /api/chat/user-memories
+ * Fetch all structured user context memories for the authenticated user
+ */
+router.get('/user-memories', authMiddleware, (req, res) => {
+  try {
+    const memories = getUserMemories(req.username);
+    res.json({ success: true, memories });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve context memories' });
+  }
+});
+
+/**
+ * POST /api/chat/user-memories
+ * Manually add or upsert a user context memory
+ */
+router.post('/user-memories', authMiddleware, (req, res) => {
+  try {
+    const { category, key, value } = req.body;
+    if (!key || !value) {
+      return res.status(400).json({ error: 'Key and Value are required' });
+    }
+    const memoryItem = {
+      category: category || 'fact',
+      key: key.trim(),
+      value: value.trim(),
+      source: 'manual',
+      updatedAt: new Date().toISOString()
+    };
+    const updatedMemories = saveUserMemory(req.username, memoryItem);
+    res.json({ success: true, memories: updatedMemories });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save context memory' });
+  }
+});
+
+/**
+ * DELETE /api/chat/user-memories/:id
+ * Delete a specific context memory
+ */
+router.delete('/user-memories/:id', authMiddleware, (req, res) => {
+  try {
+    const { id } = req.params;
+    deleteUserMemory(req.username, id);
+    const updatedMemories = getUserMemories(req.username);
+    res.json({ success: true, memories: updatedMemories });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete context memory' });
+  }
+});
+
+/**
+ * DELETE /api/chat/user-memories
+ * Wipe all context memories for current user
+ */
+router.delete('/user-memories', authMiddleware, (req, res) => {
+  try {
+    clearUserMemories(req.username);
+    res.json({ success: true, message: 'Context memories erased successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear context memories' });
   }
 });
 

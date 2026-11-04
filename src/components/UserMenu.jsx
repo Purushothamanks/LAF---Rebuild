@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, HelpCircle, Smartphone, Share2, Trash2, LogOut } from 'lucide-react';
+import { Settings, HelpCircle, Smartphone, Share2, Trash2, LogOut, Brain } from 'lucide-react';
 
 export default function UserMenu({
   user,
   onOpenSettings,
+  onOpenMemoryVault,
   onOpenDownloadApp,
   onOpenHelpFeedback,
   onClearAllConversations,
@@ -86,6 +87,22 @@ export default function UserMenu({
             <Settings style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />
             <span>Settings</span>
           </button>
+
+          {/* Context & Memory Vault */}
+          {onOpenMemoryVault && (
+            <button
+              type="button"
+              className="user-menu-item"
+              role="menuitem"
+              onClick={() => {
+                setIsOpen(false);
+                onOpenMemoryVault();
+              }}
+            >
+              <Brain style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />
+              <span>Context & Memory Vault</span>
+            </button>
+          )}
 
           {/* Help & Feedback Option */}
           {onOpenHelpFeedback && (

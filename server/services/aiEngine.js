@@ -1,5 +1,6 @@
 const axios = require('axios');
-const { searchUserMemory } = require('./database');
+const { searchUserMemory, getUserMemories } = require('./database');
+const { formatUserMemoriesForPrompt } = require('./userMemoryEngine');
 const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
@@ -842,7 +843,15 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
   const targetCloudModel = (selectedModel && selectedModel !== 'auto') ? selectedModel : autoRoute.cloudModel;
   console.log(`[AI-ENGINE] Auto-Switching Route: [Category: ${autoRoute.category}] | Target: ${targetCloudModel} | Local: ${autoRoute.localModel}`);
 
-  // Build Context (Memory Recall + Live Grounding + RAG Anchors)
+  // Build Context (Persistent User Memory + Memory Recall + Live Grounding + RAG Anchors)
+  let userProfileContext = '';
+  try {
+    const userMemories = getUserMemories(username);
+    if (userMemories && userMemories.length > 0) {
+      userProfileContext = formatUserMemoriesForPrompt(userMemories);
+    }
+  } catch (e) {}
+
   let memoryContext = '';
   try {
     const memoryMatches = searchUserMemory(username, cleanPrompt);
@@ -867,7 +876,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     ragContext = getRagContext(cleanPrompt);
   } catch (e) {}
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}${ragContext ? '\n' + ragContext : ''}`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\nUser: ${username}${userProfileContext ? '\n' + userProfileContext : ''}${memoryContext ? '\n' + memoryContext : ''}${webGroundingContext ? '\n' + webGroundingContext : ''}${ragContext ? '\n' + ragContext : ''}`;
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt }

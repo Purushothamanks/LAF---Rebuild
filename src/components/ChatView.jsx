@@ -7,7 +7,8 @@ import {
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { apiUrl } from '../api';
-import { generateRealtimeResponse, saveLocalConversation, isImageQuery } from '../utils/aiClient';
+import { generateRealtimeResponse, saveLocalConversation, isImageQuery, saveLocalUserMemory } from '../utils/aiClient';
+import { extractUserMemories } from '../utils/userMemoryEngine';
 import AgentSandbox from './AgentSandbox';
 import LafCanvas from './LafCanvas';
 import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAutoOpenCanvas, isComplexAgentTask, isDocumentCreationRequest, extractDocumentExcerpt } from '../utils/agentEngine';
@@ -757,6 +758,14 @@ export default function ChatView({
         timestamp: new Date().toISOString()
       }
     ];
+
+    // Autonomously learn and persist user context memories immediately
+    try {
+      const extractedMems = extractUserMemories(textToSend);
+      if (extractedMems && extractedMems.length > 0) {
+        saveLocalUserMemory(user?.username, extractedMems);
+      }
+    } catch (e) {}
 
     setMessages(newHistory);
     setLoading(true);

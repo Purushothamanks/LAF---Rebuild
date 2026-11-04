@@ -12,6 +12,14 @@ import {
   idbGetConversation, 
   idbGetAllConversations 
 } from './indexedDbVault.js';
+import {
+  extractUserMemories,
+  mergeUserMemories,
+  formatUserMemoriesForPrompt,
+  isMemoryQuery,
+  isMemoryDeleteQuery,
+  buildMemoryRecallResponse
+} from './userMemoryEngine.js';
 
 const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
 
@@ -40,6 +48,7 @@ export function getEffectiveSystemInstruction(username = '') {
   const year = now.getFullYear();
 
   let customDirectivesText = '';
+  let userMemoriesText = '';
   if (typeof window !== 'undefined') {
     try {
       const key = `laf_directives_${(username || 'default').toLowerCase()}`;
@@ -51,12 +60,19 @@ export function getEffectiveSystemInstruction(username = '') {
         }
       }
     } catch (e) {}
+
+    try {
+      const mems = getLocalUserMemories(username);
+      if (mems && mems.length > 0) {
+        userMemoriesText = formatUserMemoriesForPrompt(mems);
+      }
+    } catch (e) {}
   }
   const dynamicInstruction = LAF_SYSTEM_INSTRUCTION.replace(
     '5. TEMPORAL GROUNDING: Current year is 2026.',
     `5. TEMPORAL GROUNDING: Current year is ${year} | Current date is ${dateStr}. Always use this exact current date when citing document timestamps or temporal milestones.`
   );
-  return dynamicInstruction + customDirectivesText;
+  return dynamicInstruction + (userMemoriesText ? '\n' + userMemoriesText : '') + customDirectivesText;
 }
 
 export function isIdentityQuery(prompt = '') {
@@ -457,8 +473,33 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
 export async function generateRealtimeResponse({ prompt, history = [], customApiKey = '', username = 'User', attachment = null }) {
   const cleanPrompt = (prompt || '').trim();
 
+  // Autonomous User Context Memory Extraction (Client-Side)
+  try {
+    const extracted = extractUserMemories(cleanPrompt);
+    if (extracted && extracted.length > 0) {
+      saveLocalUserMemory(username, extracted);
+    }
+  } catch (memErr) {}
+
   // If there is NO attachment, allow quick conversational intercepts
   if (!attachment) {
+    // Direct Memory Recall Query (e.g. "What do you know about me?", "Who am I?", "What is my tech stack?")
+    if (isMemoryQuery(cleanPrompt)) {
+      return {
+        text: buildMemoryRecallResponse(getLocalUserMemories(username), username),
+        provider: 'LAF Context Vault'
+      };
+    }
+
+    // Direct Memory Wipe Query (e.g. "Clear my memory", "Forget my project")
+    if (isMemoryDeleteQuery(cleanPrompt)) {
+      clearLocalUserMemories(username);
+      return {
+        text: `🗑️ **[LAF Context Vault]** All autonomous context memories have been erased from your local vault.`,
+        provider: 'LAF Context Vault'
+      };
+    }
+
     // 1. Direct Greetings (Normal, polite, no robotic speeches)
     if (isGreetingQuery(cleanPrompt)) {
       return { text: 'Hello! How can I help you today?', provider: 'LAF AI' };
@@ -867,4 +908,90 @@ export function searchLocalMemory(username, query = '') {
     }
   }
   return matches;
+}
+
+/**
+ * Client-Side Context Memory Storage & Retrieval
+ */
+export function getLocalUserMemories(username = '') {
+  if (typeof window === 'undefined') return [];
+  const u = (username || 'default').toLowerCase().trim();
+  const key = `laf_context_memories_${u}`;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {}
+
+  const db = getLocalUserDb(username);
+  if (db && Array.isArray(db.contextMemories)) {
+    return db.contextMemories;
+  }
+  return [];
+}
+
+export function saveLocalUserMemory(username = '', memoryItem) {
+  if (typeof window === 'undefined') return [];
+  const u = (username || 'default').toLowerCase().trim();
+  const key = `laf_context_memories_${u}`;
+  const current = getLocalUserMemories(username);
+  const items = Array.isArray(memoryItem) ? memoryItem : [memoryItem];
+  const updated = mergeUserMemories(current, items);
+  
+  try {
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {}
+
+  try {
+    const db = getLocalUserDb(username);
+    if (db) {
+      db.contextMemories = updated;
+      safeSetUserDb(`laf_user_db_${u}`, db);
+    }
+  } catch (e) {}
+
+  return updated;
+}
+
+export function deleteLocalUserMemory(username = '', memoryId) {
+  if (typeof window === 'undefined') return [];
+  const u = (username || 'default').toLowerCase().trim();
+  const key = `laf_context_memories_${u}`;
+  const current = getLocalUserMemories(username);
+  const updated = current.filter(m => m.id !== memoryId);
+
+  try {
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {}
+
+  try {
+    const db = getLocalUserDb(username);
+    if (db) {
+      db.contextMemories = updated;
+      safeSetUserDb(`laf_user_db_${u}`, db);
+    }
+  } catch (e) {}
+
+  return updated;
+}
+
+export function clearLocalUserMemories(username = '') {
+  if (typeof window === 'undefined') return [];
+  const u = (username || 'default').toLowerCase().trim();
+  const key = `laf_context_memories_${u}`;
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {}
+
+  try {
+    const db = getLocalUserDb(username);
+    if (db) {
+      db.contextMemories = [];
+      safeSetUserDb(`laf_user_db_${u}`, db);
+    }
+  } catch (e) {}
+
+  return [];
 }
