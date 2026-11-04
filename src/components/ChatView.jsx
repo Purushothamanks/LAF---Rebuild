@@ -14,7 +14,24 @@ import { executeAgentTask, extractCodeArtifacts, extractCanvasArtifact, shouldAu
 
 if (typeof window !== 'undefined') {
   window.downloadLafImage = async function (url, filename) {
-    const safeFilename = filename || `laf_image_${Date.now()}.jpg`;
+    const isSvg = (typeof url === 'string') && (url.startsWith('data:image/svg+xml') || url.endsWith('.svg'));
+    const safeFilename = filename || (isSvg ? `laf_blueprint_${Date.now()}.svg` : `laf_image_${Date.now()}.jpg`);
+
+    // Method 0: If data URI, trigger immediate direct anchor download (0ms, zero network error)
+    if (typeof url === 'string' && url.startsWith('data:')) {
+      try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = safeFilename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      } catch (err) {
+        console.warn('Direct data URI download failed, falling back:', err);
+      }
+    }
 
     // Method 1: Fetch as Blob and trigger standard link download
     try {
@@ -409,6 +426,7 @@ export default function ChatView({
         const rawUrl = dlBtn.getAttribute('data-download-url');
         if (rawUrl) {
           const url = decodeURIComponent(rawUrl);
+          const isSvg = url.startsWith('data:image/svg') || url.endsWith('.svg');
           // Visual confirmation animation on icon
           const originalHTML = dlBtn.innerHTML;
           dlBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -419,7 +437,7 @@ export default function ChatView({
           }, 2200);
 
           if (window.downloadLafImage) {
-            window.downloadLafImage(url, 'laf_ai_image.jpg');
+            window.downloadLafImage(url, isSvg ? 'laf_blueprint.svg' : 'laf_ai_image.jpg');
           }
         }
         return;
@@ -1323,8 +1341,9 @@ export default function ChatView({
 
                           // Default Message Bubble for standard chat responses
                           const rawContent = m.content || '';
-                          const cleanContent = rawContent.replace(/```(?:markdown|md|image)?\s*(!\[.*?\]\(https?:\/\/[^\s)]+\))\s*```/gs, '$1').trim();
-                          const singleImgMatch = cleanContent.match(/^!\[(.*?)\]\((https?:\/\/[^\s)]+)\)$/);
+                          const cleanContent = rawContent.replace(/```(?:markdown|md|image)?\s*(!\[.*?\]\((?:https?:\/\/|data:image\/)[^\s)]+\))\s*```/gs, '$1').trim();
+                          const singleImgMatch = cleanContent.match(/^!\[(.*?)\]\(((?:https?:\/\/|data:image\/)[^\s)]+)\)$/);
+                          const isBlueprintImg = singleImgMatch && singleImgMatch[2] && singleImgMatch[2].startsWith('data:image/svg');
 
                           return (
                             <div 
@@ -1336,11 +1355,12 @@ export default function ChatView({
                                   <div className="laf-img-wrapper">
                                     <img
                                       src={singleImgMatch[2]}
-                                      alt={singleImgMatch[1] || 'LAF AI Image'}
+                                      alt={singleImgMatch[1] || (isBlueprintImg ? 'LAF Architecture Blueprint' : 'LAF AI Image')}
                                       className="laf-generated-img"
                                       loading="lazy"
                                       onError={(e) => {
                                         const target = e.currentTarget;
+                                        if (target.src.startsWith('data:')) return;
                                         try {
                                           if (!target.dataset.retried) {
                                             target.dataset.retried = '1';
@@ -1364,11 +1384,11 @@ export default function ChatView({
                                     <button
                                       type="button"
                                       className="laf-img-download-icon"
-                                      title="Download Image"
-                                      aria-label="Download Image"
+                                      title={isBlueprintImg ? "Download Blueprint (SVG)" : "Download Image"}
+                                      aria-label={isBlueprintImg ? "Download Blueprint (SVG)" : "Download Image"}
                                       onClick={() => {
                                         if (window.downloadLafImage) {
-                                          window.downloadLafImage(singleImgMatch[2], 'laf_ai_image.jpg');
+                                          window.downloadLafImage(singleImgMatch[2], isBlueprintImg ? 'laf_blueprint.svg' : 'laf_ai_image.jpg');
                                         }
                                       }}
                                     >
@@ -1380,7 +1400,7 @@ export default function ChatView({
                                     </button>
                                   </div>
                                   <div className="laf-image-badge-caption">
-                                    <span className="laf-image-badge-sparkle">✨</span> Image generated successfully !
+                                    <span className="laf-image-badge-sparkle">✨</span> {isBlueprintImg ? 'Architecture Blueprint generated successfully !' : 'Image generated successfully !'}
                                   </div>
                                 </div>
                               ) : (
@@ -1396,13 +1416,17 @@ export default function ChatView({
                                     }}
                                     dangerouslySetInnerHTML={{
                                       __html: DOMPurify.sanitize(marked.parse(cleanContent), {
-                                        ADD_TAGS: ['svg', 'path', 'polyline', 'line', 'button'],
+                                        ADD_TAGS: ['svg', 'path', 'polyline', 'line', 'button', 'img', 'circle', 'g', 'rect', 'text', 'defs', 'pattern', 'filter', 'feDropShadow', 'tspan'],
                                         ADD_ATTR: [
                                           'target', 'download', 'rel', 'viewBox', 'fill', 'stroke', 
                                           'stroke-width', 'stroke-linecap', 'stroke-linejoin', 
-                                          'data-download-url', 'data-copy-text', 'class', 'title', 'type', 'aria-label'
+                                          'data-download-url', 'data-copy-text', 'class', 'title', 'type', 'aria-label',
+                                          'src', 'alt', 'loading', 'width', 'height', 'x', 'y', 'rx', 'cx', 'cy', 'r', 'd',
+                                          'font-family', 'font-size', 'font-weight', 'text-anchor', 'letter-spacing', 'transform',
+                                          'filter', 'stroke-dasharray', 'stroke-opacity'
                                         ],
-                                        ALLOW_DATA_ATTR: true
+                                        ALLOW_DATA_ATTR: true,
+                                        DATA_URI_TAGS: ['img']
                                       })
                                     }}
                                   />

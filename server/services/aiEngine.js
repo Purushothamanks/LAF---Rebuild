@@ -3,6 +3,7 @@ const { searchUserMemory } = require('./database');
 const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
+const { generateBlueprintImageUri } = require('./blueprintEngine');
 
 function getSystemPrompt() {
   const now = new Date();
@@ -140,7 +141,9 @@ function normalizeImagePromptText(raw = '') {
     .replace(/blue-?prit|blue\s+prit/gi, 'blueprint')
     .replace(/\bghaph\b|\bgrap\b|\bgraff\b|\bgraf\b/gi, 'graph')
     .replace(/\bflow-?chart\b/gi, 'flowchart')
-    .replace(/\bwire-?frame\b/gi, 'wireframe');
+    .replace(/\bwire-?frame\b/gi, 'wireframe')
+    .replace(/\bformate\b/gi, 'format')
+    .replace(/\baskd\b/gi, 'asked');
 }
 
 function isImageGenerationQuery(prompt = '') {
@@ -161,7 +164,8 @@ function isImageGenerationQuery(prompt = '') {
     return false;
   }
 
-  // 0. Clarity, regeneration, and quality queries (e.g. "The image is not clear", "image not clear", "regenerate image")
+  // 0. Clarity, regeneration, content-to-image, and quality queries
+  if (/\b(content\s+(to|as|in)\s+image|image\s+format|content\s+image|convert\s+to\s+image)\b/i.test(p)) return true;
   if (/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/i.test(p)) return true;
   if (/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/i.test(p)) return true;
   if (/\b(regenerate|re-generate|again|another|better|clearer)\b/i.test(p) && /\b(image|picture|blueprint|graph|diagram|flowchart)\b/i.test(p)) return true;
@@ -220,18 +224,21 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   const lower = normalized.toLowerCase();
 
   // 1. Detect if this is a technical blueprint / graph / diagram / flowchart request
-  const isTechnicalVisual = /\b(blueprint|graph|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower);
+  const isContentToImage = /\b(content\s+(to|as|in)\s+image|image\s+format|image\s+formate|steps\s+as\s+image|steps\s+in\s+image|summary\s+image)\b/i.test(lower);
+  const isTechnicalVisual = isContentToImage || /\b(blueprint|blue-prit|graph|ghaph|grap|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower);
 
   // 2. Normalize common colloquial phrases & typos
   let cleaned = normalized
     .replace(/^please\s+/i, '')
     .replace(/^can you\s+/i, '')
     .replace(/^(generate|create|make|draw|paint|render|sketch|design|show me|give me|produce|show as|give as|give|send me|display)\s+(an?\s+|the\s+)?/i, '')
+    .replace(/^(i\s+)?(asked|askd|want|need|told\s+you|said|saying)\s+(for\s+)?(the\s+)?/gi, '')
     .replace(/^(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)\s*(of|about|showing|with|for)?\s*/i, '')
     .replace(/\s+(as\s+)?(image|picture|photo|illustration|drawing|wallpaper|sketch|artwork)s?$/i, '')
     .replace(/\b(the\s+)?image\s+is\s+(not\s+clear|blurry|bad|low|distorted|unclear|dark|messy)\b/gi, '')
     .replace(/\b(image\s+not\s+clear|not\s+clear\s+image|unclear\s+image|blurry\s+image|clear\s+image)\b/gi, '')
     .replace(/\b(regenerate|re-generate|again|another|better|clearer|not clear|blurry)\b/gi, '')
+    .replace(/\b(content\s+(to|as|in)\s+image|image\s+format|image\s+formate|format\s+of\s+image)\b/gi, '')
     .replace(/,\s*etc\.*$/i, '')
     .trim();
 
@@ -240,7 +247,9 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
 
   // 3. Check if what is left is purely format tokens or empty (e.g. "blueprint", "graph", "blueprint , graph", "this", "that", "it")
   const strippedOfFormatTokens = cleaned
-    .replace(/\b(blueprint|graph|diagram|flowchart|chart|wireframe|schematic|architecture|image|picture|drawing)\b/gi, '')
+    .replace(/\b(blueprint|blue-prit|graph|ghaph|grap|diagram|flowchart|chart|wireframe|schematic|architecture|image|picture|drawing|content|formate?)\b/gi, '')
+    .replace(/^(i\s+)?(asked|askd|want|need|told\s+you|said|saying)\s+(for\s+)?(the\s+)?/gi, '')
+    .replace(/^(the|a|an|in|to|as)\s+/gi, '')
     .replace(/[\s,.-]+/g, '')
     .trim();
 
@@ -262,7 +271,7 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
             .replace(/^explain\s+/i, '')
             .replace(/^what is\s+/i, '')
             .replace(/^tell me about\s+/i, '')
-            .replace(/^(give me as|give as|show as)\s+(a\s+)?(blueprint|graph|diagram|flowchart|image)\s*(for|of)?\s*/i, '')
+            .replace(/^(give me as|give as|show as)\s+(a\s+)?(blueprint|blue-prit|graph|ghaph|grap|diagram|flowchart|image)\s*(for|of)?\s*/i, '')
             .trim();
           break;
         }
@@ -290,18 +299,21 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   }
 
   // 5. Stylize: Technical Blueprint/Graph vs General Image (with strict negative prompt against humans/faces)
-  if (isTechnicalVisual || /deploy|github|git|code|architecture|database|server|api|network|system|ai|machine learning/i.test(finalSubject)) {
+  const isDomainTechnical = /deploy|github|git|code|architecture|database|server|api|network|system|ai|machine learning|roadmap|workflow|engine|pipeline/i.test(finalSubject);
+  if (isTechnicalVisual || isDomainTechnical) {
     return {
       prompt: `detailed technical blueprint architecture flowchart and workflow schematic for ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution, no humans, no people, no portraits, no faces`,
       negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`,
-      isTechnical: true
+      isTechnical: true,
+      subject: finalSubject
     };
   }
 
   return {
     prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art, no watermark, no text`,
     negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`,
-    isTechnical: false
+    isTechnical: false,
+    subject: finalSubject
   };
 }
 
@@ -730,10 +742,25 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     });
   });
 
-  // 1. Image Generation Handler (Cloud API Key / High-Resolution FLUX Neural Engine)
+  // 1. Image Generation Handler (Vector Blueprint / Cloud API Key / High-Resolution Neural Engine)
   if (!attachment && isImageGenerationQuery(cleanPrompt)) {
-    const { prompt: formattedPrompt, negative: negativePrompt } = buildContextualImagePrompt(cleanPrompt, history);
-    console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}"`);
+    const { prompt: formattedPrompt, negative: negativePrompt, isTechnical, subject } = buildContextualImagePrompt(cleanPrompt, history);
+    console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}" (technical=${isTechnical})`);
+
+    // High-Precision Vector Blueprint Generator for Technical / Content-to-Image requests
+    if (isTechnical) {
+      const lastAssistantMsg = Array.isArray(history)
+        ? (history.slice().reverse().find(m => m.role === 'assistant' && m.content)?.content || '')
+        : '';
+      const blueprintUri = generateBlueprintImageUri({
+        topic: subject || cleanPrompt,
+        assistantText: lastAssistantMsg
+      });
+      return {
+        text: `![${subject || cleanPrompt} Blueprint](${blueprintUri})`,
+        provider: 'LAF 1.0 Vision Engine'
+      };
+    }
 
     // Try Cloud Image API with API key first
     const cloudImage = await callCloudImageGen(formattedPrompt, candidateKeys);
