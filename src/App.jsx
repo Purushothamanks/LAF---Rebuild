@@ -331,7 +331,6 @@ export default function App() {
         <UserMenu
           user={user}
           onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenMemoryVault={() => setActiveTab('memory')}
           onOpenDownloadApp={() => setIsDownloadAppOpen(true)}
           onOpenHelpFeedback={() => setIsHelpFeedbackOpen(true)}
           onClearAllConversations={handleClearAllConversations}

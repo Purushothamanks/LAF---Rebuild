@@ -169,78 +169,18 @@ export function formatLafProvider(provider) {
   return p;
 }
 
-function TypewriterHeroSubheading() {
-  const fullText = "Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.";
-  const [displayText, setDisplayText] = useState('');
-  const [phase, setPhase] = useState('typing'); // 'typing' | 'holding' | 'snapping' | 'void'
-
-  useEffect(() => {
-    let timer;
-
-    if (phase === 'typing') {
-      if (displayText.length < fullText.length) {
-        timer = setTimeout(() => {
-          setDisplayText(fullText.slice(0, displayText.length + 1));
-        }, 34); // natural live writing speed
-      } else {
-        timer = setTimeout(() => {
-          setPhase('holding');
-        }, 200);
-      }
-    } else if (phase === 'holding') {
-      // Hold for 2.8 seconds so user can read comfortably
-      timer = setTimeout(() => {
-        setPhase('snapping');
-      }, 2800);
-    } else if (phase === 'snapping') {
-      // Thanos snap dissolution sweeps across text (2.2 seconds total)
-      timer = setTimeout(() => {
-        setPhase('void');
-        setDisplayText('');
-      }, 2200);
-    } else if (phase === 'void') {
-      // Brief pause in void before live typing restarts
-      timer = setTimeout(() => {
-        setPhase('typing');
-      }, 600);
-    }
-
-    return () => clearTimeout(timer);
-  }, [displayText, phase, fullText]);
-
-  if (phase === 'snapping') {
-    return (
-      <p className="laf-hero-subheading gemini-animated-subheading typewriter-subheading thanos-snap-active">
-        {fullText.split(' ').map((word, wIdx) => (
-          <span key={wIdx} style={{ display: 'inline-block', whiteSpace: 'nowrap', margin: '0 2.5px' }}>
-            {word.split('').map((char, cIdx) => {
-              const globalIdx = wIdx * 8 + cIdx;
-              return (
-                <span
-                  key={cIdx}
-                  className="thanos-ash-particle"
-                  style={{
-                    display: 'inline-block',
-                    animationDelay: `${globalIdx * 12}ms`,
-                    '--dx': `${((globalIdx % 5) - 2) * 8 + 10}px`,
-                    '--dy': `${-(((globalIdx * 2) % 6) + 3) * 6}px`,
-                    '--rot': `${((globalIdx % 4) - 2) * 8}deg`
-                  }}
-                >
-                  {char}
-                </span>
-              );
-            })}
-          </span>
-        ))}
-      </p>
-    );
-  }
-
+function HeroSubheading() {
   return (
-    <p className="laf-hero-subheading gemini-animated-subheading typewriter-subheading">
-      <span>{displayText}</span>
-      {phase === 'typing' && <span className="typewriter-cursor">|</span>}
+    <p 
+      className="laf-hero-subheading gemini-animated-subheading"
+      style={{
+        margin: '0 auto 20px auto',
+        maxWidth: '560px',
+        lineHeight: '1.55',
+        textAlign: 'center'
+      }}
+    >
+      Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
     </p>
   );
 }
@@ -882,14 +822,21 @@ export default function ChatView({
   };
 
   useEffect(() => {
-    if (chatMessagesScrollRef.current) {
-      chatMessagesScrollRef.current.scrollTo({
-        top: chatMessagesScrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-    if (loading && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (messages.length > 0) {
+      if (chatMessagesScrollRef.current) {
+        chatMessagesScrollRef.current.scrollTo({
+          top: chatMessagesScrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+      if (loading && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    } else {
+      // In a new conversation: firmly lock page at the top with zero scrolling up or down
+      if (chatMessagesScrollRef.current) {
+        chatMessagesScrollRef.current.scrollTop = 0;
+      }
     }
   }, [messages, loading, isStreaming, isImageGenerating, isDocGenerating]);
 
@@ -945,23 +892,37 @@ export default function ChatView({
         {/* Messages Scroll Area with Generous Bottom Clearance (Layer 2: Above glow, crisp text, zero blur/interference) */}
         <div 
           ref={chatMessagesScrollRef}
-          className="chat-messages-scroll"
+          className={`chat-messages-scroll ${messages.length === 0 ? 'chat-scroll-empty' : ''}`}
           style={{ 
             flex: 1, 
             minHeight: 0,
-            overflowY: 'auto', 
+            height: '100%',
+            overflowY: messages.length === 0 ? 'hidden' : 'auto', 
+            overflowX: 'hidden',
             overscrollBehaviorY: 'contain',
-            padding: '20px 0 160px 0', 
+            padding: messages.length === 0 ? '0' : '20px 0 160px 0', 
             display: 'flex', 
             flexDirection: 'column',
             position: 'relative',
             zIndex: 2
           }}
         >
-          <div className="chat-messages-inner" style={{ maxWidth: '820px', width: '92%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '26px' }}>
+          <div 
+            className={`chat-messages-inner ${messages.length === 0 ? 'chat-messages-inner-empty' : ''}`}
+            style={{ 
+              maxWidth: '820px', 
+              width: '92%', 
+              margin: '0 auto', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: messages.length === 0 ? '0' : '26px',
+              height: messages.length === 0 ? '100%' : 'auto',
+              flex: messages.length === 0 ? 1 : 'none'
+            }}
+          >
             
             {messages.length === 0 ? (
-              /* Unique Futuristic Welcome Hero Screen */
+              /* Unique Futuristic Welcome Hero Screen - Fixed & Non-Jumping */
               <div className="laf-hero-container">
                 <div className="laf-hero-header-group">
                   <div className="laf-hero-emblem-wrap">
@@ -977,7 +938,7 @@ export default function ChatView({
                     Where Imagination Meets Intelligence.
                   </h1>
                   
-                  <TypewriterHeroSubheading />
+                  <HeroSubheading />
                 </div>
 
                 {/* Floating Centered Clean Input Card with Multimodal Attachment Support */}
