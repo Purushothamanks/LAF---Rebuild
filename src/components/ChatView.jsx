@@ -879,7 +879,10 @@ export default function ChatView({
         behavior: 'smooth'
       });
     }
-  }, [messages, loading, isStreaming, isImageGenerating]);
+    if (loading && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [messages, loading, isStreaming, isImageGenerating, isDocGenerating]);
 
   const handleCopy = (text, idx) => {
     navigator.clipboard.writeText(text);
@@ -1545,7 +1548,7 @@ export default function ChatView({
               </div>
             )}
 
-            <div ref={messagesEndRef} style={{ height: '24px', flexShrink: 0 }} />
+            <div ref={messagesEndRef} className="chat-messages-bottom-spacer" />
           </div>
         </div>
 
