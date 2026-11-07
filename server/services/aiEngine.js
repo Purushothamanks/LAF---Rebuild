@@ -228,9 +228,9 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   const normalized = normalizeImagePromptText(userPrompt.trim());
   const lower = normalized.toLowerCase();
 
-  // 1. Detect if this is a technical blueprint / graph / diagram / flowchart request
-  const isContentToImage = /\b(content\s+(to|as|in)\s+image|image\s+format|image\s+formate|steps\s+as\s+image|steps\s+in\s+image|summary\s+image)\b/i.test(lower);
-  const isTechnicalVisual = isContentToImage || /\b(blueprint|blue-prit|graph|ghaph|grap|diagram|flowchart|chart|wireframe|architecture|schematic|workflow|infographic|mindmap|pipeline|system design)\b/i.test(lower);
+  // 1. Detect if the user EXPLICITLY requested a technical blueprint / schematic / flowchart
+  // NEVER check general conversation history or broad technical domains (e.g. game, engine, code) for this!
+  const isExplicitBlueprint = /\b(blueprint|blue-prit|flowchart|architecture diagram|system architecture diagram|schematic diagram|technical schematic)\b/i.test(lower);
 
   // 2. Normalize common colloquial phrases & typos
   let cleaned = normalized
@@ -250,7 +250,7 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
   // Also remove standalone "as" if left at the beginning
   cleaned = cleaned.replace(/^as\s+/i, '').trim();
 
-  // 3. Check if what is left is purely format tokens or empty (e.g. "blueprint", "graph", "blueprint , graph", "this", "that", "it")
+  // 3. Check if what is left is purely format tokens or empty (e.g. "this", "that", "it")
   const strippedOfFormatTokens = cleaned
     .replace(/\b(blueprint|blue-prit|graph|ghaph|grap|diagram|flowchart|chart|wireframe|schematic|architecture|image|picture|drawing|content|formate?)\b/gi, '')
     .replace(/^(i\s+)?(asked|askd|want|need|told\s+you|said|saying)\s+(for\s+)?(the\s+)?/gi, '')
@@ -303,9 +303,8 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
     finalSubject = cleaned || contextTopic || userPrompt;
   }
 
-  // 5. Stylize: Technical Blueprint/Graph vs General Image (with strict negative prompt against humans/faces)
-  const isDomainTechnical = /deploy|github|git|code|architecture|database|server|api|network|system|ai|machine learning|roadmap|workflow|engine|pipeline/i.test(finalSubject);
-  if (isTechnicalVisual || isDomainTechnical) {
+  // 5. Stylize: Technical Blueprint/Graph ONLY when explicitly requested
+  if (isExplicitBlueprint) {
     return {
       prompt: `detailed technical blueprint architecture flowchart and workflow schematic for ${finalSubject}, system architecture diagram, step-by-step engineering process schema, technical vector infographic, clean blueprint grid line aesthetic, sharp schematic illustration, professional technical documentation graphic, high resolution, no humans, no people, no portraits, no faces`,
       negative: `girl, woman, female, human face, portrait, model, person, selfie, character, anime, photography, blurry, deformed, low resolution, messy, chaotic, watermark, distorted`,
@@ -314,9 +313,10 @@ function buildContextualImagePrompt(userPrompt = '', history = []) {
     };
   }
 
+  // General High-Quality AI Image Generation (Games, art, scenery, characters, concepts)
   return {
-    prompt: `${finalSubject}, ultra-detailed, 8k resolution, stunning visual composition, sharp focus, vibrant colors, high quality digital art, no watermark, no text`,
-    negative: `girl, woman, female, model, portrait, human face, watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts`,
+    prompt: `${finalSubject}, ultra-detailed, photorealistic, 8k resolution, cinematic lighting, stunning visual composition, sharp focus, vibrant colors, masterpiece, high quality digital art, no watermark, no text`,
+    negative: `watermark, signature, text, error, blurry, low quality, bad anatomy, deformed, distorted, artifacts, lowres`,
     isTechnical: false,
     subject: finalSubject
   };

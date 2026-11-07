@@ -967,12 +967,12 @@ export default function ChatView({
     setEditingIndex(null);
     setEditingText('');
 
-    // Wait 750ms for dust particle dispersal before continuing
+    // Wait 1450ms for slow, smooth, cinematic Thanos ash dust dispersal before continuing
     setTimeout(() => {
       setSnappingIndices([]);
       const priorHistory = messages.slice(0, idx);
       handleSend(null, newText, priorHistory);
-    }, 750);
+    }, 1450);
   };
 
   useEffect(() => {
@@ -1113,7 +1113,8 @@ export default function ChatView({
                       alignItems: 'flex-start',
                       alignSelf: isUser ? 'flex-end' : 'flex-start',
                       maxWidth: isUser ? '85%' : '100%',
-                      width: isUser ? 'auto' : '100%'
+                      width: isUser ? 'auto' : '100%',
+                      animationDelay: isSnapping ? `${(idx - (snappingIndices[0] || 0)) * 110}ms` : undefined
                     }}
                   >
                     {/* Centered Avatar Icon Circle */}
@@ -1655,11 +1656,6 @@ export default function ChatView({
               <textarea
                 value={inputPrompt}
                 onChange={(e) => setInputPrompt(e.target.value)}
-                onFocus={() => {
-                  if (typeof window !== 'undefined') {
-                    window.scrollTo(0, 0);
-                  }
-                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -1688,7 +1684,7 @@ export default function ChatView({
                 )}
               </button>
 
-              {/* Send or Stop Button: Perfect Dark Circle with Vibrant Blue / Stop Icon */}
+              {/* Send or Stop Button: Perfect Dark Circle with Identical Vibrant Blue (#3b82f6) Icon */}
               {(loading || isStreaming) ? (
                 <button
                   type="button"
@@ -1702,14 +1698,9 @@ export default function ChatView({
               ) : (
                 <button
                   type="submit"
-                  disabled={!inputPrompt.trim() && !attachment}
                   className="chat-icon-action-btn send-btn"
                   title="Send message"
                   aria-label="Send message"
-                  style={{
-                    cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
-                    opacity: (inputPrompt.trim() || attachment) ? 1 : 0.55
-                  }}
                 >
                   <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
                 </button>

@@ -134,14 +134,20 @@
 - **Interruptible Generation (Send / Stop Toggle):**
   - While AI responds (`loading || isStreaming`), send button transforms into a dark circular Stop button (`Square` icon with red active accent).
   - Clicking halts network streaming via `AbortController`, stops typewriter interval, and cleanly preserves partial response.
-- **Message Edit & Restart Thanos Snap Disintegration:**
-  - When user edits a past prompt and clicks "Save & Restart", the edited prompt and all subsequent assistant responses trigger a dust particle disintegration effect (`.thanos-snap-active`) for 750ms before clearing and streaming the refreshed query.
+- **Message Edit & Restart Thanos Snap Disintegration (Slow & Smooth):**
+  - When user edits a past prompt and clicks "Save & Restart", the edited prompt and all subsequent assistant responses trigger a dust particle disintegration effect (`.chat-message-row.thanos-snap-active`) running `@keyframes thanosRowSlowDisintegrate` with a smooth 1450ms duration and staggered cascade delay before clearing and streaming the refreshed query.
 - **Under-Input Disclaimer & Tiered Task Complexity Routing (`LAF 4.0 Flagship`):**
   - Added clean responsive disclaimer centered beneath the floating bar: `Laf is AI and can make mistakes.`
   - Tiered task complexity classifier (`getCandidateModelsForTask`):
     - **Light Tasks:** `gemini-3.1-flash-lite` / `gemini-3.5-flash-lite` (`LAF 1.0 Lite` / `LAF 1.5 Lite`) prioritized for simple everyday questions, definitions, and chit-chat.
     - **Moderate Tasks:** `gemini-3.8-flash` / `gemini-flash-latest` (`LAF 2.0 Flash` / `LAF 1.0 Flash`) prioritized for standard coding, summaries, explanations, and documents.
     - **Very Complex Tasks:** `gemini-4-argon` branded as **`LAF 4.0 Flagship`** reserved strictly for deep architectural engineering, math proofs, algorithm design, and heavy multi-step reasoning.
+- **Image Generation Over-Routing Elimination:**
+  - Removed broad domain triggers (`game`, `engine`, `code`, `system`, `ai`) and conversational history leakage that hijacked general image generation requests into SVG blueprints. Pure AI image requests now consistently render high-fidelity visual art via Pollinations/FLUX.1 unless explicitly asked for a blueprint/schematic diagram.
+- **Send Button Visual Uniformity:**
+  - Ensured the send icon inside the button maintains 100% vibrant royal blue (`#3b82f6`) matching the mic and paperclip icons at all times without light-blue opacity washing out.
+- **New Chat Keyboard Jump Neutralization:**
+  - Fully removed `overflow-y: hidden` and `touch-action: pan-x` from empty chat containers, ensuring the page remains rock-solid on mobile when the input bar is touched, with only the input bar floating above the keyboard.
 
 ---
 
