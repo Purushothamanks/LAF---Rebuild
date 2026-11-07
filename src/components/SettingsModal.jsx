@@ -4,10 +4,6 @@ import { X, Settings, LogOut, Trash2, Shield, FileText, Check, Save } from 'luci
 export default function SettingsModal({ isOpen, onClose, user, onLogout, customApiKey, setCustomApiKey, theme, setTheme }) {
   const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
   const [language, setLanguage] = useState('en');
-  const [keyInput, setKeyInput] = useState(customApiKey || '');
-  const [savedKey, setSavedKey] = useState(false);
-  const [backendInput, setBackendInput] = useState(localStorage.getItem('laf_custom_backend') || '');
-  const [savedBackend, setSavedBackend] = useState(false);
   const [showLegalDoc, setShowLegalDoc] = useState(null); // 'terms' or 'privacy'
 
   // User editable profile details
@@ -18,26 +14,6 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   const [savedProfile, setSavedProfile] = useState(false);
 
   if (!isOpen) return null;
-
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    setCustomApiKey(keyInput.trim());
-    localStorage.setItem('laf_custom_api_key', keyInput.trim());
-    setSavedKey(true);
-    setTimeout(() => setSavedKey(false), 2000);
-  };
-
-  const handleSaveBackend = (e) => {
-    e.preventDefault();
-    const clean = backendInput.trim();
-    if (clean) {
-      localStorage.setItem('laf_custom_backend', clean);
-    } else {
-      localStorage.removeItem('laf_custom_backend');
-    }
-    setSavedBackend(true);
-    setTimeout(() => setSavedBackend(false), 2000);
-  };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -307,9 +283,8 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     fontWeight: '600'
                   }}
                 >
-                  <option value="dark">🌙 Dark (Default Royal Blue Charcoal)</option>
-                  <option value="cyber">⚡ Cyber Glow Neon (Cyan Accent)</option>
-                  <option value="light">☀️ Sleek Light Mode</option>
+                  <option value="dark">🌙 Dark (Royal Blue Charcoal)</option>
+                  <option value="light">☀️ Light Mode</option>
                 </select>
               </div>
 
@@ -326,69 +301,13 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
                     background: 'var(--ds-bg-card)',
                     border: '1px solid var(--ds-border)',
                     borderRadius: '14px',
-                    color: '#fff',
+                    color: 'var(--ds-text-primary)',
                     outline: 'none'
                   }}
                 >
                   <option value="en">English (US)</option>
                   <option value="system">System Default</option>
                 </select>
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '16px' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '6px' }}>
-                  Custom Reasoning API Key (Optional)
-                </label>
-                <form onSubmit={handleSaveKey} style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="password"
-                    value={keyInput}
-                    onChange={(e) => setKeyInput(e.target.value)}
-                    placeholder="Paste LAF / OpenRouter API Key"
-                    style={{
-                      flex: 1,
-                      padding: '12px 16px',
-                      background: 'var(--ds-bg-card)',
-                      border: '1px solid var(--ds-border)',
-                      borderRadius: '14px',
-                      color: 'var(--ds-text-primary)',
-                      outline: 'none'
-                    }}
-                  />
-                  <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)', color: '#fff' }}>
-                    {savedKey ? <Check style={{ width: '16px' }} /> : 'Save'}
-                  </button>
-                </form>
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--ds-border)', paddingTop: '16px' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ds-text-primary)', display: 'block', marginBottom: '6px' }}>
-                  Backend Server URL (Optional)
-                </label>
-                <div style={{ fontSize: '0.78rem', color: 'var(--ds-text-muted)', marginBottom: '8px' }}>
-                  Leave blank to use Autonomous Cloud Realtime AI. Or enter your custom backend endpoint.
-                </div>
-                <form onSubmit={handleSaveBackend} style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="text"
-                    value={backendInput}
-                    onChange={(e) => setBackendInput(e.target.value)}
-                    placeholder="e.g. http://localhost:3000 or https://api.yourdomain.com"
-                    style={{
-                      flex: 1,
-                      padding: '12px 16px',
-                      background: 'var(--ds-bg-card)',
-                      border: '1px solid var(--ds-border)',
-                      borderRadius: '14px',
-                      color: 'var(--ds-text-primary)',
-                      outline: 'none',
-                      fontSize: '0.88rem'
-                    }}
-                  />
-                  <button type="submit" className="ds-new-chat-btn" style={{ width: 'auto', padding: '12px 20px', background: 'var(--ds-blue)', borderColor: 'var(--ds-blue)', color: '#fff' }}>
-                    {savedBackend ? <Check style={{ width: '16px' }} /> : 'Save'}
-                  </button>
-                </form>
               </div>
 
             </div>

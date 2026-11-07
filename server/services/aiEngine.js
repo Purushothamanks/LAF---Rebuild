@@ -467,14 +467,81 @@ async function callRealtimeCloudAI({ messages, systemPrompt }) {
 function getLafModelDisplayName(modelKey) {
   if (!modelKey) return 'LAF 1.0 Lite';
   const m = String(modelKey).toLowerCase();
-  if (m.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
-  if (m.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
-  if (m.includes('flash-lite-latest') || m.includes('2.5-flash-lite')) return 'LAF 1.0 Lite';
-  if (m.includes('flash-latest')) return 'LAF 1.0 Flash';
+  if (m.includes('argon')) return 'LAF 4.0 Flagship';
   if (m.includes('3.8-flash')) return 'LAF 2.0 Flash';
-  if (m.includes('flash')) return 'LAF 1.0 Flash';
+  if (m.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
+  if (m.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('flash-lite-latest') || m.includes('2.5-flash-lite')) return 'LAF 1.0 Lite';
+  if (m.includes('flash-latest') || m.includes('flash')) return 'LAF 1.0 Flash';
   if (m.includes('pro')) return 'LAF 1.0 Pro';
   return 'LAF 1.0 Lite';
+}
+
+/**
+ * Dynamic Task Complexity Classifier:
+ * - Light use: gemini-3.1-flash-lite / gemini-3.5-flash-lite (LAF 1.0 Lite / LAF 1.5 Lite)
+ * - Moderate use: gemini-3.8-flash / gemini-flash-latest (LAF 2.0 Flash / LAF 1.0 Flash)
+ * - Very complex: gemini-4-argon (LAF 4.0 Flagship) reserved exclusively for complex engineering, proofs, and deep reasoning
+ */
+function getCandidateModelsForTask(prompt = '', attachment = null) {
+  const p = (prompt || '').toLowerCase().trim();
+  const len = p.length;
+
+  // 1. Very Complex: Extensive architecture, heavy algorithms, math proofs, deep reasoning, compilers, security audits
+  const complexTriggers = [
+    'architecture', 'system design', 'microservice', 'distributed system', 'compiler', 'interpreter',
+    'concurrency', 'deadlock', 'race condition', 'cryptography', 'elliptic curve', 'theorem',
+    'formal proof', 'mathematical proof', 'deep dive', 'deep reasoning', 'step-by-step reasoning',
+    'full stack app', 'refactor entire', 'kubernetes cluster', 'optimization algorithm',
+    'vulnerability analysis', 'reverse engineer', 'machine learning architecture', 'neural network from scratch'
+  ];
+
+  const hasComplexTrigger = complexTriggers.some(t => p.includes(t));
+  const isHeavyPrompt = len > 950 || (p.includes('```') && len > 450);
+
+  if (hasComplexTrigger || isHeavyPrompt) {
+    // Very complex task -> Flagship (gemini-4-argon) prioritized
+    return [
+      'gemini-4-argon',
+      'gemini-3.8-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
+      'gemini-flash-latest'
+    ];
+  }
+
+  // 2. Moderate use: Standard coding, explanations, summaries, documents, multi-turn analysis
+  const moderateTriggers = [
+    'code', 'function', 'class', 'react', 'python', 'javascript', 'typescript', 'sql',
+    'html', 'css', 'bug', 'fix', 'error', 'debug', 'api', 'endpoint', 'database',
+    'explain in detail', 'summarize', 'write an essay', 'generate document', 'canvas',
+    'compare and contrast', 'translate', 'review', 'workflow'
+  ];
+
+  const hasModerateTrigger = moderateTriggers.some(t => p.includes(t));
+  const isModerateLength = len >= 120 || attachment !== null;
+
+  if (hasModerateTrigger || isModerateLength) {
+    // Moderate task -> Flash prioritized
+    return [
+      'gemini-3.8-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
+      'gemini-4-argon'
+    ];
+  }
+
+  // 3. Light use: Greetings, chit-chat, simple lookups, brief definitions, single calculations
+  // -> Lite model prioritized
+  return [
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-lite-latest',
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
+    'gemini-4-argon'
+  ];
 }
 
 /**
@@ -482,13 +549,7 @@ function getLafModelDisplayName(modelKey) {
  */
 async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, attachment = null }) {
   if (!apiKey) return null;
-  const models = [
-    'gemini-3.1-flash-lite',
-    'gemini-3.5-flash-lite',
-    'gemini-flash-lite-latest',
-    'gemini-flash-latest',
-    'gemini-3.8-flash'
-  ];
+  const models = getCandidateModelsForTask(prompt, attachment);
 
   for (const m of models) {
     try {

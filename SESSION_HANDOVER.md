@@ -4,8 +4,8 @@
 > **Workspace Path:** `/home/purushothaman/Videos/Projects/LAF-Rebuild`  
 > **Repository:** [https://github.com/Purushothamanks/LAF---Rebuild.git](https://github.com/Purushothamanks/LAF---Rebuild.git) (Branch: `main`)  
 > **Live Production:** [https://lafsai.web.app](https://lafsai.web.app) | [https://lafsai.firebaseapp.com](https://lafsai.firebaseapp.com)  
-> **Last Verified Date:** Wednesday, November 4, 2026 (IST)  
-> **Latest Git Commits:** `883dc57`
+> **Last Verified Date:** Saturday, November 7, 2026 (IST)  
+> **Latest Git Commits:** `46f2e0d` (Local feature updates ready for stage & commit)
 
 ---
 
@@ -44,7 +44,7 @@
 - **Mobile Positioning:** Elevated floating pill card with `bottom: calc(20px + env(safe-area-inset-bottom, 12px)); z-index: 50;` lifted cleanly above the bottom edge and home gesture indicator, accompanied by `padding: 0 12px;`, `border-radius: 28px;`, and ambient blue drop-shadow.
 - **Scroll Clearance:** `.chat-messages-scroll` configured with `calc(115px + env(safe-area-inset-bottom, 16px))` bottom padding on mobile so the latest conversation messages remain fully visible above the floating bar.
 - **Dynamic Themed Send Button:**
-  - Auto-adapts based on active theme (`dark`, `cyber`, `light`).
+  - Auto-adapts based on active theme (`dark`, `light`).
   - Active state lights up with blue accent (`#3b82f6`) when prompt text or an attachment is present.
   - Hover elevation with active scale depression (`scale(0.98)`).
 
@@ -101,14 +101,47 @@
 ---
 
 ### 1.9 Unified LAF Model Branding & Context-Aware Blueprint/Graph Image Engine
-- **Unified Clean Model Naming (`LAF 1.0 Lite`, `LAF 1.5 Lite`, `LAF 1.0 Flash`, `LAF 2.0 Flash`):**
-  - Replaced legacy provider labels such as `LAF Antigravity Matrix (Gemini gemini-3.1-flash-lite)` with clean LAF branding (`LAF 1.0 Lite`, `LAF 1.5 Lite`, `LAF 1.0 Flash`, `LAF 2.0 Flash`).
+- **Unified Clean Model Naming (`LAF 1.0 Lite`, `LAF 1.5 Lite`, `LAF 1.0 Flash`, `LAF 2.0 Flash`, `LAF 4.0 Flagship`):**
+  - Replaced legacy provider labels with clean LAF branding.
   - Added centralized model name formatter `getLafModelDisplayName` in both backend (`server/services/aiEngine.js`) and frontend (`src/utils/aiClient.js`).
   - Added frontend sanitizer `formatLafProvider` in `src/components/ChatView.jsx` to dynamically sanitize existing chat messages and new responses, guaranteeing zero "Gemini" mentions across all message headers.
 - **Root-Cause Elimination of Irrelevant Girl/Portrait Images on Technical Requests:**
-  - *Identified Root Cause:* Previous image generator was context-blind (ignored `history`), had typos like `blue-prit` and colloquialisms like `give me as image` unhandled, blindly appended photographic portrait tokens (`photorealistic, professional photography, realistic texture`), and had `text, words` in negative prompt. Flux diffusion defaulted to portrait photos of a girl when given empty or vague photo prompts without context.
-  - *Contextual Topic Extraction:* Implemented `buildContextualImagePrompt(userPrompt, history)`: when a follow-up image request arrives (e.g. "how to deploy a project in github" followed by "give me as image blue-prit , ghaph"), the engine automatically extracts the prior subject ("deploy a project in github") from conversation history.
-  - *Technical Visual Categorization:* Queries for blueprints, graphs, flowcharts, architectures, or technical workflows receive dedicated schematic prompts (`detailed technical blueprint architecture flowchart and workflow graph, system architecture diagram, clean blueprint grid line aesthetic, high resolution technical illustration`) and enforce a strict negative prompt against humans/faces/models (`girl, woman, human face, portrait, model, person, selfie, character, anime, photography`).
+  - Queries for blueprints, graphs, flowcharts, architectures, or technical workflows receive dedicated schematic prompts and enforce strict negative prompts against portraits/models.
+
+---
+
+### 1.10 UI/UX Overhaul: Royal Blue Charcoal Theme, Circular Controls, Typing Streaming, & Thanos Snap
+
+- **Dark & Light Mode Consolidation (Royal Blue Charcoal):**
+  - Deprecated and purged all `cyber` and legacy theme selectors. Strictly two modes supported:
+    - **Dark Mode (Royal Blue Charcoal):** Canvas `#090d16`, sidebar `#0f1523`, elevated card `#151c2e`, border `#1e293b`, royal blue accents `#3b82f6`, crisp text `#f8fafc`.
+    - **Light Mode:** Canvas `#f8fafc`, card `#ffffff`, borders `#cbd5e1`, text `#0f172a`.
+  - Guaranteed WCAG 2.1 AAA contrast for all headings, text, cards, and input fields.
+- **Settings Modal Cleanup:**
+  - Removed "Custom Reasoning API Key (Optional)" and "Backend Server URL (Optional)" input fields, states, and action buttons. Settings modal is now clean and uncluttered.
+- **Strictly Circular Chat Input Action Buttons:**
+  - Mobile & desktop action buttons (`mic`, `attachment`, `send`/`stop`) enforce strict 1:1 circular geometry:
+    `width: 38px !important; height: 38px !important; border-radius: 50% !important; aspect-ratio: 1 / 1 !important;`.
+  - Styled with dark circular background (`#151c2e` in dark mode, `#1e293b` in light mode) and vibrant royal blue icons (`#3b82f6`).
+- **Floating Input Bar & Mobile Keyboard Jump Neutralization:**
+  - Root cause eliminated on 1st new chat: removed locked `overflow-y: hidden` and `height: 100%` on `.chat-scroll-empty`. Replaced with responsive `margin: auto 0` centering and auto-scrolling container.
+  - Added `onFocus={() => window.scrollTo(0, 0)}` to prompt textarea so mobile viewports never jump or displace the hero layout.
+- **Hero Subtitle Thanos Snap Dust Particle Disintegration:**
+  - Subheading: `"Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning."`
+  - Rendered via `TypewriterHeroSubheading`: streams text at ~30ms/char, holds for 3.2s, dissolves across words into floating `.thanos-ash-particle` dust with randomized dispersion vectors (`--dx`, `--dy`, `--rot`), pauses briefly in void, and seamlessly repeats.
+- **Live Text Typing Streaming with Blinking Cursor:**
+  - Corrected typewriter streaming in `streamTextResponse`: message initializes empty and characters stream in smoothly tick-by-tick with an interactive pulsing cursor (`.laf-typing-cursor`).
+- **Interruptible Generation (Send / Stop Toggle):**
+  - While AI responds (`loading || isStreaming`), send button transforms into a dark circular Stop button (`Square` icon with red active accent).
+  - Clicking halts network streaming via `AbortController`, stops typewriter interval, and cleanly preserves partial response.
+- **Message Edit & Restart Thanos Snap Disintegration:**
+  - When user edits a past prompt and clicks "Save & Restart", the edited prompt and all subsequent assistant responses trigger a dust particle disintegration effect (`.thanos-snap-active`) for 750ms before clearing and streaming the refreshed query.
+- **Under-Input Disclaimer & Tiered Task Complexity Routing (`LAF 4.0 Flagship`):**
+  - Added clean responsive disclaimer centered beneath the floating bar: `Laf is AI and can make mistakes.`
+  - Tiered task complexity classifier (`getCandidateModelsForTask`):
+    - **Light Tasks:** `gemini-3.1-flash-lite` / `gemini-3.5-flash-lite` (`LAF 1.0 Lite` / `LAF 1.5 Lite`) prioritized for simple everyday questions, definitions, and chit-chat.
+    - **Moderate Tasks:** `gemini-3.8-flash` / `gemini-flash-latest` (`LAF 2.0 Flash` / `LAF 1.0 Flash`) prioritized for standard coding, summaries, explanations, and documents.
+    - **Very Complex Tasks:** `gemini-4-argon` branded as **`LAF 4.0 Flagship`** reserved strictly for deep architectural engineering, math proofs, algorithm design, and heavy multi-step reasoning.
 
 ---
 
@@ -119,6 +152,7 @@
 | `src/components/UserMenu.jsx` | Top-right circular user initial button, popover dropdown menu, Settings trigger |
 | `src/components/Navigation.jsx` | Compact floating sidebar, new chat button, recent conversations, clear all chats |
 | `src/components/ChatView.jsx` | Primary chat pane, ambient glow container, hero header, messages scroll, sticky input, and file viewer modal |
+| `src/components/SettingsModal.jsx` | Streamlined profile, theme toggle (Dark / Light), and legal information |
 | `src/components/LafCanvas.jsx` | LAF Canvas document viewer, live markdown editor, export & copy controls |
 | `src/index.css` | Design system variables, layout constraints, ambient glow animations, media queries |
 | `src/App.jsx` | Root application layout, session management, viewport sizing (`100dvh`) |
@@ -147,13 +181,6 @@ npm start
 ```bash
 firebase deploy --only hosting
 # Target: https://lafsai.web.app
-```
-
-### Git Commit & Push
-```bash
-git add .
-git commit -m "feat/fix: description of updates"
-git push origin main
 ```
 
 ---

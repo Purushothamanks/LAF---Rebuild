@@ -23,8 +23,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('laf_custom_api_key') || '');
   
-  // Theme state ('dark', 'cyber', 'light')
-  const [theme, setTheme] = useState(localStorage.getItem('laf_theme') || 'dark');
+  // Theme state ('dark' - Royal Blue Charcoal, or 'light')
+  const [theme, setTheme] = useState(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('laf_theme') : 'dark';
+    return saved === 'light' ? 'light' : 'dark';
+  });
 
   // Modal toggle states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

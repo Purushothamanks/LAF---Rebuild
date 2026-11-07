@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Send, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, 
+  Send, Square, Volume2, Copy, Check, RefreshCw, Pencil, Cpu, Mic, MicOff, 
   Bot, Sparkles, ChevronDown, ChevronUp, Layers, CheckCircle2, Play, 
   Paperclip, X, FileText, Image as ImageIcon, ExternalLink, Code, Eye, Download
 } from 'lucide-react';
@@ -154,33 +154,112 @@ marked.setOptions({
 export function formatLafProvider(provider) {
   if (!provider) return 'LAF 1.0 Lite';
   let p = String(provider).trim();
-  if (p.includes('gemini-3.1-flash-lite') || p.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
-  if (p.includes('gemini-3.5-flash-lite') || p.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
-  if (p.includes('gemini-flash-lite') || p.includes('flash-lite')) return 'LAF 1.0 Lite';
+  if (p.includes('gemini-4-argon') || p.includes('argon') || p.includes('Argon') || p.includes('Flagship')) return 'LAF 4.0 Flagship';
   if (p.includes('gemini-3.8-flash') || p.includes('3.8-flash')) return 'LAF 2.0 Flash';
+  if (p.includes('gemini-3.5-flash-lite') || p.includes('3.5-flash-lite')) return 'LAF 1.5 Lite';
+  if (p.includes('gemini-3.1-flash-lite') || p.includes('3.1-flash-lite')) return 'LAF 1.0 Lite';
+  if (p.includes('gemini-flash-lite') || p.includes('flash-lite')) return 'LAF 1.0 Lite';
   if (p.includes('gemini-flash') || p.includes('flash-latest')) return 'LAF 1.0 Flash';
   if (p.includes('Gemini') || p.includes('gemini')) {
     p = p.replace(/LAF Antigravity Matrix \([^\)]+\)/gi, 'LAF 1.0 Lite')
          .replace(/Google Gemini/gi, 'LAF')
          .replace(/Gemini\s*/gi, 'LAF ')
-         .replace(/gemini-[a-z0-9.-]+/gi, 'LAF 1.0');
+         .replace(/gemini-[a-z0-9.-]+/gi, 'LAF 1.0 Lite');
   }
   if (p === 'LAF AI') return 'LAF 1.0 Lite';
   return p;
 }
 
-function HeroSubheading() {
+function TypewriterHeroSubheading() {
+  const fullText = "Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.";
+  const [displayText, setDisplayText] = useState('');
+  const [phase, setPhase] = useState('typing'); // 'typing' | 'holding' | 'snapping' | 'void'
+
+  useEffect(() => {
+    let timer;
+
+    if (phase === 'typing') {
+      if (displayText.length < fullText.length) {
+        timer = setTimeout(() => {
+          setDisplayText(fullText.slice(0, displayText.length + 1));
+        }, 30);
+      } else {
+        timer = setTimeout(() => {
+          setPhase('holding');
+        }, 200);
+      }
+    } else if (phase === 'holding') {
+      // Hold for 3.2 seconds so user can read comfortably
+      timer = setTimeout(() => {
+        setPhase('snapping');
+      }, 3200);
+    } else if (phase === 'snapping') {
+      // Thanos snap dissolution sweeps across text (2.2 seconds total)
+      timer = setTimeout(() => {
+        setPhase('void');
+        setDisplayText('');
+      }, 2200);
+    } else if (phase === 'void') {
+      // Brief pause in void before live typing restarts
+      timer = setTimeout(() => {
+        setPhase('typing');
+      }, 500);
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, phase, fullText]);
+
+  if (phase === 'snapping') {
+    return (
+      <p 
+        className="laf-hero-subheading gemini-animated-subheading typewriter-subheading thanos-snap-active"
+        style={{
+          margin: '0 auto 20px auto',
+          maxWidth: '560px',
+          lineHeight: '1.55',
+          textAlign: 'center',
+          minHeight: '52px'
+        }}
+      >
+        {fullText.split(' ').map((word, wIdx) => (
+          <span key={wIdx} style={{ display: 'inline-block', whiteSpace: 'nowrap', margin: '0 2.5px' }}>
+            {word.split('').map((char, cIdx) => {
+              const globalIdx = wIdx * 8 + cIdx;
+              return (
+                <span
+                  key={cIdx}
+                  className="thanos-ash-particle"
+                  style={{
+                    display: 'inline-block',
+                    animationDelay: `${globalIdx * 14}ms`,
+                    '--dx': `${((globalIdx % 5) - 2) * 10 + 12}px`,
+                    '--dy': `${-(((globalIdx * 2) % 6) + 4) * 8}px`,
+                    '--rot': `${((globalIdx % 4) - 2) * 12}deg`
+                  }}
+                >
+                  {char}
+                </span>
+              );
+            })}
+          </span>
+        ))}
+      </p>
+    );
+  }
+
   return (
     <p 
-      className="laf-hero-subheading gemini-animated-subheading"
+      className="laf-hero-subheading gemini-animated-subheading typewriter-subheading"
       style={{
         margin: '0 auto 20px auto',
         maxWidth: '560px',
         lineHeight: '1.55',
-        textAlign: 'center'
+        textAlign: 'center',
+        minHeight: '52px'
       }}
     >
-      Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.
+      <span>{displayText}</span>
+      {phase === 'typing' && <span className="typewriter-cursor">|</span>}
     </p>
   );
 }
@@ -220,6 +299,11 @@ export default function ChatView({
   // Message Editing & Regeneration State
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingText, setEditingText] = useState('');
+  const [snappingIndices, setSnappingIndices] = useState([]);
+
+  // Stop Controller and Streaming Interval Refs
+  const abortControllerRef = useRef(null);
+  const streamingIntervalRef = useRef(null);
 
   const toggleMilestone = (idx) => {
     setExpandedMilestones(prev => ({ ...prev, [idx]: !prev[idx] }));
@@ -498,6 +582,39 @@ export default function ChatView({
     }
   };
 
+  const handleStopGenerating = () => {
+    if (abortControllerRef.current) {
+      try { abortControllerRef.current.abort(); } catch (e) {}
+      abortControllerRef.current = null;
+    }
+    if (streamingIntervalRef.current) {
+      clearInterval(streamingIntervalRef.current);
+      streamingIntervalRef.current = null;
+    }
+    setLoading(false);
+    setIsStreaming(false);
+    setIsLiveGenerating(false);
+    setIsDocGenerating(false);
+
+    setMessages(prev => {
+      if (!prev || prev.length === 0) return prev;
+      const lastIdx = prev.length - 1;
+      if (prev[lastIdx]?.role === 'assistant' && prev[lastIdx]?.isTyping) {
+        const next = [...prev];
+        next[lastIdx] = {
+          ...next[lastIdx],
+          isTyping: false
+        };
+        const convId = activeConvId || `conv_${Date.now()}`;
+        try {
+          saveLocalConversation(user?.username, convId, undefined, next);
+        } catch (e) {}
+        return next;
+      }
+      return prev;
+    });
+  };
+
   /**
    * Fluid Live Typewriter Streaming simulation for instantaneous, lifelike AI responses
    */
@@ -551,10 +668,11 @@ export default function ChatView({
       return;
     }
 
+    // Initial message starts with empty text so typing animation displays progressively
     const initialAssistantMsg = {
       role: 'assistant',
-      content: fullText,
-      documentArtifact: isDoc ? detectedArtifact : null,
+      content: '',
+      documentArtifact: isDoc ? { ...detectedArtifact, content: '' } : null,
       isDocument: isDoc,
       provider: providerName,
       artifacts,
@@ -566,15 +684,23 @@ export default function ChatView({
     setMessages([...baseHistory, initialAssistantMsg]);
 
     const totalLen = fullText.length;
-    const chunkSize = totalLen > 3000 ? 55 : (totalLen > 1500 ? 30 : (totalLen > 500 ? 14 : 5));
+    const chunkSize = totalLen > 3000 ? 16 : (totalLen > 1200 ? 9 : (totalLen > 400 ? 4 : 2));
     let currentLen = 0;
 
     await new Promise((resolve) => {
       const interval = setInterval(() => {
+        if (abortControllerRef.current?.signal?.aborted) {
+          clearInterval(interval);
+          streamingIntervalRef.current = null;
+          resolve();
+          return;
+        }
+
         currentLen += chunkSize;
         if (currentLen >= totalLen) {
           currentLen = totalLen;
           clearInterval(interval);
+          streamingIntervalRef.current = null;
 
           const finalMessages = [...baseHistory, {
             role: 'assistant',
@@ -619,7 +745,7 @@ export default function ChatView({
             if (next.length > assistantMsgIndex) {
               next[assistantMsgIndex] = {
                 ...next[assistantMsgIndex],
-                content: fullText,
+                content: partial,
                 isDocument: isDoc,
                 documentArtifact: isDoc ? { ...detectedArtifact, content: partial } : null,
                 isTyping: true
@@ -627,8 +753,14 @@ export default function ChatView({
             }
             return next;
           });
+
+          if (chatMessagesScrollRef.current) {
+            chatMessagesScrollRef.current.scrollTop = chatMessagesScrollRef.current.scrollHeight;
+          }
         }
       }, 16);
+
+      streamingIntervalRef.current = interval;
     });
   };
 
@@ -715,6 +847,7 @@ export default function ChatView({
     // 1. Try sending to backend if reachable
     try {
       const controller = new AbortController();
+      abortControllerRef.current = controller;
       const tid = setTimeout(() => controller.abort(), 40000);
 
       const res = await fetch(apiUrl('/api/chat/send'), {
@@ -742,7 +875,7 @@ export default function ChatView({
         if (data.success && data.response) {
           setActiveConvId(data.conversationId);
           const fullContent = data.response.content || '';
-          const providerName = data.response.provider || 'LAF AI';
+          const providerName = data.response.provider || 'LAF 1.0 Lite';
 
           const artifacts = extractCodeArtifacts(fullContent);
           await streamTextResponse(fullContent, providerName, newHistory, artifacts, null, null, textToSend);
@@ -751,14 +884,19 @@ export default function ChatView({
         }
       }
     } catch (backendErr) {
+      if (abortControllerRef.current?.signal?.aborted) {
+        setLoading(false);
+        setIsStreaming(false);
+        return;
+      }
       console.warn('Backend chat route note:', backendErr.message);
     }
 
     // 2. Real-Time Autonomous AI Engine (Multimodal Google Gemini Vision & Native PDF Intelligence)
-    if (!answered) {
+    if (!answered && !abortControllerRef.current?.signal?.aborted) {
       try {
         let aiResultText = '';
-        let providerName = 'LAF AI';
+        let providerName = 'LAF 1.0 Lite';
         let artifacts = [];
         let milestones = null;
         let executionTimeMs = null;
@@ -789,20 +927,24 @@ export default function ChatView({
           artifacts = extractCodeArtifacts(res.text);
         }
 
-        await streamTextResponse(aiResultText, providerName, newHistory, artifacts, milestones, executionTimeMs, textToSend);
+        if (!abortControllerRef.current?.signal?.aborted) {
+          await streamTextResponse(aiResultText, providerName, newHistory, artifacts, milestones, executionTimeMs, textToSend);
+        }
       } catch (clientAiErr) {
         setLoading(false);
         setIsImageGenerating(false);
         setIsDocGenerating(false);
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: `Error: ${clientAiErr.message}`, provider: 'System Notice' }
-        ]);
+        if (!abortControllerRef.current?.signal?.aborted) {
+          setMessages(prev => [
+            ...prev,
+            { role: 'assistant', content: `Error: ${clientAiErr.message}`, provider: 'System Notice' }
+          ]);
+        }
       }
     }
   };
 
-  // Edit Message & Restart Responding
+  // Edit Message & Restart Responding with Thanos Snap Dust disintegration
   const handleStartEdit = (idx, currentContent) => {
     setEditingIndex(idx);
     setEditingText(currentContent);
@@ -815,10 +957,22 @@ export default function ChatView({
 
   const handleSaveAndRestart = (idx, newText) => {
     if (!newText.trim()) return;
-    const priorHistory = messages.slice(0, idx);
+    
+    // Thanos snap disintegration effect: mark old message and its subsequent responses
+    const toSnap = [];
+    for (let i = idx; i < messages.length; i++) {
+      toSnap.push(i);
+    }
+    setSnappingIndices(toSnap);
     setEditingIndex(null);
     setEditingText('');
-    handleSend(null, newText, priorHistory);
+
+    // Wait 750ms for dust particle dispersal before continuing
+    setTimeout(() => {
+      setSnappingIndices([]);
+      const priorHistory = messages.slice(0, idx);
+      handleSend(null, newText, priorHistory);
+    }, 750);
   };
 
   useEffect(() => {
@@ -897,10 +1051,10 @@ export default function ChatView({
             flex: 1, 
             minHeight: 0,
             height: '100%',
-            overflowY: messages.length === 0 ? 'hidden' : 'auto', 
+            overflowY: 'auto', 
             overflowX: 'hidden',
             overscrollBehaviorY: 'contain',
-            padding: messages.length === 0 ? '0' : '20px 0 160px 0', 
+            padding: '20px 0 160px 0', 
             display: 'flex', 
             flexDirection: 'column',
             position: 'relative',
@@ -916,7 +1070,7 @@ export default function ChatView({
               display: 'flex', 
               flexDirection: 'column', 
               gap: messages.length === 0 ? '0' : '26px',
-              height: messages.length === 0 ? '100%' : 'auto',
+              minHeight: messages.length === 0 ? '100%' : 'auto',
               flex: messages.length === 0 ? 1 : 'none'
             }}
           >
@@ -938,7 +1092,7 @@ export default function ChatView({
                     Where Imagination Meets Intelligence.
                   </h1>
                   
-                  <HeroSubheading />
+                  <TypewriterHeroSubheading />
                 </div>
               </div>
             ) : (
@@ -946,11 +1100,12 @@ export default function ChatView({
               messages.map((m, idx) => {
                 const isUser = m.role === 'user';
                 const isEditing = editingIndex === idx;
+                const isSnapping = snappingIndices.includes(idx);
 
                 return (
                   <div
                     key={idx}
-                    className={`chat-message-row ${isUser ? 'user-row' : 'assistant-row'}`}
+                    className={`chat-message-row ${isUser ? 'user-row' : 'assistant-row'} ${isSnapping ? 'thanos-snap-active' : ''}`}
                     style={{
                       display: 'flex',
                       flexDirection: isUser ? 'row-reverse' : 'row',
@@ -1181,7 +1336,32 @@ export default function ChatView({
                               className={isUser ? "user-message-bubble" : "assistant-message-bubble"}
                               style={{ textAlign: 'left' }}
                             >
-                              {singleImgMatch ? (
+                              {isSnapping ? (
+                                <div className="thanos-snap-active" style={{ padding: '6px 0', minHeight: '36px' }}>
+                                  {(m.content || '...').split(' ').map((word, wIdx) => (
+                                    <span key={wIdx} style={{ display: 'inline-block', whiteSpace: 'nowrap', margin: '0 2px' }}>
+                                      {word.split('').map((char, cIdx) => {
+                                        const globalIdx = (wIdx * 7 + cIdx) % 45;
+                                        return (
+                                          <span
+                                            key={cIdx}
+                                            className="thanos-ash-particle"
+                                            style={{
+                                              display: 'inline-block',
+                                              animationDelay: `${globalIdx * 10}ms`,
+                                              '--dx': `${((globalIdx % 5) - 2) * 10 + 16}px`,
+                                              '--dy': `${-(((globalIdx * 2) % 6) + 3) * 8}px`,
+                                              '--rot': `${((globalIdx % 4) - 2) * 12}deg`
+                                            }}
+                                          >
+                                            {char}
+                                          </span>
+                                        );
+                                      })}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : singleImgMatch ? (
                                 <div className="laf-image-card">
                                   <div className="laf-img-wrapper">
                                     <img
@@ -1461,17 +1641,13 @@ export default function ChatView({
                 style={{ display: 'none' }}
               />
 
-              {/* Attachment Button */}
+              {/* Attachment Button: Perfect Dark Circle with Vibrant Blue Icon */}
               <button
                 type="button"
                 onClick={() => fileInputBottomRef.current?.click()}
                 title="Attach image or PDF"
-                className="chat-icon-action-btn"
-                style={{
-                  background: attachment ? 'rgba(79, 117, 255, 0.25)' : 'var(--ds-bg-card)',
-                  border: attachment ? '1px solid rgba(79, 117, 255, 0.6)' : 'none',
-                  color: attachment ? '#60a5fa' : 'var(--ds-text-secondary)'
-                }}
+                className={`chat-icon-action-btn ${attachment ? 'attachment-active' : ''}`}
+                aria-label="Attach file"
               >
                 <Paperclip style={{ width: '16px', height: '16px' }} />
               </button>
@@ -1479,10 +1655,17 @@ export default function ChatView({
               <textarea
                 value={inputPrompt}
                 onChange={(e) => setInputPrompt(e.target.value)}
+                onFocus={() => {
+                  if (typeof window !== 'undefined') {
+                    window.scrollTo(0, 0);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSend();
+                    if (!loading && !isStreaming) {
+                      handleSend();
+                    }
                   }
                 }}
                 placeholder={isListening ? "Listening... speak now..." : (attachment ? "Ask LAF about this attachment..." : "Message LAF...")}
@@ -1490,34 +1673,54 @@ export default function ChatView({
                 className="chat-prompt-textarea"
               />
 
-              {/* Voice Typing Mic Button */}
+              {/* Voice Typing Mic Button: Perfect Dark Circle with Vibrant Blue Icon */}
               <button
                 type="button"
                 onClick={toggleVoiceTyping}
                 title={isListening ? "Stop Voice Typing" : "Voice Typing"}
-                className="chat-icon-action-btn"
-                style={{
-                  background: isListening ? '#ef4444' : 'var(--ds-bg-card)',
-                  animation: isListening ? 'micPulse 1.5s infinite' : 'none'
-                }}
+                className={`chat-icon-action-btn ${isListening ? 'mic-listening' : ''}`}
+                aria-label="Voice Typing"
               >
-                {isListening ? <MicOff style={{ width: '16px', height: '16px', color: '#fff' }} /> : <Mic style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />}
+                {isListening ? (
+                  <MicOff style={{ width: '16px', height: '16px' }} />
+                ) : (
+                  <Mic style={{ width: '16px', height: '16px' }} />
+                )}
               </button>
 
-              {/* Send Button */}
-              <button
-                type="submit"
-                disabled={loading || isStreaming || (!inputPrompt.trim() && !attachment)}
-                className="chat-icon-action-btn send-btn"
-                style={{
-                  cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
-                  opacity: (inputPrompt.trim() || attachment) ? 1 : 0.85
-                }}
-              >
-                <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
-              </button>
+              {/* Send or Stop Button: Perfect Dark Circle with Vibrant Blue / Stop Icon */}
+              {(loading || isStreaming) ? (
+                <button
+                  type="button"
+                  onClick={handleStopGenerating}
+                  title="Stop response"
+                  className="chat-icon-action-btn stop-btn"
+                  aria-label="Stop response"
+                >
+                  <Square style={{ width: '13px', height: '13px', fill: 'currentColor' }} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!inputPrompt.trim() && !attachment}
+                  className="chat-icon-action-btn send-btn"
+                  title="Send message"
+                  aria-label="Send message"
+                  style={{
+                    cursor: (inputPrompt.trim() || attachment) ? 'pointer' : 'default',
+                    opacity: (inputPrompt.trim() || attachment) ? 1 : 0.55
+                  }}
+                >
+                  <Send style={{ width: '15px', height: '15px', transform: 'translate(-1px, 1px)' }} />
+                </button>
+              )}
             </div>
           </form>
+
+          {/* Clean disclaimer under chat input bar */}
+          <div className="laf-input-disclaimer">
+            Laf is AI and can make mistakes.
+          </div>
         </div>
 
       </div>
