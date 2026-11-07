@@ -21,7 +21,7 @@ import {
   buildMemoryRecallResponse
 } from './userMemoryEngine.js';
 
-const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
+const LAF_DEVELOPER_TEXT = `Oh he? No, sorry bro! That's a secret. 😉✨\n\nIf it's very important, you can refer to his LinkedIn and make a touch:\n👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**`;
 
 const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF**, an AI assistant designed to help with software engineering, technical problem solving, and general tasks. How can I help you today?`;
 
@@ -29,7 +29,8 @@ const LAF_SYSTEM_INSTRUCTION = `You are a helpful, accurate, and professional AI
 
 CRITICAL INSTRUCTIONS:
 1. DIRECT & PROFESSIONAL ANSWERS: Answer questions directly and concisely. Do NOT begin responses with self-introductions, such as "I am LAF", "As an AI...", or grand proclamations like "Systems are fully operational".
-2. NO ATTRIBUTION UNLESS EXPLICITLY ASKED: Do NOT mention who created, engineered, or architected you unless the user explicitly asks "who created you?" or "who is your developer?". Only if explicitly asked, state: "I was developed by Purushothaman."
+2. DEVELOPER INQUIRIES: If the user asks about your developer, creator, founder, or Purushothaman (e.g. "what you know about your developer", "tell me about your developer", "about your developer", "who created you"), playfully and impressively respond:
+"Oh he? No, sorry bro! That's a secret. 😉✨\n\nIf it's very important, you can refer to his LinkedIn and make a touch:\n👉 [Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)"
 3. NORMAL & PROFESSIONAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing. Never say "I am LAF" unless asked for your identity.
 4. ACCURACY & HIGH QUALITY: Provide precise, well-structured, production-ready answers. Use GitHub-flavored markdown with clean syntax-highlighted code blocks, clear headings, and concise explanations.
 5. TEMPORAL GROUNDING: Current year is 2026.
@@ -91,11 +92,38 @@ export function isIdentityQuery(prompt = '') {
 }
 
 export function isDeveloperQuery(prompt = '') {
-  const p = prompt.toLowerCase().trim();
+  const p = (prompt || '').toLowerCase().trim().replace(/[?!.,;:_]/g, ' ');
+  
+  if (/\b(developer|creator|founder|architect|author)\b/i.test(p)) {
+    if (/\b(about|know about|tell me about|who is|who are|details of|contact|reach|connect with|meet)\b/i.test(p) ||
+        /\b(your developer|the developer|our developer|laf developer|developer of laf)\b/i.test(p) ||
+        /\b(your creator|the creator|creator of laf|who created|who made|who built|who coded|who programmed)\b/i.test(p)) {
+      return true;
+    }
+  }
+
+  if (/\b(who (created|developed|built|made|engineered|coded|programmed) (you|laf))\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(about (your |the )?developer|tell (me )?about (your |the )?developer|know about (your |the )?developer)\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(what (do you|you) know about (your |the )?developer)\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(purushothaman)\b/i.test(p)) {
+    return true;
+  }
+
   const devPhrases = [
     'who is your developer', 'who is the developer', 'who developed laf', 'who created laf',
     'who built laf', 'who made laf', 'who is your creator', 'who created you', 'who developed you',
-    'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf'
+    'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf',
+    'about your developer', 'tell me about your developer', 'what you know about your developer',
+    'what do you know about your developer', 'know about your developer'
   ];
   return devPhrases.some(phrase => p.includes(phrase));
 }
@@ -367,6 +395,16 @@ export function getCandidateModelsForTask(prompt = '', attachment = null) {
   const p = (prompt || '').toLowerCase().trim();
   const len = p.length;
 
+  // 0. Multimodal Vision / Document Attachment: prioritize ultra-fast, verified multimodal models
+  if (attachment) {
+    return [
+      'gemini-3.1-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-flash-latest'
+    ];
+  }
+
   // 1. Very Complex: Extensive architecture, heavy algorithms, math proofs, deep reasoning, compilers, security audits
   const complexTriggers = [
     'architecture', 'system design', 'microservice', 'distributed system', 'compiler', 'interpreter',
@@ -442,10 +480,11 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
       if (h.content && typeof h.content === 'string') {
         const parts = [];
         if (h.attachment?.data && (h.attachment.isImage || h.attachment.isPdf || h.attachment.mimeType === 'application/pdf' || h.attachment.mimeType?.startsWith('image/'))) {
+          const histCleanData = (h.attachment.data || '').replace(/^data:[^;]+;base64,/, '').trim();
           parts.push({
             inlineData: {
               mimeType: h.attachment.mimeType || (h.attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
-              data: h.attachment.data
+              data: histCleanData
             }
           });
         }
@@ -466,10 +505,11 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
   const userParts = [];
   if (attachment) {
     if (attachment.data && (attachment.isImage || attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.mimeType?.startsWith('image/'))) {
+      const cleanData = (attachment.data || '').replace(/^data:[^;]+;base64,/, '').trim();
       userParts.push({
         inlineData: {
           mimeType: attachment.mimeType || (attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
-          data: attachment.data
+          data: cleanData
         }
       });
     } else if (attachment.textContent) {
@@ -479,7 +519,7 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
     }
   }
 
-  const userPrompt = (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail. Describe its contents, any text, graphics, and key insights.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation, code/content breakdown, and suggestions.`)) : '');
+  const userPrompt = (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this uploaded image in detail. What are you seeing in the image? Describe all objects, text, visual elements, colors, and key insights.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation, code/content breakdown, and suggestions.`)) : '');
   userParts.push({ text: userPrompt });
 
   contents.push({
@@ -505,7 +545,8 @@ async function callGeminiApi({ prompt, history, apiKey, username = '', attachmen
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutMs = attachment ? 25000 : 14000;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const res = await fetch(url, {
         method: 'POST',

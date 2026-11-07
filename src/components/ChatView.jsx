@@ -340,20 +340,75 @@ export default function ChatView({
     if (isImg) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        const base64Data = dataUrl.split(',')[1];
-        const attObj = {
-          name: file.name,
-          size: file.size,
-          formattedSize,
-          mimeType: file.type || 'image/jpeg',
-          isImage: true,
-          isPdf: false,
-          previewUrl: blobUrl || dataUrl,
-          data: base64Data
+        const rawDataUrl = e.target.result;
+        // High-speed offscreen canvas normalization for lightning-fast multimodal AI vision
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const maxDim = 1600;
+            let width = img.width || 800;
+            let height = img.height || 600;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+            const base64Data = compDataUrl.split(',')[1] || rawDataUrl.split(',')[1];
+            const attObj = {
+              name: file.name,
+              size: file.size,
+              formattedSize,
+              mimeType: 'image/jpeg',
+              isImage: true,
+              isPdf: false,
+              previewUrl: blobUrl || compDataUrl,
+              data: base64Data
+            };
+            attachmentCacheRef.current[file.name] = attObj;
+            setAttachment(attObj);
+          } catch (canvErr) {
+            // Fallback to raw data url if canvas security or memory exception occurs
+            const base64Data = rawDataUrl.split(',')[1];
+            const attObj = {
+              name: file.name,
+              size: file.size,
+              formattedSize,
+              mimeType: file.type || 'image/jpeg',
+              isImage: true,
+              isPdf: false,
+              previewUrl: blobUrl || rawDataUrl,
+              data: base64Data
+            };
+            attachmentCacheRef.current[file.name] = attObj;
+            setAttachment(attObj);
+          }
         };
-        attachmentCacheRef.current[file.name] = attObj;
-        setAttachment(attObj);
+        img.onerror = () => {
+          const base64Data = rawDataUrl.split(',')[1];
+          const attObj = {
+            name: file.name,
+            size: file.size,
+            formattedSize,
+            mimeType: file.type || 'image/jpeg',
+            isImage: true,
+            isPdf: false,
+            previewUrl: blobUrl || rawDataUrl,
+            data: base64Data
+          };
+          attachmentCacheRef.current[file.name] = attObj;
+          setAttachment(attObj);
+        };
+        img.src = rawDataUrl;
       };
       reader.readAsDataURL(file);
     } else if (isPdf) {
@@ -893,7 +948,9 @@ export default function ChatView({
     }
 
     // 2. Real-Time Autonomous AI Engine (Multimodal Google Gemini Vision & Native PDF Intelligence)
-    if (!answered && !abortControllerRef.current?.signal?.aborted) {
+    if (!answered) {
+      const clientController = new AbortController();
+      abortControllerRef.current = clientController;
       try {
         let aiResultText = '';
         let providerName = 'LAF 1.0 Lite';
@@ -1337,32 +1394,7 @@ export default function ChatView({
                               className={isUser ? "user-message-bubble" : "assistant-message-bubble"}
                               style={{ textAlign: 'left' }}
                             >
-                              {isSnapping ? (
-                                <div className="thanos-snap-active" style={{ padding: '6px 0', minHeight: '36px' }}>
-                                  {(m.content || '...').split(' ').map((word, wIdx) => (
-                                    <span key={wIdx} style={{ display: 'inline-block', whiteSpace: 'nowrap', margin: '0 2px' }}>
-                                      {word.split('').map((char, cIdx) => {
-                                        const globalIdx = (wIdx * 7 + cIdx) % 45;
-                                        return (
-                                          <span
-                                            key={cIdx}
-                                            className="thanos-ash-particle"
-                                            style={{
-                                              display: 'inline-block',
-                                              animationDelay: `${globalIdx * 10}ms`,
-                                              '--dx': `${((globalIdx % 5) - 2) * 10 + 16}px`,
-                                              '--dy': `${-(((globalIdx * 2) % 6) + 3) * 8}px`,
-                                              '--rot': `${((globalIdx % 4) - 2) * 12}deg`
-                                            }}
-                                          >
-                                            {char}
-                                          </span>
-                                        );
-                                      })}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : singleImgMatch ? (
+                              {singleImgMatch ? (
                                 <div className="laf-image-card">
                                   <div className="laf-img-wrapper">
                                     <img

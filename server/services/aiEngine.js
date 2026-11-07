@@ -36,7 +36,7 @@ CRITICAL INSTRUCTIONS:
 
 const SYSTEM_PROMPT = getSystemPrompt();
 
-const LAF_DEVELOPER_TEXT = `I was developed by **Purushothaman**.\n\nYou can find more details on his [LinkedIn profile](https://www.linkedin.com/in/purushothaman-k-s-158900282/).`;
+const LAF_DEVELOPER_TEXT = `Oh he? No, sorry bro! That's a secret. 😉✨\n\nIf it's very important, you can refer to his LinkedIn and make a touch:\n👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**`;
 
 const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF**, an AI assistant designed to help with software engineering, technical problem solving, and general questions. How can I help you today?`;
 
@@ -119,11 +119,38 @@ function checkAmbiguousQuery(prompt = '') {
 }
 
 function isDeveloperQuery(prompt = '') {
-  const p = prompt.toLowerCase().trim();
+  const p = (prompt || '').toLowerCase().trim().replace(/[?!.,;:_]/g, ' ');
+
+  if (/\b(developer|creator|founder|architect|author)\b/i.test(p)) {
+    if (/\b(about|know about|tell me about|who is|who are|details of|contact|reach|connect with|meet)\b/i.test(p) ||
+        /\b(your developer|the developer|our developer|laf developer|developer of laf)\b/i.test(p) ||
+        /\b(your creator|the creator|creator of laf|who created|who made|who built|who coded|who programmed)\b/i.test(p)) {
+      return true;
+    }
+  }
+
+  if (/\b(who (created|developed|built|made|engineered|coded|programmed) (you|laf))\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(about (your |the )?developer|tell (me )?about (your |the )?developer|know about (your |the )?developer)\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(what (do you|you) know about (your |the )?developer)\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\b(purushothaman)\b/i.test(p)) {
+    return true;
+  }
+
   const devPhrases = [
     'who is your developer', 'who is the developer', 'who developed laf', 'who created laf',
     'who built laf', 'who made laf', 'who is your creator', 'who created you', 'who developed you',
-    'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf'
+    'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf',
+    'about your developer', 'tell me about your developer', 'what you know about your developer',
+    'what do you know about your developer', 'know about your developer'
   ];
   return devPhrases.some(phrase => p.includes(phrase));
 }
@@ -486,6 +513,16 @@ function getCandidateModelsForTask(prompt = '', attachment = null) {
   const p = (prompt || '').toLowerCase().trim();
   const len = p.length;
 
+  // 0. Multimodal Vision / Document Attachment: prioritize ultra-fast, verified multimodal models
+  if (attachment) {
+    return [
+      'gemini-3.1-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-flash-latest'
+    ];
+  }
+
   // 1. Very Complex: Extensive architecture, heavy algorithms, math proofs, deep reasoning, compilers, security audits
   const complexTriggers = [
     'architecture', 'system design', 'microservice', 'distributed system', 'compiler', 'interpreter',
@@ -561,10 +598,11 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
           if (h.content && typeof h.content === 'string') {
             const parts = [];
             if (h.attachment?.data && (h.attachment.isImage || h.attachment.isPdf || h.attachment.mimeType === 'application/pdf' || h.attachment.mimeType?.startsWith('image/'))) {
+              const histCleanData = (h.attachment.data || '').replace(/^data:[^;]+;base64,/, '').trim();
               parts.push({
                 inlineData: {
                   mimeType: h.attachment.mimeType || (h.attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
-                  data: h.attachment.data
+                  data: histCleanData
                 }
               });
             }
@@ -585,10 +623,11 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
       const userParts = [];
       if (attachment) {
         if (attachment.data && (attachment.isImage || attachment.isPdf || attachment.mimeType === 'application/pdf' || attachment.mimeType?.startsWith('image/'))) {
+          const cleanData = (attachment.data || '').replace(/^data:[^;]+;base64,/, '').trim();
           userParts.push({
             inlineData: {
               mimeType: attachment.mimeType || (attachment.isPdf ? 'application/pdf' : 'image/jpeg'),
-              data: attachment.data
+              data: cleanData
             }
           });
         } else if (attachment.textContent) {
@@ -599,7 +638,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
       }
 
       userParts.push({
-        text: (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this image in detail.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation and suggestions.`)) : '')
+        text: (prompt || '').trim() || (attachment ? (attachment.isImage ? 'Analyze and explain this uploaded image in detail. What are you seeing in the image? Describe all objects, text, visual elements, colors, and key insights.' : (attachment.isPdf ? `Analyze this attached PDF document (${attachment.name}) in detail. Provide a comprehensive breakdown of its key contents, structure, insights, and actionable takeaways.` : `Analyze this attached file (${attachment.name}) and provide a comprehensive explanation and suggestions.`)) : '')
       });
 
       contents.push({
@@ -617,7 +656,7 @@ async function callGoogleGeminiAI({ prompt, history = [], apiKey, systemPrompt, 
             maxOutputTokens: 4096
           }
         },
-        { timeout: 12000 }
+        { timeout: attachment ? 25000 : 14000 }
       );
 
       const raw = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;

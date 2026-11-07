@@ -502,9 +502,9 @@ export default function LafCanvas({
                 boxShadow: '0 0 10px rgba(59, 130, 246, 0.2)'
               }}
             >
-              <Download style={{ width: '13px', height: '13px' }} />
+              <Download style={{ width: '13px', height: '13px', flexShrink: 0 }} />
               <span>Export</span>
-              <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.8 }} />
+              <ChevronDown style={{ width: '12px', height: '12px', opacity: 0.8 }} className="laf-canvas-desktop-only" />
             </button>
 
             {/* Desktop Fullscreen Toggle */}
