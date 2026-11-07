@@ -142,8 +142,8 @@
     - **Light Tasks:** `gemini-3.1-flash-lite` / `gemini-3.5-flash-lite` (`LAF 1.0 Lite` / `LAF 1.5 Lite`) prioritized for simple everyday questions, definitions, and chit-chat.
     - **Moderate Tasks:** `gemini-3.8-flash` / `gemini-flash-latest` (`LAF 2.0 Flash` / `LAF 1.0 Flash`) prioritized for standard coding, summaries, explanations, and documents.
     - **Very Complex Tasks:** `gemini-4-argon` branded as **`LAF 4.0 Flagship`** reserved strictly for deep architectural engineering, math proofs, algorithm design, and heavy multi-step reasoning.
-- **Image Generation Over-Routing Elimination:**
-  - Removed broad domain triggers (`game`, `engine`, `code`, `system`, `ai`) and conversational history leakage that hijacked general image generation requests into SVG blueprints. Pure AI image requests now consistently render high-fidelity visual art via Pollinations/FLUX.1 unless explicitly asked for a blueprint/schematic diagram.
+- **Permanent Elimination of SVG Blueprint Hijacking (`data:image/svg+xml;base64`):**
+  - Completely decommissioned `generateBlueprintImageUri` from image query handlers in both `src/utils/aiClient.js` and `server/services/aiEngine.js`. All image generation requests now strictly synthesize high-fidelity visual art via Pollinations/FLUX.1, guaranteeing that raw SVG data URIs (`data:image/svg+xml;base64,...`) are never produced or displayed in chat.
 - **Send Button Visual Uniformity:**
   - Ensured the send icon inside the button maintains 100% vibrant royal blue (`#3b82f6`) matching the mic and paperclip icons at all times without light-blue opacity washing out.
 - **New Chat Keyboard Jump Neutralization:**

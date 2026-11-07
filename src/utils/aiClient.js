@@ -5,7 +5,6 @@
  */
 
 import { searchCustomKnowledge } from './customKnowledge.js';
-import { generateBlueprintImageUri } from './blueprintEngine.js';
 import { 
   idbSaveConversation, 
   idbDeleteConversation, 
@@ -592,24 +591,9 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
       };
     }
 
-    // 3. Image Generation (Vector Blueprint for Technical workflows / High-Resolution Neural for Art)
+    // 3. Image Generation (High-Resolution Neural FLUX.1 Engine - Always returns real AI image URL)
     if (isImageQuery(cleanPrompt)) {
-      const { prompt: formattedPrompt, negative: negativePrompt, isTechnical, subject } = buildContextualImagePrompt(cleanPrompt, history);
-      
-      if (isTechnical) {
-        const lastAssistantMsg = Array.isArray(history)
-          ? (history.slice().reverse().find(m => m.role === 'assistant' && m.content)?.content || '')
-          : '';
-        const blueprintUri = generateBlueprintImageUri({
-          topic: subject || cleanPrompt,
-          assistantText: lastAssistantMsg
-        });
-        return {
-          text: `![${subject || cleanPrompt} Blueprint](${blueprintUri})`,
-          provider: 'LAF 1.0 Vision Engine'
-        };
-      }
-
+      const { prompt: formattedPrompt, negative: negativePrompt } = buildContextualImagePrompt(cleanPrompt, history);
       const url = generateImageUrl(formattedPrompt, negativePrompt);
       return {
         text: `![${cleanPrompt}](${url})`,

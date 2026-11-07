@@ -4,7 +4,6 @@ const { formatUserMemoriesForPrompt } = require('./userMemoryEngine');
 const { searchCustomKnowledge } = require('./customKnowledge');
 const { searchWebGrounding } = require('./webSearch');
 const { getRagContext } = require('./ragEngine');
-const { generateBlueprintImageUri } = require('./blueprintEngine');
 
 function getSystemPrompt() {
   const now = new Date();
@@ -808,25 +807,10 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
     });
   });
 
-  // 1. Image Generation Handler (Vector Blueprint / Cloud API Key / High-Resolution Neural Engine)
+  // 1. Image Generation Handler (Cloud API Key / Guaranteed High-Resolution FLUX.1 Neural Engine)
   if (!attachment && isImageGenerationQuery(cleanPrompt)) {
-    const { prompt: formattedPrompt, negative: negativePrompt, isTechnical, subject } = buildContextualImagePrompt(cleanPrompt, history);
-    console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}" (technical=${isTechnical})`);
-
-    // High-Precision Vector Blueprint Generator for Technical / Content-to-Image requests
-    if (isTechnical) {
-      const lastAssistantMsg = Array.isArray(history)
-        ? (history.slice().reverse().find(m => m.role === 'assistant' && m.content)?.content || '')
-        : '';
-      const blueprintUri = generateBlueprintImageUri({
-        topic: subject || cleanPrompt,
-        assistantText: lastAssistantMsg
-      });
-      return {
-        text: `![${subject || cleanPrompt} Blueprint](${blueprintUri})`,
-        provider: 'LAF 1.0 Vision Engine'
-      };
-    }
+    const { prompt: formattedPrompt, negative: negativePrompt } = buildContextualImagePrompt(cleanPrompt, history);
+    console.log(`[AI-ENGINE] Image generation triggered: "${cleanPrompt}" -> "${formattedPrompt}"`);
 
     // Try Cloud Image API with API key first
     const cloudImage = await callCloudImageGen(formattedPrompt, candidateKeys);

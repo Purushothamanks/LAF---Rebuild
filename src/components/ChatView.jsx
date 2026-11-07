@@ -1329,7 +1329,7 @@ export default function ChatView({
                           // Default Message Bubble for standard chat responses
                           const rawContent = m.content || '';
                           const cleanContent = rawContent.replace(/```(?:markdown|md|image)?\s*(!\[.*?\]\((?:https?:\/\/|data:image\/)[^\s)]+\))\s*```/gs, '$1').trim();
-                          const singleImgMatch = cleanContent.match(/^!\[(.*?)\]\(((?:https?:\/\/|data:image\/)[^\s)]+)\)$/);
+                          const singleImgMatch = cleanContent.match(/!\[(.*?)\]\(((?:https?:\/\/|data:image\/)[^\s)]+)\)/);
                           const isBlueprintImg = singleImgMatch && singleImgMatch[2] && singleImgMatch[2].startsWith('data:image/svg');
 
                           return (
