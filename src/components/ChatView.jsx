@@ -145,6 +145,19 @@ renderer.image = function ({ href, title, text }) {
   </div>`;
 };
 
+renderer.link = function ({ href, title, text }) {
+  const cleanHref = (href || '').trim();
+  // Disarm dangerous protocols (javascript:, data:, vbscript:, file:)
+  const isSafeProtocol = /^(?:https?:\/\/|\/|mailto:)/i.test(cleanHref);
+  const safeHref = isSafeProtocol ? cleanHref : '#';
+  const titleAttr = title ? ` title="${String(title).replace(/"/g, '&quot;')}"` : '';
+  const isExternal = /^https?:\/\//i.test(safeHref);
+  const targetAttr = isExternal ? ' target="_blank"' : '';
+  const relAttr = isExternal ? ' rel="noopener noreferrer"' : '';
+
+  return `<a href="${safeHref}"${titleAttr}${targetAttr}${relAttr} class="laf-chat-link">${text}</a>`;
+};
+
 marked.setOptions({
   renderer,
   breaks: true,

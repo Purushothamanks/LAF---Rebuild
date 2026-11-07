@@ -19,15 +19,56 @@ function authMiddleware(req, res, next) {
 
 /**
  * GET /api/media/download-proxy
- * Proxies image downloads directly to bypass browser CORS restrictions with multi-model fallback
+ * Proxies image downloads directly to bypass browser CORS restrictions with multi-model fallback.
+ * Strictly fortified against SSRF (Server-Side Request Forgery) attacks.
  */
 router.get('/download-proxy', async (req, res) => {
   try {
     const rawUrl = req.query.url;
-    const filename = req.query.filename || 'laf_ai_image.jpg';
+    const filename = (req.query.filename || 'laf_ai_image.jpg')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .substring(0, 64);
 
-    if (!rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') {
       return res.status(400).send('Image URL parameter is required.');
+    }
+
+    // SSRF Defense: Strict Protocol & Hostname Verification
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(rawUrl.trim());
+    } catch (e) {
+      return res.status(400).send('Invalid image URL format.');
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      return res.status(400).send('Security Shield: Only secure HTTPS image endpoints are permitted.');
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const isPrivateHost = (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname === '169.254.169.254' ||
+      hostname === '::1' ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local')
+    );
+
+    const isAllowedDomain = (
+      hostname === 'pollinations.ai' ||
+      hostname.endsWith('.pollinations.ai') ||
+      hostname === 'images.unsplash.com' ||
+      hostname.endsWith('.googleusercontent.com') ||
+      hostname.endsWith('.githubusercontent.com')
+    );
+
+    if (isPrivateHost || !isAllowedDomain) {
+      return res.status(403).send('Security Shield: Access to this host is forbidden.');
     }
 
     const candidateUrls = [rawUrl];

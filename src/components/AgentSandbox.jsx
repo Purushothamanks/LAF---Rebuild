@@ -24,6 +24,7 @@ export default function AgentSandbox({
   const [hasError, setHasError] = useState(false);
   const [copied, setCopied] = useState(false);
   const iframeRef = useRef(null);
+  const [sandboxHtml, setSandboxHtml] = useState('');
 
   // Prepare robust, fully responsive HTML bundle
   const prepareHtmlBundle = (rawCode, lang) => {
@@ -212,23 +213,20 @@ export default function AgentSandbox({
   const reloadSandbox = () => {
     setLogs([]);
     setHasError(false);
+    const bundle = prepareHtmlBundle(code, language);
+    setSandboxHtml(bundle);
     if (iframeRef.current) {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-      if (doc) {
-        doc.open();
-        doc.write(prepareHtmlBundle(code, language));
-        doc.close();
-      }
+      iframeRef.current.srcdoc = bundle;
     }
   };
 
-  // Open the live app in a full browser tab
+  // Open the live app in a full browser tab safely with noopener,noreferrer
   const openInNewTab = () => {
     try {
       const fullHtml = prepareHtmlBundle(code, language);
       const blob = new Blob([fullHtml], { type: 'text/html' });
       const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
       setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
     } catch (e) {
       console.warn('Failed to open preview in new window:', e);
@@ -237,20 +235,25 @@ export default function AgentSandbox({
 
   useEffect(() => {
     reloadSandbox();
+  }, [code, language]);
 
+  useEffect(() => {
     const handleMessage = (event) => {
+      // Defensive Security Barrier: strictly accept events from our sandboxed iframe
+      if (iframeRef.current && event.source !== iframeRef.current.contentWindow) return;
       if (!event.data || typeof event.data !== 'object') return;
+
       if (event.data.type === 'CONSOLE_LOG' || event.data.type === 'CONSOLE_WARN') {
         setLogs(prev => [...prev.slice(-40), { 
           type: event.data.type === 'CONSOLE_WARN' ? 'warn' : 'log', 
-          text: event.data.message, 
+          text: String(event.data.message || ''), 
           time: new Date().toLocaleTimeString() 
         }]);
       } else if (event.data.type === 'CONSOLE_ERROR') {
         setHasError(true);
         setLogs(prev => [...prev.slice(-40), { 
           type: 'error', 
-          text: event.data.message, 
+          text: String(event.data.message || ''), 
           time: new Date().toLocaleTimeString() 
         }]);
       }
@@ -258,7 +261,7 @@ export default function AgentSandbox({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [code, language]);
+  }, []);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(code);
@@ -509,7 +512,8 @@ export default function AgentSandbox({
             <iframe
               ref={iframeRef}
               title="LAF Live App Preview"
-              sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+              sandbox="allow-scripts allow-modals allow-forms"
+              srcDoc={sandboxHtml}
               style={{
                 width: '100%',
                 height: '100%',
@@ -808,7 +812,8 @@ export default function AgentSandbox({
           <iframe
             ref={iframeRef}
             title="LAF Agent Sandbox"
-            sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+            sandbox="allow-scripts allow-modals allow-forms"
+            srcDoc={sandboxHtml}
             style={{
               width: '100%',
               height: '100%',

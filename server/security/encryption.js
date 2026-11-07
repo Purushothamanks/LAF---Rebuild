@@ -75,20 +75,38 @@ function generateUserToken(username) {
 }
 
 /**
- * Verify session token and extract username
+ * Verify session token and extract username with Constant-Time Timing Attack Defense & Expiration Enforcement
  */
 function verifyUserToken(token) {
-  if (!token) return null;
+  if (!token || typeof token !== 'string') return null;
   try {
     const decoded = Buffer.from(token, 'base64').toString('utf8');
     const parts = decoded.split('|');
     if (parts.length !== 4) return null;
     
     const [username, userHash, timestamp, signature] = parts;
+
+    // 1. Session Expiration Check (Valid for 60 days)
+    const tokenTime = parseInt(timestamp, 10);
+    if (isNaN(tokenTime) || Date.now() - tokenTime > 60 * 24 * 60 * 60 * 1000 || tokenTime > Date.now() + 60000) {
+      return null;
+    }
+
+    // 2. User Hash Integrity Verification
+    if (hashUsername(username) !== userHash) {
+      return null;
+    }
+
+    // 3. Constant-Time HMAC Signature Comparison (Neutralizes timing attack side-channels)
     const payload = `${username}|${userHash}|${timestamp}`;
     const expectedSignature = crypto.createHmac('sha256', MASTER_SECRET).update(payload).digest('hex');
     
-    if (signature !== expectedSignature) return null;
+    const sigBuf = Buffer.from(signature, 'hex');
+    const expBuf = Buffer.from(expectedSignature, 'hex');
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+
     return username;
   } catch (e) {
     return null;

@@ -462,13 +462,13 @@ export function getCandidateModelsForTask(prompt = '', attachment = null) {
   ];
 }
 
-const CANDIDATE_GEMINI_MODELS = [
+export const CANDIDATE_GEMINI_MODELS = Object.freeze([
   'gemini-3.1-flash-lite',
   'gemini-3.5-flash-lite',
   'gemini-3.8-flash',
   'gemini-flash-latest',
   'gemini-4-argon'
-];
+]);
 
 /**
  * Call Google Gemini API directly with multi-model automatic failover and multimodal attachment support
