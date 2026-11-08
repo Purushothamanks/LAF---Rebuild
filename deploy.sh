@@ -21,15 +21,15 @@ echo "======================================================="
 chmod 400 "$KEY_PATH"
 
 echo "1. Syncing project code to AWS server..."
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" "mkdir -p $REMOTE_DIR"
-rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
+ssh -F /dev/null -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" "mkdir -p $REMOTE_DIR"
+rsync -avz -e "ssh -F /dev/null -i $KEY_PATH -o StrictHostKeyChecking=no" \
   --exclude 'node_modules' \
   --exclude 'dist' \
   --exclude '.git' \
   ./ "$AWS_HOST:$REMOTE_DIR/"
 
 echo "2. Building & Deploying Docker Container on Port 3000..."
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
+ssh -F /dev/null -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   cd /home/ubuntu/LAF---Rebuild
   sudo docker stop laf-ai-product || true
   sudo docker rm laf-ai-product || true
@@ -38,7 +38,7 @@ ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
 EOF
 
 echo "3. Updating Nginx Site Config to proxy to LAF (127.0.0.1:3000)..."
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
+ssh -F /dev/null -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   sudo bash -c 'cat << "NGINX_CONF" > /etc/nginx/sites-available/open-webui
 server {
     listen 80 default_server;
