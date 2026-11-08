@@ -118,8 +118,8 @@ router.post('/broadcast-launch', async (req, res) => {
     const result = await sendGrandLaunchNotification({ recipients: subscribers });
 
     saveBroadcastHistory({
-      type: 'GRAND_LAUNCH_12PM',
-      title: 'Grand Launch Diwali Celebration',
+      type: 'GRAND_LAUNCH_1PM',
+      title: 'Grand Launch Diwali Celebration (1:00 PM)',
       sentCount: result.sent,
       totalRecipients: result.total
     });
