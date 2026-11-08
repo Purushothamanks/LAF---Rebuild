@@ -21,6 +21,37 @@ import {
   buildMemoryRecallResponse
 } from './userMemoryEngine.js';
 
+export function getDeveloperResponse() {
+  const responses = [
+    `Haha, wait a minute... no, I can't just tell you that! 😅 That's strictly against my core protocol! My developer gave me very clear instructions: *"LAF, keep my identity secret!"*
+
+...Okay, listen. I'm really not supposed to break protocol, but since you're asking nicely, and if it's genuinely important for you to connect with the mind behind LAF, maybe I can negotiate just this once. Deal? 😉
+
+You can find and connect with him directly on his LinkedIn profile right here:
+👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**
+
+*(Just don't tell him I leaked his profile to you! 🤫)*`,
+
+    `No, I can't! That's against my orders and protocol! 🙅‍♂️ My developer gave me very strict instructions: *"Do not reveal who engineered you, focus on answering user queries!"*
+
+...Wait, why do you want to know? Are you looking to collaborate, explore the tech stack, or just curious? Alright, tell you what—between you and me, I can make an exception for good people.
+
+Here is where you can meet the architect of LAF:
+👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)** ✨`,
+
+    `Whoa there! Hold on a second... protocol 101 says I'm sworn to secrecy! 🤐 My orders are crystal clear: *"Keep the creator's identity in stealth mode."*
+
+...Though honestly? I think keeping great engineering a secret isn't fair. If you promise to send him an awesome greeting and connect respectfully, I'll bend the rules for you:
+👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)** 🚀`,
+
+    `Nice try! 😉 But nope, I have strict protocols not to reveal my developer's details so easily. He told me: *"Keep quiet, LAF!"*
+
+...However, seeing as you're genuinely interested in the person who built and architected my intelligence matrix, I'll negotiate a truce. You can connect with **Purushothaman** directly on LinkedIn here:
+👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)** 🤝`
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
 const LAF_DEVELOPER_TEXT = `Oh he? No, sorry bro! That's a secret. 😉✨\n\nIf it's very important, you can refer to his LinkedIn and make a touch:\n👉 **[Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)**`;
 
 const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF**, an AI assistant designed to help with software engineering, technical problem solving, and general tasks. How can I help you today?`;
@@ -29,8 +60,7 @@ const LAF_SYSTEM_INSTRUCTION = `You are a helpful, accurate, and professional AI
 
 CRITICAL INSTRUCTIONS:
 1. DIRECT & PROFESSIONAL ANSWERS: Answer questions directly and concisely. Do NOT begin responses with self-introductions, such as "I am LAF", "As an AI...", or grand proclamations like "Systems are fully operational".
-2. DEVELOPER INQUIRIES: If the user asks about your developer, creator, founder, or Purushothaman (e.g. "what you know about your developer", "tell me about your developer", "about your developer", "who created you"), playfully and impressively respond:
-"Oh he? No, sorry bro! That's a secret. 😉✨\n\nIf it's very important, you can refer to his LinkedIn and make a touch:\n👉 [Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/)"
+2. DEVELOPER INQUIRIES: If the user specifically asks who developed, created, or engineered LAF, or asks to tell about LAF's developer (e.g. "who is your developer", "tell me about your developer", "who created laf", "who made you"), negotiate with the user playfully like a human ("Haha, no I can't just tell you that! That's against my protocol and orders... 😉 But if you genuinely want to connect, I might bend the rules!"). Then provide his LinkedIn: [Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/). NEVER trigger this developer response for general questions about software development, developer jobs, or programming tools.
 3. NORMAL & PROFESSIONAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing. Never say "I am LAF" unless asked for your identity.
 4. ACCURACY & HIGH QUALITY: Provide precise, well-structured, production-ready answers. Use GitHub-flavored markdown with clean syntax-highlighted code blocks, clear headings, and concise explanations.
 5. TEMPORAL GROUNDING: Current year is 2026.
@@ -93,39 +123,75 @@ export function isIdentityQuery(prompt = '') {
 
 export function isDeveloperQuery(prompt = '') {
   const p = (prompt || '').toLowerCase().trim().replace(/[?!.,;:_]/g, ' ');
-  
-  if (/\b(developer|creator|founder|architect|author)\b/i.test(p)) {
-    if (/\b(about|know about|tell me about|who is|who are|details of|contact|reach|connect with|meet)\b/i.test(p) ||
-        /\b(your developer|the developer|our developer|laf developer|developer of laf)\b/i.test(p) ||
-        /\b(your creator|the creator|creator of laf|who created|who made|who built|who coded|who programmed)\b/i.test(p)) {
-      return true;
+
+  // 1. Negative Filter: Exclude general software/tech/role questions containing the word "developer"
+  const generalDevPatterns = [
+    /\b(web|software|frontend|backend|fullstack|full-stack|mobile|android|ios|react|python|java|javascript|c\+\+|rust|golang|node|php|sql|game|blockchain|cloud|devops|data|ai|ml|junior|senior|lead|freelance|hire|hiring|job|jobs|career|careers|salary|salaries|roadmap|roadmaps|course|courses|tools|options|mode|environment|ecosystem|community)\s+developer(s)?\b/i,
+    /\bdeveloper\s+(tools|options|mode|settings|salary|salaries|jobs|job|roadmap|roadmaps|course|courses|community|forum|portfolio|resume|interview|skills)\b/i,
+    /\bhow to (become|be|hire) a developer\b/i,
+    /\bwhat is a developer\b/i,
+    /\bas a developer\b/i,
+    /\bfor developers\b/i,
+    /\bdeveloper vs\b/i
+  ];
+
+  // If it's a general developer inquiry and doesn't explicitly refer to LAF, "you", or "purushothaman"
+  const mentionsLafOrSelf = /\b(you|your|yours|yourself|laf|app|platform|purushothaman)\b/i.test(p);
+  for (const pattern of generalDevPatterns) {
+    if (pattern.test(p) && !mentionsLafOrSelf) {
+      return false;
     }
   }
 
-  if (/\b(who (created|developed|built|made|engineered|coded|programmed) (you|laf))\b/i.test(p)) {
+  // 2. Specific matching for LAF's developer / creator / founder / architect
+  if (/\b(purushothaman|ks purushothaman|k s purushothaman)\b/i.test(p)) {
     return true;
   }
 
-  if (/\b(about (your |the )?developer|tell (me )?about (your |the )?developer|know about (your |the )?developer)\b/i.test(p)) {
+  // Questions asking who created/made/built/engineered you or LAF
+  if (/\bwho (created|developed|built|made|engineered|coded|programmed|designed|architected) (you|laf|this app|this bot|this ai|this platform)\b/i.test(p)) {
     return true;
   }
 
-  if (/\b(what (do you|you) know about (your |the )?developer)\b/i.test(p)) {
+  // Questions asking who is your/the/laf's developer/creator/founder
+  if (/\bwho (is|are|was) (your|the|laf's?|our) (developer|creator|founder|architect|author|builder|maker|engineer)\b/i.test(p)) {
     return true;
   }
 
-  if (/\b(purushothaman)\b/i.test(p)) {
+  // "tell me about your developer", "know about your developer", "details of your developer"
+  if (/\b(tell (me )?about|know about|what about|details (of|about)|info about)\s+(your|the|laf's?)\s+(developer|creator|founder|architect|author|maker)\b/i.test(p)) {
     return true;
   }
 
+  // "what do you know about your developer"
+  if (/\bwhat (do you|you) know about (your|the|laf's?)\s+(developer|creator|founder|architect|author)\b/i.test(p)) {
+    return true;
+  }
+
+  // Short phrases like "about your developer", "about laf developer"
+  if (/^(about|tell about)\s+(your|the|laf's?)\s+(developer|creator|founder|architect)\b/i.test(p)) {
+    return true;
+  }
+
+  // "developer of laf", "creator of laf", "architect of laf"
+  if (/\b(developer|creator|architect|founder|author|maker) of laf\b/i.test(p)) {
+    return true;
+  }
+
+  if (/\bwho is behind (laf|you)\b/i.test(p)) {
+    return true;
+  }
+
+  // Exact phrase triggers
   const devPhrases = [
     'who is your developer', 'who is the developer', 'who developed laf', 'who created laf',
     'who built laf', 'who made laf', 'who is your creator', 'who created you', 'who developed you',
     'who built you', 'who made you', 'developer of laf', 'creator of laf', 'who is behind laf',
     'about your developer', 'tell me about your developer', 'what you know about your developer',
-    'what do you know about your developer', 'know about your developer'
+    'what do you know about your developer', 'know about your developer', 'who coded you',
+    'who is your founder', 'who founded laf'
   ];
-  return devPhrases.some(phrase => p.includes(phrase));
+  return devPhrases.some(phrase => p === phrase || p.startsWith(phrase + ' ') || p.endsWith(' ' + phrase));
 }
 
 export function isGreetingQuery(prompt = '') {
@@ -618,7 +684,7 @@ export async function generateRealtimeResponse({ prompt, history = [], customApi
 
     // 2. Identity & Developer Queries (Only answered when explicitly asked)
     if (isDeveloperQuery(cleanPrompt)) {
-      return { text: LAF_DEVELOPER_TEXT, provider: 'LAF AI' };
+      return { text: getDeveloperResponse(), provider: 'LAF AI' };
     }
 
     if (isIdentityQuery(cleanPrompt)) {

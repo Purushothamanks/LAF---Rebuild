@@ -10,6 +10,7 @@ const chatRoutes = require('./routes/chat');
 const mediaRoutes = require('./routes/media');
 const trendsRoutes = require('./routes/trends');
 const securityRoutes = require('./routes/security');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -79,6 +80,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api/security', securityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Dedicated Secure Android Application Package Download Route
 app.get(['/api/download/app.apk', '/LAF-AI.apk'], (req, res) => {

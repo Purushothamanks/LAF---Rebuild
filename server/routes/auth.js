@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { validateUsername, sanitizeInput } = require('../security/sanitize');
 const { generateUserToken, verifyUserToken } = require('../security/encryption');
-const { readUserDb, userExists } = require('../services/database');
+const { readUserDb, userExists, registerUser } = require('../services/database');
 
 /**
  * POST /api/auth/login
- * Passwordless username authentication (enforces username uniqueness)
+ * Passwordless username authentication with optional email registration
  */
 router.post('/login', (req, res) => {
   try {
     const rawUsername = req.body ? req.body.username : '';
+    const rawEmail = req.body ? req.body.email : '';
     const username = sanitizeInput(rawUsername);
+    const email = typeof rawEmail === 'string' ? sanitizeInput(rawEmail).trim().toLowerCase() : '';
 
     if (!validateUsername(username)) {
       return res.status(400).json({
@@ -19,11 +21,20 @@ router.post('/login', (req, res) => {
       });
     }
 
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        error: 'Invalid email address format.'
+      });
+    }
+
+    // Register/update user registry
+    registerUser(username, email);
+
     // Issue session token for user
     const token = generateUserToken(username);
 
     // Initialize or fetch isolated user database
-    let userDb = { conversations: [], createdAt: new Date().toISOString(), userPreferences: { theme: 'dark' } };
+    let userDb = { conversations: [], createdAt: new Date().toISOString(), userPreferences: { theme: 'dark' }, email: email };
     try {
       userDb = readUserDb(username);
     } catch (dbErr) {
@@ -36,6 +47,7 @@ router.post('/login', (req, res) => {
       token,
       user: {
         username: username,
+        email: email || userDb?.email || '',
         conversationsCount: (userDb && userDb.conversations) ? userDb.conversations.length : 0,
         createdAt: (userDb && userDb.createdAt) ? userDb.createdAt : new Date().toISOString(),
         userPreferences: (userDb && userDb.userPreferences) ? userDb.userPreferences : { theme: 'dark' }
@@ -70,6 +82,7 @@ router.get('/me', (req, res) => {
       success: true,
       user: {
         username,
+        email: (userDb && userDb.email) ? userDb.email : '',
         conversationsCount: (userDb && userDb.conversations) ? userDb.conversations.length : 0,
         createdAt: (userDb && userDb.createdAt) ? userDb.createdAt : new Date().toISOString(),
         userPreferences: (userDb && userDb.userPreferences) ? userDb.userPreferences : { theme: 'dark' }

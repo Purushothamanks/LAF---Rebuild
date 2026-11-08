@@ -4,6 +4,8 @@ const { hashUsername, encryptText, decryptText } = require('../security/encrypti
 
 const DATA_DIR = path.join(__dirname, '../../data/users');
 const FEEDBACK_FILE = path.join(__dirname, '../../data/feedback.json');
+const REGISTERED_USERS_FILE = path.join(__dirname, '../../data/registered_users.json');
+const BROADCAST_HISTORY_FILE = path.join(__dirname, '../../data/broadcast_history.json');
 
 // In-memory resilient cache for read-only sandboxes or fallback sessions
 const memoryDbCache = new Map();
@@ -183,9 +185,10 @@ function deleteAllConversations(username) {
 }
 
 /**
- * Delete all conversation files across all users
+ * Delete all conversation files across all users and flush memory cache
  */
 function clearAllUserDatabases() {
+  memoryDbCache.clear();
   if (fs.existsSync(DATA_DIR)) {
     const files = fs.readdirSync(DATA_DIR);
     for (const f of files) {
@@ -197,6 +200,120 @@ function clearAllUserDatabases() {
     }
   }
   return true;
+}
+
+/**
+ * Register or update user with optional email address for update broadcasts
+ */
+function registerUser(username, email = '') {
+  if (!username) return null;
+  const cleanUser = username.trim();
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  let users = [];
+  try {
+    if (fs.existsSync(REGISTERED_USERS_FILE)) {
+      users = JSON.parse(fs.readFileSync(REGISTERED_USERS_FILE, 'utf8'));
+      if (!Array.isArray(users)) users = [];
+    }
+  } catch (e) {
+    users = [];
+  }
+
+  const existingIdx = users.findIndex(u => u.username && u.username.toLowerCase() === cleanUser.toLowerCase());
+  const now = new Date().toISOString();
+
+  let record;
+  if (existingIdx >= 0) {
+    record = users[existingIdx];
+    if (cleanEmail) record.email = cleanEmail;
+    record.lastLoginAt = now;
+    users[existingIdx] = record;
+  } else {
+    record = {
+      username: cleanUser,
+      email: cleanEmail,
+      registeredAt: now,
+      lastLoginAt: now
+    };
+    users.push(record);
+  }
+
+  try {
+    fs.writeFileSync(REGISTERED_USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[DB] Failed to save registered_users.json:', e.message);
+  }
+
+  // Also record email in userDb if exists
+  try {
+    const userDb = readUserDb(cleanUser);
+    if (userDb) {
+      userDb.email = cleanEmail || userDb.email || '';
+      saveUserDb(cleanUser, userDb);
+    }
+  } catch (e) {}
+
+  return record;
+}
+
+/**
+ * Get all registered users
+ */
+function getRegisteredUsers() {
+  try {
+    if (fs.existsSync(REGISTERED_USERS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(REGISTERED_USERS_FILE, 'utf8'));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (e) {}
+  return [];
+}
+
+/**
+ * Get all users who have registered a valid email address
+ */
+function getSubscribedUsers() {
+  const users = getRegisteredUsers();
+  return users.filter(u => u && u.email && /\S+@\S+\.\S+/.test(u.email));
+}
+
+/**
+ * Record a broadcast event in broadcast_history.json
+ */
+function saveBroadcastHistory(record) {
+  let history = [];
+  try {
+    if (fs.existsSync(BROADCAST_HISTORY_FILE)) {
+      history = JSON.parse(fs.readFileSync(BROADCAST_HISTORY_FILE, 'utf8'));
+      if (!Array.isArray(history)) history = [];
+    }
+  } catch (e) {
+    history = [];
+  }
+
+  history.unshift({
+    ...record,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    fs.writeFileSync(BROADCAST_HISTORY_FILE, JSON.stringify(history.slice(0, 50), null, 2), 'utf8');
+  } catch (e) {}
+  return true;
+}
+
+/**
+ * Get broadcast history
+ */
+function getBroadcastHistory() {
+  try {
+    if (fs.existsSync(BROADCAST_HISTORY_FILE)) {
+      const data = JSON.parse(fs.readFileSync(BROADCAST_HISTORY_FILE, 'utf8'));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (e) {}
+  return [];
 }
 
 function escapeRegExp(string) {
@@ -367,5 +484,10 @@ module.exports = {
   saveUserMemory,
   deleteUserMemory,
   clearUserMemories,
-  updateUserMemoriesBatch
+  updateUserMemoriesBatch,
+  registerUser,
+  getRegisteredUsers,
+  getSubscribedUsers,
+  saveBroadcastHistory,
+  getBroadcastHistory
 };

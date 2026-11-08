@@ -8,6 +8,7 @@ import TrendsView from './components/TrendsView';
 import MemoryVault from './components/MemoryVault';
 import SecurityVault from './components/SecurityVault';
 import LoginModal from './components/LoginModal';
+import GrandLaunchScreen from './components/GrandLaunchScreen';
 import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
@@ -44,17 +45,32 @@ export default function App() {
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
 
+  // Grand Launch Lock State: Sharply 12:00 PM today
+  const [launchUnlocked, setLaunchUnlocked] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview') === 'live' || urlParams.get('dev') === '1') {
+      return true;
+    }
+    const now = new Date();
+    const target12PM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0).getTime();
+    return Date.now() >= target12PM;
+  });
+
   // Sync theme attribute to HTML root element whenever theme changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('laf_theme', theme);
   }, [theme]);
 
-  // Migration: Completely deletes all user conversation history across localStorage & IndexedDB
+  // Fresh Grand Launch Clean Migration: Wipes all historical sessions & databases for clean launch
   useEffect(() => {
     try {
-      const FRESH_KEY = 'laf_v4_wipe_all_conversations';
+      const FRESH_KEY = 'laf_grand_launch_diwali_2026_clean';
       if (typeof window !== 'undefined' && localStorage.getItem(FRESH_KEY) !== 'true') {
+        localStorage.removeItem('laf_username');
+        localStorage.removeItem('laf_token');
+        localStorage.removeItem('laf_email');
         Object.keys(localStorage).forEach(k => {
           if (
             k.startsWith('laf_user_db_') ||
@@ -62,7 +78,9 @@ export default function App() {
             k.startsWith('laf_vault_') ||
             k.startsWith('laf_conversations') ||
             k.startsWith('laf_active_') ||
-            k.startsWith('laf_messages_')
+            k.startsWith('laf_messages_') ||
+            k.startsWith('laf_profile_') ||
+            k.startsWith('laf_directives_')
           ) {
             localStorage.removeItem(k);
           }
@@ -72,6 +90,8 @@ export default function App() {
           try { window.indexedDB.deleteDatabase('LAF_AI_VAULT'); } catch (e) {}
         }
         localStorage.setItem(FRESH_KEY, 'true');
+        setUser(null);
+        setToken('');
         setConversations([]);
         setMessages([]);
         setActiveConvId(null);
@@ -316,8 +336,17 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-      {/* Passwordless Login Modal if unauthenticated */}
-      {!user && <LoginModal onLogin={handleLogin} />}
+      {/* 🎆 Grand Launch & Diwali Celebration Gate Screen (Sharply 12:00 PM) */}
+      {!launchUnlocked && (
+        <GrandLaunchScreen
+          user={user}
+          onRegisterSuccess={handleLogin}
+          onLaunchUnlock={() => setLaunchUnlocked(true)}
+        />
+      )}
+
+      {/* Passwordless Login Modal if unauthenticated and launch is unlocked */}
+      {launchUnlocked && !user && <LoginModal onLogin={handleLogin} />}
 
       {/* Floating Top-Left Bar */}
       {user && (

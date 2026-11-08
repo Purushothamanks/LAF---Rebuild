@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Settings, LogOut, Trash2, Shield, FileText, Check, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Settings, LogOut, Trash2, Shield, FileText, Check, Save, Send, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { apiUrl } from '../api';
 
 export default function SettingsModal({ isOpen, onClose, user, onLogout, customApiKey, setCustomApiKey, theme, setTheme }) {
   const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
@@ -9,9 +10,81 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
   // User editable profile details
   const [nameInput, setNameInput] = useState(user?.name || user?.username || '');
   const [usernameInput, setUsernameInput] = useState(user?.username ? `@${user.username.toLowerCase()}` : '');
-  const [emailInput, setEmailInput] = useState(user?.email || '');
+  const [emailInput, setEmailInput] = useState(user?.email || localStorage.getItem('laf_email') || '');
   const [phoneInput, setPhoneInput] = useState(user?.phone || '');
   const [savedProfile, setSavedProfile] = useState(false);
+
+  // Feature Broadcast state
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastDetails, setBroadcastDetails] = useState('');
+  const [devPermissionGranted, setDevPermissionGranted] = useState(false);
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastStatus, setBroadcastStatus] = useState(null);
+  const [subscriberCount, setSubscriberCount] = useState(0);
+
+  // Fetch subscribers count when broadcast tab is opened
+  useEffect(() => {
+    if (activeTab === 'broadcast' && isOpen) {
+      fetch(apiUrl('/api/admin/subscribers'))
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.subscribersCount !== undefined) {
+            setSubscriberCount(data.subscribersCount);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeTab, isOpen]);
+
+  const handleBroadcastSubmit = async (e) => {
+    e.preventDefault();
+    if (!devPermissionGranted) {
+      alert('Developer permission is required. Please check the permission checkbox.');
+      return;
+    }
+    if (!broadcastTitle.trim() || !broadcastDetails.trim()) {
+      alert('Please fill out both the Feature Title and Feature Details.');
+      return;
+    }
+
+    setBroadcastSending(true);
+    setBroadcastStatus(null);
+
+    try {
+      const res = await fetch(apiUrl('/api/admin/broadcast-feature'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          featureTitle: broadcastTitle.trim(),
+          featureDetails: broadcastDetails.trim(),
+          developerPermission: true
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBroadcastStatus({
+          type: 'success',
+          message: `Update broadcast successfully sent to ${data.result?.sent || 0} registered users!`
+        });
+        setBroadcastTitle('');
+        setBroadcastDetails('');
+        setDevPermissionGranted(false);
+      } else {
+        setBroadcastStatus({
+          type: 'error',
+          message: data.error || 'Failed to dispatch email broadcast.'
+        });
+      }
+    } catch (err) {
+      setBroadcastStatus({
+        type: 'error',
+        message: 'Network note: ' + err.message
+      });
+    } finally {
+      setBroadcastSending(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -62,7 +135,7 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--ds-border)', padding: '12px 24px', background: 'var(--ds-bg-main)' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--ds-border)', padding: '12px 24px', background: 'var(--ds-bg-main)', overflowX: 'auto' }}>
           <button
             onClick={() => setActiveTab('profile')}
             className={`settings-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
@@ -74,6 +147,14 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
             className={`settings-tab-btn ${activeTab === 'general' ? 'active' : ''}`}
           >
             General
+          </button>
+          <button
+            onClick={() => setActiveTab('broadcast')}
+            className={`settings-tab-btn ${activeTab === 'broadcast' ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+          >
+            <span>Feature Release</span>
+            <span style={{ fontSize: '0.68rem', background: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '999px', fontWeight: '700' }}>Mail</span>
           </button>
           <button
             onClick={() => setActiveTab('about')}
@@ -311,6 +392,145 @@ export default function SettingsModal({ isOpen, onClose, user, onLogout, customA
               </div>
 
             </div>
+          )}
+
+          {/* 📢 FEATURE BROADCAST TAB */}
+          {activeTab === 'broadcast' && (
+            <form onSubmit={handleBroadcastSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '14px 16px', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#60a5fa', fontWeight: '700', fontSize: '0.92rem', marginBottom: '4px' }}>
+                  <Sparkles style={{ width: '16px' }} />
+                  <span>Developer Release Broadcast Engine</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--ds-text-secondary)', lineHeight: '1.5' }}>
+                  Broadcast new feature releases to all registered LAF users via their respective email addresses. Dispatches strictly with your authorization.
+                </p>
+                <div style={{ marginTop: '8px', fontSize: '0.82rem', color: '#93c5fd', fontWeight: '600' }}>
+                  👥 Active registered recipients: <strong>{subscriberCount} user(s)</strong>
+                </div>
+              </div>
+
+              {broadcastStatus && (
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    fontSize: '0.86rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: broadcastStatus.type === 'success' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                    border: `1px solid ${broadcastStatus.type === 'success' ? '#10b981' : '#ef4444'}`,
+                    color: broadcastStatus.type === 'success' ? '#34d399' : '#f87171'
+                  }}
+                >
+                  {broadcastStatus.type === 'success' ? <CheckCircle2 style={{ width: '18px' }} /> : <AlertCircle style={{ width: '18px' }} />}
+                  <span>{broadcastStatus.message}</span>
+                </div>
+              )}
+
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Feature / Update Title
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. LAF 4.0 Flagship Model Live with Multimodal Vision"
+                  value={broadcastTitle}
+                  onChange={(e) => setBroadcastTitle(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'var(--ds-bg-card)',
+                    border: '1px solid var(--ds-border)',
+                    borderRadius: '12px',
+                    color: 'var(--ds-text-primary)',
+                    fontSize: '0.92rem',
+                    outline: 'none',
+                    fontWeight: '500'
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--ds-text-muted)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Feature Highlights & Release Notes
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder="Describe the new features, improvements, and instructions for users..."
+                  value={broadcastDetails}
+                  onChange={(e) => setBroadcastDetails(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'var(--ds-bg-card)',
+                    border: '1px solid var(--ds-border)',
+                    borderRadius: '12px',
+                    color: 'var(--ds-text-primary)',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Developer Explicit Permission Checkbox */}
+              <div
+                style={{
+                  background: 'var(--ds-bg-card)',
+                  border: devPermissionGranted ? '1.5px solid #2563eb' : '1px solid var(--ds-border)',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onClick={() => setDevPermissionGranted(!devPermissionGranted)}
+              >
+                <input
+                  type="checkbox"
+                  checked={devPermissionGranted}
+                  onChange={(e) => setDevPermissionGranted(e.target.checked)}
+                  style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: '#2563eb', cursor: 'pointer' }}
+                />
+                <div style={{ flex: 1, fontSize: '0.85rem', color: 'var(--ds-text-primary)', lineHeight: '1.4' }}>
+                  <strong>Developer Permission Mandate:</strong> I, <strong>Purushothaman</strong>, grant explicit permission to broadcast this feature release notification email to all registered LAF users with their respected mail.
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={broadcastSending || !devPermissionGranted}
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  background: devPermissionGranted ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : 'var(--ds-bg-card)',
+                  border: devPermissionGranted ? 'none' : '1px solid var(--ds-border)',
+                  color: devPermissionGranted ? '#ffffff' : 'var(--ds-text-muted)',
+                  borderRadius: '9999px',
+                  fontWeight: '700',
+                  fontSize: '0.94rem',
+                  cursor: devPermissionGranted && !broadcastSending ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: devPermissionGranted ? '0 0 20px rgba(59, 130, 246, 0.4)' : 'none',
+                  transition: 'all 0.2s ease',
+                  opacity: broadcastSending ? 0.7 : 1
+                }}
+              >
+                <Send style={{ width: '16px' }} />
+                <span>{broadcastSending ? 'Broadcasting Update...' : 'Send Feature Update Email to Users'}</span>
+              </button>
+            </form>
           )}
 
           {/* ℹ️ ABOUT TAB */}
