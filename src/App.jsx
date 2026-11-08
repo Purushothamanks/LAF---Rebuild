@@ -45,7 +45,7 @@ export default function App() {
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  // Grand Launch Lock State: Sharply 12:00 PM today
+  // Grand Launch Lock State: Sharply 1:00 PM today
   const [launchUnlocked, setLaunchUnlocked] = useState(() => {
     if (typeof window === 'undefined') return true;
     const urlParams = new URLSearchParams(window.location.search);
@@ -53,8 +53,8 @@ export default function App() {
       return true;
     }
     const now = new Date();
-    const target12PM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0).getTime();
-    return Date.now() >= target12PM;
+    const target1PM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0, 0).getTime();
+    return Date.now() >= target1PM;
   });
 
   // Sync theme attribute to HTML root element whenever theme changes
@@ -336,7 +336,7 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-      {/* 🎆 Grand Launch & Diwali Celebration Gate Screen (Sharply 12:00 PM) */}
+      {/* 🎆 Grand Launch & Diwali Celebration Gate Screen (Sharply 1:00 PM) */}
       {!launchUnlocked && (
         <GrandLaunchScreen
           user={user}

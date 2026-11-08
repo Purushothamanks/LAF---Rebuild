@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Bell, ArrowRight, CheckCircle2, ShieldCheck, Play, Lock } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Lock, Mail, User } from 'lucide-react';
 import { apiUrl } from '../api';
 import { createLocalSession } from '../utils/aiClient';
 
-export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnlock, isPreviewMode = false }) {
+export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnlock }) {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0, totalMs: 0 });
   const [isLaunched, setIsLaunched] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
@@ -18,11 +18,10 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
 
   const canvasRef = useRef(null);
 
-  // Compute launch target: Today at 12:00:00 PM (12.o clock) IST
+  // Compute launch target: Today at sharply 1:00:00 PM (13:00 IST)
   const getTargetTime = () => {
     const now = new Date();
-    // Sharply 12:00:00 PM today
-    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0, 0);
     return target.getTime();
   };
 
@@ -53,10 +52,9 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
     return () => clearInterval(interval);
   }, [isLaunched, devBypass]);
 
-  // Dispatch launch notification when time hits 12:00 PM
+  // Dispatch launch notification when time hits 1:00 PM
   const handleLaunchTrigger = async () => {
     try {
-      // Broadcast launch email to all registered users
       fetch(apiUrl('/api/admin/broadcast-launch'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -64,7 +62,6 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
       }).catch(() => {});
     } catch (e) {}
 
-    // Wait 2.5 seconds for celebration fireworks finale, then smoothly lift curtain into LAF
     setTimeout(() => {
       setFadingOut(true);
       setTimeout(() => {
@@ -85,21 +82,19 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
     }
 
     if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setRegError('Please enter a valid email address to receive launch & update alerts.');
+      setRegError('Please enter a valid email address.');
       return;
     }
 
     setRegLoading(true);
     setRegError('');
 
-    // Save in localStorage immediately
     localStorage.setItem('laf_username', cleanName);
     localStorage.setItem('laf_email', cleanEmail);
 
     let sessionToken = 'laf_guest_' + Date.now();
     let userData = { username: cleanName, email: cleanEmail };
 
-    // Register via Backend
     try {
       const res = await fetch(apiUrl('/api/admin/register-launch'), {
         method: 'POST',
@@ -111,7 +106,6 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         if (data.user) userData = data.user;
       }
 
-      // Also obtain auth session
       const authRes = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,7 +130,7 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
     }
   };
 
-  // HTML5 Canvas Fireworks & Diwali Crackers Blast Simulation
+  // 60 FPS HTML5 Canvas Crackers Blast & Particle Fireworks
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -150,7 +144,6 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Particle and Rocket Systems
     const particles = [];
     const rockets = [];
 
@@ -162,16 +155,16 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
       '#ec4899', // Radiant Pink
       '#8b5cf6', // Electric Purple
       '#06b6d4', // Cyan Spark
-      '#ffffff'  // Pure Starlight
+      '#ffffff'  // Starlight White
     ];
 
     class Rocket {
       constructor(x, targetY, color) {
-        this.x = x || Math.random() * (canvas.width - 200) + 100;
+        this.x = x || Math.random() * (canvas.width - 160) + 80;
         this.y = canvas.height;
-        this.targetY = targetY || Math.random() * (canvas.height * 0.45) + (canvas.height * 0.1);
+        this.targetY = targetY || Math.random() * (canvas.height * 0.42) + (canvas.height * 0.08);
         this.color = color || festiveColors[Math.floor(Math.random() * festiveColors.length)];
-        this.speed = Math.random() * 4 + 7;
+        this.speed = Math.random() * 4 + 7.5;
         this.trail = [];
       }
 
@@ -185,7 +178,7 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
       draw() {
         ctx.save();
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
         if (this.trail.length > 0) {
           ctx.moveTo(this.trail[0].x, this.trail[0].y);
@@ -198,7 +191,7 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
       }
 
       explode() {
-        const count = Math.floor(Math.random() * 40) + 60;
+        const count = Math.floor(Math.random() * 35) + 55;
         for (let i = 0; i < count; i++) {
           particles.push(new Particle(this.x, this.y, this.color));
         }
@@ -211,14 +204,14 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         this.y = y;
         this.color = color;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 6 + 1.5;
+        const speed = Math.random() * 5.5 + 1.2;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.gravity = 0.05;
-        this.friction = 0.96;
+        this.gravity = 0.048;
+        this.friction = 0.965;
         this.alpha = 1;
-        this.decay = Math.random() * 0.015 + 0.009;
-        this.radius = Math.random() * 2.5 + 1.5;
+        this.decay = Math.random() * 0.016 + 0.009;
+        this.radius = Math.random() * 2.2 + 1.2;
       }
 
       update() {
@@ -235,7 +228,7 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.alpha);
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -244,31 +237,27 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
       }
     }
 
-    // Interactive cracker blast on user tap / click
     const handleCanvasClick = (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const color = festiveColors[Math.floor(Math.random() * festiveColors.length)];
-      for (let i = 0; i < 70; i++) {
+      for (let i = 0; i < 60; i++) {
         particles.push(new Particle(x, y, color));
       }
     };
     canvas.addEventListener('pointerdown', handleCanvasClick);
 
-    // Continuous fireworks spawner
     let spawnCounter = 0;
     const render = () => {
-      ctx.fillStyle = 'rgba(7, 11, 22, 0.22)';
+      ctx.fillStyle = 'rgba(5, 8, 18, 0.22)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       spawnCounter++;
-      // Launch a new cracker rocket every 28 frames
-      if (spawnCounter % 28 === 0) {
+      if (spawnCounter % 26 === 0) {
         rockets.push(new Rocket());
       }
 
-      // Update rockets
       for (let i = rockets.length - 1; i >= 0; i--) {
         const rocket = rockets[i];
         rocket.draw();
@@ -278,7 +267,6 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         }
       }
 
-      // Update particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.draw();
@@ -305,7 +293,7 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         position: 'fixed',
         inset: 0,
         zIndex: 999999,
-        background: '#070b16',
+        background: 'radial-gradient(ellipse at 50% 15%, #0f1d38 0%, #060b17 65%, #03060c 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -313,14 +301,14 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         overflowY: 'auto',
         overflowX: 'hidden',
         color: '#f8fafc',
-        padding: '24px 16px',
+        padding: 'clamp(16px, 4vw, 32px) clamp(12px, 3vw, 24px)',
         opacity: fadingOut ? 0 : 1,
-        transform: fadingOut ? 'scale(1.04)' : 'scale(1)',
+        transform: fadingOut ? 'scale(1.03)' : 'scale(1)',
         transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
         pointerEvents: fadingOut ? 'none' : 'auto'
       }}
     >
-      {/* Dynamic Background Cracker Blast Canvas */}
+      {/* Background Fireworks Canvas */}
       <canvas
         ref={canvasRef}
         style={{
@@ -333,78 +321,78 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
         }}
       />
 
-      {/* Foreground Container with Glassmorphism */}
+      {/* Modern Ethereal Floating Hero Container (Non-Boxy, Fluid Glass) */}
       <div
         style={{
           position: 'relative',
           zIndex: 10,
-          maxWidth: '680px',
+          maxWidth: '640px',
           width: '100%',
           margin: 'auto',
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1.5px solid rgba(234, 179, 8, 0.35)',
-          borderRadius: '28px',
-          padding: '36px 28px',
+          background: 'rgba(10, 16, 30, 0.72)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 'clamp(24px, 5vw, 36px)',
+          padding: 'clamp(24px, 5vw, 40px) clamp(18px, 4vw, 32px)',
           textAlign: 'center',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(234, 179, 8, 0.25)',
-          animation: 'fadeInUp 0.8s ease'
+          boxShadow: '0 30px 80px rgba(0, 0, 0, 0.75), 0 0 50px rgba(37, 99, 235, 0.18)',
+          boxSizing: 'border-box'
         }}
       >
-        {/* Festive Diya Header with Glowing Flame */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
-          <span style={{ fontSize: '2.5rem', animation: 'pulse 1.8s infinite' }}>🪔</span>
-          <span style={{ fontSize: '2.5rem', animation: 'bounce 2.2s infinite' }}>🎆</span>
-          <span style={{ fontSize: '2.5rem', animation: 'pulse 1.8s infinite' }}>🪔</span>
+        {/* Festive Diya Header with Ambient Glow */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+          <span style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)', filter: 'drop-shadow(0 0 12px rgba(245, 158, 11, 0.6))' }}>🪔</span>
+          <span style={{ fontSize: 'clamp(1.8rem, 4.5vw, 2.2rem)', filter: 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.5))' }}>✨</span>
+          <span style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)', filter: 'drop-shadow(0 0 12px rgba(245, 158, 11, 0.6))' }}>🪔</span>
         </div>
 
-        {/* Happy Diwali Announcement */}
+        {/* Happy Diwali Headline */}
         <h2
           style={{
             margin: '0 0 6px 0',
-            fontSize: 'clamp(1.6rem, 5vw, 2.3rem)',
+            fontSize: 'clamp(1.5rem, 5.5vw, 2.2rem)',
             fontWeight: '900',
             fontFamily: 'var(--font-title)',
-            background: 'linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #f97316 100%)',
+            background: 'linear-gradient(135deg, #fffbeb 0%, #fde047 35%, #f59e0b 70%, #ea580c 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            letterSpacing: '0.5px'
+            letterSpacing: '1px'
           }}
         >
           HAPPY DIWALI!
         </h2>
-        <p style={{ color: '#93c5fd', fontSize: '0.96rem', fontWeight: '600', margin: '0 0 22px 0', lineHeight: '1.5' }}>
-          May the festival of lights bring limitless happiness, peace, and prosperity to you and your loved ones!
+        <p style={{ color: '#cbd5e1', fontSize: 'clamp(0.85rem, 2.8vw, 0.98rem)', fontWeight: '500', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+          Wishing you a vibrant, joyous, and prosperous Diwali!
         </p>
 
-        {/* Brand Badge */}
+        {/* Brand Pill */}
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(37, 99, 235, 0.18)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
             padding: '6px 18px',
             borderRadius: '9999px',
             color: '#60a5fa',
-            fontSize: '0.85rem',
+            fontSize: 'clamp(0.75rem, 2.4vw, 0.85rem)',
             fontWeight: '700',
             letterSpacing: '1px',
             textTransform: 'uppercase',
-            marginBottom: '16px'
+            marginBottom: '14px'
           }}
         >
-          <Sparkles style={{ width: '16px', color: '#f59e0b' }} />
+          <Sparkles style={{ width: '15px', color: '#f59e0b' }} />
           <span>LAF AI • Look At Future</span>
         </div>
 
-        {/* Grand Launch Headline */}
+        {/* Grand Launch Title */}
         <h1
           style={{
-            margin: '0 0 10px 0',
-            fontSize: 'clamp(1.8rem, 6vw, 2.8rem)',
+            margin: '0 0 8px 0',
+            fontSize: 'clamp(1.6rem, 5vw, 2.5rem)',
             fontWeight: '900',
             color: '#ffffff',
             letterSpacing: '-0.5px'
@@ -413,167 +401,179 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
           {isLaunched ? '🚀 GRAND LAUNCH IS LIVE!' : 'Grand Launch Starts In'}
         </h1>
 
-        {/* Running Live Countdown Timer */}
+        {/* Modern Fluid Floating Timer Ribbon (Zero Clunky Separate Boxes) */}
         {!isLaunched && (
           <div
             style={{
-              display: 'flex',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 'clamp(20px, 4vw, 28px)',
+              padding: 'clamp(16px, 3.5vw, 24px) clamp(10px, 2.5vw, 20px)',
+              display: 'grid',
+              gridTemplateColumns: '1fr auto 1fr auto 1fr',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '14px',
-              margin: '24px 0 32px 0'
+              margin: '20px 0 26px 0',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3)'
             }}
           >
-            {/* Hours */}
-            <div style={timeCardStyle}>
-              <div style={timeDigitStyle}>{String(timeLeft.hours).padStart(2, '0')}</div>
-              <div style={timeLabelStyle}>HOURS</div>
+            {/* Hours Column */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={fluidNumberStyle}>{String(timeLeft.hours).padStart(2, '0')}</div>
+              <div style={fluidLabelStyle}>HOURS</div>
             </div>
 
-            <span style={timeSeparatorStyle}>:</span>
+            {/* Glowing Divider */}
+            <div style={timerDividerStyle}>:</div>
 
-            {/* Minutes */}
-            <div style={timeCardStyle}>
-              <div style={timeDigitStyle}>{String(timeLeft.minutes).padStart(2, '0')}</div>
-              <div style={timeLabelStyle}>MINUTES</div>
+            {/* Minutes Column */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={fluidNumberStyle}>{String(timeLeft.minutes).padStart(2, '0')}</div>
+              <div style={fluidLabelStyle}>MINUTES</div>
             </div>
 
-            <span style={timeSeparatorStyle}>:</span>
+            {/* Glowing Divider */}
+            <div style={timerDividerStyle}>:</div>
 
-            {/* Seconds */}
-            <div style={timeCardStyle}>
-              <div style={{ ...timeDigitStyle, color: '#f59e0b' }}>{String(timeLeft.seconds).padStart(2, '0')}</div>
-              <div style={timeLabelStyle}>SECONDS</div>
+            {/* Seconds Column */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ ...fluidNumberStyle, color: '#f59e0b', textShadow: '0 0 20px rgba(245, 158, 11, 0.5)' }}>
+                {String(timeLeft.seconds).padStart(2, '0')}
+              </div>
+              <div style={fluidLabelStyle}>SECONDS</div>
             </div>
           </div>
         )}
 
         {isLaunched && (
-          <div style={{ padding: '20px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', borderRadius: '16px', margin: '20px 0' }}>
-            <h3 style={{ margin: 0, color: '#34d399', fontSize: '1.2rem', fontWeight: '800' }}>
-              🎉 Sharply 12:00 PM Achieved! Unlocking LAF AI Workspace...
+          <div style={{ padding: '18px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid #10b981', borderRadius: '20px', margin: '20px 0' }}>
+            <h3 style={{ margin: 0, color: '#34d399', fontSize: 'clamp(1rem, 3.2vw, 1.2rem)', fontWeight: '800' }}>
+              🎉 1:00 PM Achieved! Unlocking LAF AI Workspace...
             </h3>
-            <p style={{ margin: '6px 0 0 0', color: '#e2e8f0', fontSize: '0.9rem' }}>
-              Welcome to the fastest multimodal AI platform. Enjoy the celebration!
+            <p style={{ margin: '6px 0 0 0', color: '#e2e8f0', fontSize: '0.88rem' }}>
+              Welcome to the future of intelligence. Enjoy the celebration!
             </p>
           </div>
         )}
 
-        {/* Pre-Registration / VIP Status Card */}
+        {/* Sleek Floating Pre-Registration or VIP Status */}
         {!registered ? (
-          <div
-            style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '20px',
-              padding: '24px 20px',
-              textAlign: 'left',
-              marginTop: '10px'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-              <Lock style={{ width: '18px', color: '#f59e0b' }} />
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', fontWeight: '700' }}>
-                Pre-Register to Unlock VIP Access at 12:00 PM
-              </h3>
+          <div style={{ marginTop: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px' }}>
+              <Lock style={{ width: '16px', color: '#f59e0b' }} />
+              <span style={{ fontSize: 'clamp(0.85rem, 2.6vw, 0.95rem)', color: '#f1f5f9', fontWeight: '700' }}>
+                Pre-Register to Unlock Access Sharply at 1:00 PM
+              </span>
             </div>
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.86rem', color: '#94a3b8' }}>
-              Enter your name and email to receive the Grand Launch notification and be first to use LAF AI sharply at 12:00 PM.
-            </p>
 
             <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                type="text"
-                placeholder="Enter your name (e.g. Alex)"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                style={inputStyle}
-                required
-              />
+              {/* Name Input */}
+              <div style={{ position: 'relative' }}>
+                <User style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: '#60a5fa' }} />
+                <input
+                  type="text"
+                  placeholder="Enter your name (e.g. Alex)"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  style={sleekInputStyle}
+                  required
+                />
+              </div>
 
-              <input
-                type="email"
-                placeholder="Enter your email (e.g. alex@example.com)"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                style={inputStyle}
-                required
-              />
+              {/* Email Input */}
+              <div style={{ position: 'relative' }}>
+                <Mail style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', width: '18px', color: '#94a3b8' }} />
+                <input
+                  type="email"
+                  placeholder="Enter your email for 1:00 PM launch notification"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  style={sleekInputStyle}
+                  required
+                />
+              </div>
 
               {regError && (
-                <div style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: '600' }}>
+                <div style={{ color: '#ef4444', fontSize: '0.82rem', fontWeight: '600', textAlign: 'center' }}>
                   {regError}
                 </div>
               )}
 
+              {/* Sleek CTA Button */}
               <button
                 type="submit"
                 disabled={regLoading}
                 style={{
-                  padding: '14px',
-                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                  width: '100%',
+                  padding: 'clamp(12px, 3vw, 15px)',
+                  minHeight: '48px',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)',
                   border: 'none',
                   borderRadius: '9999px',
                   color: '#ffffff',
                   fontWeight: '700',
-                  fontSize: '0.96rem',
+                  fontSize: 'clamp(0.9rem, 2.7vw, 1rem)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)',
-                  transition: 'all 0.15s ease'
+                  boxShadow: '0 4px 20px rgba(37, 99, 235, 0.45)',
+                  transition: 'all 0.15s ease',
+                  marginTop: '4px'
                 }}
               >
-                <span>{regLoading ? 'Registering VIP Access...' : 'Register for Grand Launch →'}</span>
+                <span>{regLoading ? 'Registering VIP Access...' : 'Register for 1:00 PM Launch'}</span>
+                <ArrowRight style={{ width: '18px' }} />
               </button>
             </form>
           </div>
         ) : (
           <div
             style={{
-              background: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              borderRadius: '20px',
-              padding: '20px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '24px',
+              padding: 'clamp(16px, 3.5vw, 22px) clamp(14px, 3vw, 20px)',
               textAlign: 'center',
-              marginTop: '10px'
+              marginTop: '8px'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-              <CheckCircle2 style={{ width: '22px', color: '#10b981' }} />
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#34d399', fontWeight: '800' }}>
+              <CheckCircle2 style={{ width: '20px', color: '#10b981' }} />
+              <h3 style={{ margin: 0, fontSize: 'clamp(0.95rem, 3vw, 1.1rem)', color: '#34d399', fontWeight: '800' }}>
                 VIP Access Confirmed: @{nameInput || user?.username}
               </h3>
             </div>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1' }}>
-              Your access unlocks sharply at <strong>12:00 PM</strong>. Launch email notification has been queued for <strong>{emailInput || localStorage.getItem('laf_email') || 'your email'}</strong>.
+            <p style={{ margin: 0, fontSize: 'clamp(0.8rem, 2.5vw, 0.88rem)', color: '#cbd5e1', lineHeight: '1.5' }}>
+              Your access unlocks sharply at <strong>1:00 PM</strong>. Launch email notification is queued for <strong>{emailInput || localStorage.getItem('laf_email') || 'your email'}</strong>.
             </p>
           </div>
         )}
 
-        {/* Footer Guarantee */}
-        <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748b' }}>
-          <ShieldCheck style={{ width: '15px', color: '#10b981' }} />
-          <span>Architected & Engineered by K S Purushothaman • All Rights Reserved</span>
+        {/* Sleek Minimalist Footer */}
+        <div style={{ marginTop: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: 'clamp(0.72rem, 2.2vw, 0.8rem)', color: '#64748b' }}>
+          <ShieldCheck style={{ width: '14px', color: '#10b981' }} />
+          <span>Engineered by K S Purushothaman • All Rights Reserved</span>
         </div>
 
-        {/* Developer Test Bypass (for testing and verification) */}
-        <div style={{ marginTop: '14px', textAlign: 'center' }}>
+        {/* Developer Mode: Preview 1:00 PM Unlock */}
+        <div style={{ marginTop: '12px', textAlign: 'center' }}>
           <button
             onClick={() => setDevBypass(true)}
             style={{
               background: 'none',
               border: 'none',
-              color: 'rgba(255,255,255,0.2)',
+              color: 'rgba(255, 255, 255, 0.22)',
               fontSize: '0.72rem',
               cursor: 'pointer',
               textDecoration: 'underline'
             }}
-            title="Click to preview the 12:00 PM unlock transition"
+            title="Preview the 1:00 PM launch transition"
           >
-            Developer Mode: Preview 12:00 PM Unlock
+            Developer Mode: Preview 1:00 PM Unlock
           </button>
         </div>
       </div>
@@ -581,48 +581,44 @@ export default function GrandLaunchScreen({ user, onRegisterSuccess, onLaunchUnl
   );
 }
 
-// Styling Constants
-const timeCardStyle = {
-  background: 'rgba(30, 41, 59, 0.9)',
-  border: '1.5px solid rgba(234, 179, 8, 0.4)',
-  borderRadius: '18px',
-  padding: '16px 14px',
-  minWidth: '85px',
-  textAlign: 'center',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(234, 179, 8, 0.08)'
-};
-
-const timeDigitStyle = {
-  fontSize: 'clamp(2rem, 6vw, 2.8rem)',
-  fontWeight: '900',
-  fontFamily: 'monospace',
+// Fluid Modern Typography & Input Styles
+const fluidNumberStyle = {
+  fontSize: 'clamp(2.2rem, 7vw, 3.6rem)',
+  fontWeight: '800',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontVariantNumeric: 'tabular-nums',
   color: '#ffffff',
   lineHeight: '1',
-  marginBottom: '4px'
+  marginBottom: '4px',
+  textShadow: '0 0 25px rgba(255, 255, 255, 0.35)'
 };
 
-const timeLabelStyle = {
-  fontSize: '0.68rem',
+const fluidLabelStyle = {
+  fontSize: 'clamp(0.62rem, 2vw, 0.72rem)',
   fontWeight: '800',
   color: '#94a3b8',
-  letterSpacing: '1px'
+  letterSpacing: '1.5px'
 };
 
-const timeSeparatorStyle = {
-  fontSize: '2rem',
-  fontWeight: '900',
-  color: '#f59e0b',
-  margin: '0 2px'
+const timerDividerStyle = {
+  fontSize: 'clamp(1.6rem, 5vw, 2.4rem)',
+  fontWeight: '800',
+  color: 'rgba(245, 158, 11, 0.8)',
+  lineHeight: '1',
+  paddingBottom: '14px',
+  textShadow: '0 0 15px rgba(245, 158, 11, 0.5)'
 };
 
-const inputStyle = {
+const sleekInputStyle = {
   width: '100%',
-  padding: '12px 16px',
-  background: 'rgba(15, 23, 42, 0.9)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
-  borderRadius: '12px',
+  minHeight: '48px',
+  padding: '12px 18px 12px 46px',
+  background: 'rgba(255, 255, 255, 0.05)',
+  border: '1px solid rgba(255, 255, 255, 0.14)',
+  borderRadius: '9999px',
   color: '#ffffff',
-  fontSize: '0.94rem',
+  fontSize: 'clamp(0.88rem, 2.6vw, 0.95rem)',
   outline: 'none',
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
 };

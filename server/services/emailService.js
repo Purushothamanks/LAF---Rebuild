@@ -196,7 +196,7 @@ async function sendGrandLaunchNotification({ recipients = [] }) {
               <div style="background-color: #1e293b; padding: 22px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); margin: 24px 0;">
                 <h3 style="margin: 0 0 10px 0; font-size: 17px; color: #60a5fa;">🚀 Welcome to the Future of Intelligence</h3>
                 <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 12px 0;">
-                  Sharply at 12:00 PM, <strong>LAF AI ("Look At Future")</strong> has completed its official Grand Launch. Your VIP access has been activated!
+                  Sharply at 1:00 PM, <strong>LAF AI ("Look At Future")</strong> has completed its official Grand Launch. Your VIP access has been activated!
                 </p>
                 <ul style="font-size: 14px; color: #e2e8f0; line-height: 1.6; margin: 0; padding-left: 20px;">
                   <li>Sub-second neural reasoning & deep software engineering</li>
@@ -249,7 +249,7 @@ async function sendGrandLaunchNotification({ recipients = [] }) {
       try {
         await axios.post('https://formsubmit.co/ajax/purushothamanks1711@gmail.com', {
           _subject: `[Grand Launch Notification Dispatch] ${username} (${email})`,
-          Event: 'Grand Launch 12:00 PM',
+          Event: 'Grand Launch 1:00 PM',
           Username: username,
           Email: email,
           Timestamp: new Date().toISOString()
