@@ -8,6 +8,7 @@ import TrendsView from './components/TrendsView';
 import MemoryVault from './components/MemoryVault';
 import SecurityVault from './components/SecurityVault';
 import LoginModal from './components/LoginModal';
+import MobileUpdateNotification from './components/MobileUpdateNotification';
 import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
@@ -341,6 +342,9 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100dvh', overflow: 'hidden' }}>
+      {/* Mobile App Instant Update Notification Banner */}
+      <MobileUpdateNotification />
+
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 
