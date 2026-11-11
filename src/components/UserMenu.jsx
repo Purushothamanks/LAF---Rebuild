@@ -13,9 +13,11 @@ export default function UserMenu({
   const menuRef = useRef(null);
 
   const isAppMode = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: fullscreen)').matches ||
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true ||
-    document.referrer.includes('android-app://')
+    document.referrer.includes('android-app://') ||
+    new URLSearchParams(window.location.search).get('mode') === 'app'
   );
 
   // Compute first letter of username or display name (default to 'U' if not provided)

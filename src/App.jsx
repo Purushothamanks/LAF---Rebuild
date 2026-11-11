@@ -52,6 +52,20 @@ export default function App() {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#090d16');
     }
+
+    // Ensure full-screen immersion for installed PWA / mobile app like Gemini
+    if (typeof window !== 'undefined') {
+      const isInstalledApp = (
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true ||
+        document.referrer.includes('android-app://') ||
+        new URLSearchParams(window.location.search).get('mode') === 'app'
+      );
+      if (isInstalledApp) {
+        document.documentElement.classList.add('laf-app-fullscreen');
+      }
+    }
   }, [theme]);
 
   // Fresh Grand Launch Clean Migration: Wipes all historical sessions & databases for clean launch
@@ -326,7 +340,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100dvh', overflow: 'hidden' }}>
       {/* Passwordless Login Modal if unauthenticated */}
       {!user && <LoginModal onLogin={handleLogin} />}
 

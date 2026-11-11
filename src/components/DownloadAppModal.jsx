@@ -7,9 +7,11 @@ export default function DownloadAppModal({ isOpen, onClose }) {
   const [installed, setInstalled] = useState(false);
 
   const isAppMode = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: fullscreen)').matches ||
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true ||
-    document.referrer.includes('android-app://')
+    document.referrer.includes('android-app://') ||
+    new URLSearchParams(window.location.search).get('mode') === 'app'
   );
 
   useEffect(() => {

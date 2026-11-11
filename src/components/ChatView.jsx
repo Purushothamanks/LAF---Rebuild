@@ -1099,7 +1099,7 @@ export default function ChatView({
           height: '100%', 
           position: 'relative', 
           background: 'var(--ds-bg-main)', 
-          paddingTop: '60px',
+          paddingTop: 'calc(60px + env(safe-area-inset-top, 0px))',
           minWidth: '320px',
           transition: 'flex 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
