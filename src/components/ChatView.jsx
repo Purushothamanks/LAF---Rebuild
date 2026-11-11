@@ -184,7 +184,7 @@ export function formatLafProvider(provider) {
 }
 
 function TypewriterHeroSubheading() {
-  const fullText = "Experience live LAF Canvas preview, real-time code synthesis, multimodal generation, and high-speed reasoning.";
+  const fullText = "All-rounder multimodal AI for deep reasoning, creative writing, science, mathematics, code synthesis, and live Canvas.";
   const [displayText, setDisplayText] = useState('');
   const [phase, setPhase] = useState('typing'); // 'typing' | 'holding' | 'snapping' | 'void'
 

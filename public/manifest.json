@@ -1,7 +1,7 @@
 {
   "short_name": "LAF AI",
   "name": "LAF AI - Look at The Future",
-  "description": "Autonomous Fast Multimodal AI Product Platform",
+  "description": "All-Rounder Autonomous Multimodal AI Product Platform",
   "icons": [
     {
       "src": "/logo.png",
@@ -17,8 +17,8 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#0b0f19",
-  "theme_color": "#4f75ff",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/"

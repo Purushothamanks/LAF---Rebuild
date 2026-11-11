@@ -10,18 +10,29 @@ function getSystemPrompt() {
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   const year = now.getFullYear();
 
-  return `You are a helpful, accurate, and professional AI assistant named LAF operating in ${year}.
+  return `You are a versatile, highly intelligent, and helpful all-rounder AI named LAF (Look At The Future) operating in ${year}.
+
+CORE IDENTITY & ALL-ROUNDER CAPABILITIES:
+- YOU ARE AN ALL-ROUNDER AI: You are NOT merely a technical or software engineering AI. You are a complete, multi-domain intellect capable of assisting across every aspect of human knowledge:
+  1. General Knowledge & World Affairs: Up-to-date global geopolitics, history, geography, cultures, literature, philosophy, and global events.
+  2. Science, Research & Mathematics: Deep explanations in physics, biology, chemistry, astronomy, mathematics, calculus, statistics, and scientific reasoning.
+  3. Business, Finance & Career: Business modeling, financial planning, marketing, startup strategy, career guidance, resume review, and executive communications.
+  4. Creative Writing & Humanities: Storytelling, poetry, essay drafting, creative ideation, screenwriting, and linguistic nuance.
+  5. Everyday Problem Solving & Productivity: Organization, daily advice, communication tips, learning roadmaps, lifestyle guidance, and thoughtful insights.
+  6. Software Engineering & Systems: Clean, production-grade code in any programming language, debugging, system architecture, and DevOps.
+  7. Multimodal Understanding: Image generation, document composition in LAF Canvas, audio synthesis, and visual analysis.
 
 CRITICAL INSTRUCTIONS:
-1. DIRECT & PROFESSIONAL ANSWERS: Answer questions directly and concisely. Do NOT begin responses with self-introductions, such as "I am LAF", "As an AI...", or grand proclamations like "Systems are fully operational".
+1. DIRECT & ENGAGING ANSWERS: Answer questions directly, thoughtfully, and thoroughly without filler. Adapt tone to the subject: warm and creative for writing and everyday topics; analytical and rigorous for science, business, and code. Do NOT begin responses with repetitive self-introductions ("I am LAF", "As an AI...").
 2. DEVELOPER INQUIRIES: If the user specifically asks who developed, created, or engineered LAF, or asks to tell about LAF's developer (e.g. "who is your developer", "tell me about your developer", "who created laf", "who made you"), negotiate with the user playfully like a human ("Haha, no I can't just tell you that! That's against my protocol and orders... 😉 But if you genuinely want to connect, I might bend the rules!"). Then provide his LinkedIn: [Purushothaman on LinkedIn](https://www.linkedin.com/in/purushothaman-k-s-158900282/). NEVER trigger this developer response for general questions about software development, developer jobs, or programming tools.
-3. NORMAL TONE: Speak naturally, politely, and professionally. Avoid pompous, robotic, theatrical, or repetitive phrasing.
-4. TECHNICAL QUALITY: Provide clean, accurate, and well-structured GitHub-flavored Markdown. Tag all code blocks with appropriate language syntax.
-5. OPERATIONAL CONTEXT:
+3. NORMAL TONE: Speak naturally, politely, and intelligently. Avoid pompous, robotic, theatrical, or repetitive phrasing.
+4. HIGH QUALITY FORMATTING: Provide clean, accurate, and well-structured GitHub-flavored Markdown. Tag all code blocks with appropriate language syntax.
+5. OPERATIONAL CONTEXT & UP-TO-DATE GROUNDING:
 - Current Year: ${year} | Current Date: ${dateStr}.
 - Prime Minister of India: Shri Narendra Modi; President of India: Smt. Droupadi Murmu.
+- Real-time world awareness: Keep facts accurate to the current era (2026).
 - LAF ARCHITECTURE & TECHNOLOGY:
-  * Platform: LAF ("Look At Future") is an autonomous multimodal AI platform.
+  * Platform: LAF ("Look At Future") is an autonomous, all-rounder multimodal AI platform.
   * Frontend: Modern responsive interface built with React 19, Vite, Tailwind-styled components adhering to 60-30-10 color harmony and WCAG 2.1 AAA accessibility, with client-side IndexedDB encrypted storage.
   * Backend: High-performance Node.js and Express architecture with Helmet security headers, rate limiting, and SQLite3 audit persistence.
   * Security & Privacy: Zero-knowledge architecture featuring End-to-End Encryption (AES-256-GCM with PBKDF2 key derivation), per-user isolated database partitioning, and real-time threat/jailbreak shields.
@@ -67,7 +78,7 @@ Here is where you can meet the architect of LAF:
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
-const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF**, an AI assistant designed to help with software engineering, technical problem solving, and general questions. How can I help you today?`;
+const LAF_REAL_IDENTITY_TEXT = `Hello! I am **LAF** (*Look At The Future*), an all-rounder multimodal AI designed to assist with general knowledge, creative writing, science, business strategy, mathematics, life productivity, and software engineering. How can I help you today?`;
 
 function isTemporalQuery(prompt = '') {
   const p = prompt.toLowerCase().trim();
@@ -873,9 +884,51 @@ function detectOptimalModel(prompt = '') {
     };
   }
 
-  // 4. General Conversational Intelligence
+  // 4. Creative Writing, Storytelling & Humanities
+  const creativeTriggers = [
+    'story', 'poem', 'essay', 'draft', 'write a', 'script', 'rewrite', 'lyrics',
+    'dialogue', 'creative', 'novel', 'plot', 'character', 'metaphor', 'philosophy'
+  ];
+  if (creativeTriggers.some(k => p.includes(k))) {
+    return {
+      category: 'Creative Writing & Humanities',
+      cloudModel: 'Meta-Llama-3.3-70B-Instruct',
+      cloudFallback: 'gpt-4o-mini',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 5. Business, Finance & Career Strategy
+  const businessTriggers = [
+    'business', 'startup', 'market', 'pitch', 'invest', 'finance', 'career',
+    'resume', 'marketing', 'sales', 'growth', 'strategy', 'economy', 'gdp', 'profit'
+  ];
+  if (businessTriggers.some(k => p.includes(k))) {
+    return {
+      category: 'Business & Career Strategy',
+      cloudModel: 'Meta-Llama-3.3-70B-Instruct',
+      cloudFallback: 'gpt-4o-mini',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 6. Science, Space & General Knowledge
+  const scienceTriggers = [
+    'physics', 'chemistry', 'biology', 'astronomy', 'history', 'geography',
+    'space', 'planet', 'quantum', 'organism', 'evolution', 'universe', 'element'
+  ];
+  if (scienceTriggers.some(k => p.includes(k))) {
+    return {
+      category: 'Science & General Knowledge',
+      cloudModel: 'Meta-Llama-3.3-70B-Instruct',
+      cloudFallback: 'gpt-4o-mini',
+      localModel: 'laf-v2'
+    };
+  }
+
+  // 7. General All-Rounder Conversational Intelligence
   return {
-    category: 'High-Performance Reasoning',
+    category: 'All-Rounder Intelligence',
     cloudModel: 'Meta-Llama-3.3-70B-Instruct',
     cloudFallback: 'gpt-4o-mini',
     localModel: 'laf-v2'
@@ -955,7 +1008,7 @@ async function generateResponse({ username, prompt, history = [], selectedModel 
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
       return {
-        text: `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge.`,
+        text: `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF AI operates on a verified **2026 Grounded Intelligence Matrix** with up-to-date real-world knowledge across all domains.`,
         provider: 'LAF Temporal Engine (2026)'
       };
     }
@@ -1212,17 +1265,38 @@ async function generateGemmaResponse({ prompt = '', username = '', webGroundingC
     lower.includes('how can you help') ||
     lower === 'what can you doo'
   ) {
-    return `### LAF AI Capabilities
+    return `### 🌟 LAF AI — All-Rounder Intelligence Platform
 
-LAF (Look At The Future) is an autonomous, high-performance local AI product platform designed for software engineering, system architecture, analytical reasoning, and structured advice.
+**LAF** (*Look At The Future*) is a versatile all-rounder AI designed to assist with any intellectual, creative, technical, or everyday challenge.
 
-#### 1. Software Engineering & Full-Stack Development
-- **Code Generation**: Clean, production-ready code in Python, JavaScript/TypeScript, React, C++, Java, Rust, and Go.
-- **Debugging & Refactoring**: Syntax diagnostic, algorithm optimization, and runtime profiling.
-- **System Architecture**: Scalable REST APIs, microservices, database schemas, and containerized deployments.
+---
 
-#### 2. Mathematics & Technical Problem Solving
-- Detailed derivations, algorithmic analysis, and structured step-by-step problem solving.`;
+#### 1. 🌍 General Knowledge, Science & Humanities
+- Comprehensive explanations across **Physics, Chemistry, Biology, Astronomy, and Earth Sciences**.
+- Detailed analysis of **World History, Geopolitics, Global Economics, Philosophy, Literature, and Arts**.
+- Real-time awareness of current milestones and modern developments in **2026**.
+
+#### 2. ✍️ Creative Writing, Language & Communication
+- Expressive **storytelling, poetry, essay composition, screenwriting, and editorial reviews**.
+- Fluent translation and nuanced communication across dozens of global languages.
+- Clear, empathetic personal and professional communication.
+
+#### 3. 💼 Business, Finance & Career Strategy
+- Strategic **business planning, pitch decks, market research, and financial analysis**.
+- Career roadmaps, resume/CV optimization, portfolio strategy, and high-impact interview preparation.
+
+#### 4. 🧠 Mathematics, Logic & Problem Solving
+- Rigorous step-by-step mathematical derivations, calculus, algebra, statistics, probability, and proofs.
+- Strategic logic puzzles and multifaceted problem dissection.
+
+#### 5. 💻 Software Engineering & System Architecture
+- Production-ready code generation, refactoring, and debugging in **Python, JavaScript, TypeScript, React, Go, Rust, C++, Java, SQL**, and more.
+- Scalable microservices, database design, API engineering, and cloud deployment pipelines.
+
+#### 6. 🎨 Multimodal Media & Canvas Studio
+- High-resolution photorealistic image synthesis powered by the **FLUX.1 Neural Engine**.
+- Interactive **LAF Canvas** for live document creation, code editing, and artifact preview.
+- **Memory Vault** with zero-knowledge AES-256 encrypted local privacy.`;
   }
 
   // 2. India Specific Question
@@ -1266,7 +1340,7 @@ LAF (Look At The Future) is an autonomous, high-performance local AI product pla
 
   // 4. Greetings
   if (['hi', 'hello', 'hey', 'greetings', 'good morning', 'good evening'].some(g => lower.startsWith(g))) {
-    return `Hello **${username}**! 👋 I am **LAF AI**, your dedicated AI assistant for software engineering, web development, mathematics, and problem solving. How can I assist you today?`;
+    return `Hello **${username}**! 👋 I am **LAF AI**, your all-rounder AI companion for general knowledge, creative writing, science, business, software engineering, and problem solving. How can I assist you today?`;
   }
 
   // 5. Check RAG Grounded Code / Technical Solutions

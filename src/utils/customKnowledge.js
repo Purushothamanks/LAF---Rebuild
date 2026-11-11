@@ -12,7 +12,7 @@ const KNOWLEDGE_REPOSITORY = [
     response: () => {
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      return `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and modern software paradigms.`;
+      return `We are currently in the year **${now.getFullYear()}** (Today is **${dateStr}**).\n\nLAF (Look At The Future) operates on a verified **2026 Grounded Intelligence Matrix** containing up-to-date global heads of state, real GDP metrics, current geopolitics, and comprehensive multi-domain knowledge across all subjects.`;
     }
   },
   // LAF Platform & Technology Overview
@@ -24,7 +24,7 @@ const KNOWLEDGE_REPOSITORY = [
     category: 'System Architecture & Technology',
     response: `### 🚀 LAF ("Look At Future") Technology Stack & Architecture
 
-**LAF** is an autonomous, fast, multimodal AI product platform engineered for privacy, speed, and intelligence.
+**LAF** is an all-rounder autonomous multimodal AI platform engineered for versatility, privacy, high speed, and intelligence across all domains.
 
 ---
 

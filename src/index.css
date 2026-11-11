@@ -2986,45 +2986,9 @@ body.light-theme .chat-messages-scroll::-webkit-scrollbar-thumb:hover {
     z-index: 20 !important;
   }
 
-  /* Gemini Mobile Bottom Blue Glow Aura (Fits seamlessly, layer 1 behind text, zero screen displacement) */
+  /* Mobile: Completely eliminate bottom blue glow / blur aura bar for clean edge-to-edge look */
   .gemini-ambient-bottom-glow {
-    height: 38vh !important;
-    max-height: 300px !important;
-    z-index: 1 !important;
-    pointer-events: none !important;
-  }
-
-  .gemini-glow-base {
-    height: 75px !important;
-    background: linear-gradient(
-      to top,
-      rgba(37, 99, 235, 0.22) 0%,
-      rgba(59, 130, 246, 0.1) 45%,
-      transparent 100%
-    ) !important;
-    filter: blur(10px) !important;
-  }
-
-  .gemini-glow-core {
-    bottom: -5% !important;
-    width: 140% !important;
-    height: 100% !important;
-    background: radial-gradient(
-      ellipse 80% 60% at 50% 100%,
-      rgba(59, 130, 246, 0.3) 0%,
-      rgba(96, 165, 250, 0.18) 35%,
-      rgba(147, 197, 253, 0.08) 65%,
-      transparent 85%
-    ) !important;
-    filter: blur(24px) !important;
-    animation: geminiCoreSweepAcross 6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate !important;
-  }
-
-  .gemini-glow-orb {
-    width: 60vw !important;
-    height: 65% !important;
-    filter: blur(18px) !important;
-    animation: geminiOrbSweepAcross 4.8s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate !important;
+    display: none !important;
   }
 
   .floating-input-card {

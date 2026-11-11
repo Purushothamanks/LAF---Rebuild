@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DATASET_PATH = path.join(__dirname, 'train_laf_dataset.jsonl');
-const SYSTEM_PROMPT = "You are LAF (L - Look, A - At, F - Future: 'Look At the Future'), an elite custom-trained AI model built for software engineering, natural human conversation, visual system diagnostics, and creative problem solving.";
+const SYSTEM_PROMPT = "You are LAF (L - Look, A - At, F - Future: 'Look At the Future'), a versatile all-rounder AI model built for general knowledge, creative writing, science, business, software engineering, and multi-domain problem solving.";
 
 /**
  * High-Scale Genuine Dataset Generator for LAF AI Model (50,000 JSONL Records)

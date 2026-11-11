@@ -41,9 +41,9 @@ fi
 # Step 3: Sync & Deploy to AWS Server
 echo "3/4. Deploying update to AWS Host..."
 chmod 400 "$KEY_PATH"
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" "mkdir -p $REMOTE_DIR"
+ssh -F /dev/null -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" "mkdir -p $REMOTE_DIR"
 
-rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
+rsync -avz -e "ssh -F /dev/null -i $KEY_PATH -o StrictHostKeyChecking=no" \
   --exclude 'node_modules' \
   --exclude 'dist' \
   --exclude '.git' \
@@ -51,7 +51,7 @@ rsync -avz -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" \
   --exclude 'server/training/*.jsonl' \
   ./ "$AWS_HOST:$REMOTE_DIR/"
 
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
+ssh -F /dev/null -i "$KEY_PATH" -o StrictHostKeyChecking=no "$AWS_HOST" << 'EOF'
   cd /home/ubuntu/LAF---Rebuild
   if [ "$CLEAR_DATA" = "1" ]; then
     rm -rf data/users/* data/*.json || true

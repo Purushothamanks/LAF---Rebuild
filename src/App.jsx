@@ -8,7 +8,6 @@ import TrendsView from './components/TrendsView';
 import MemoryVault from './components/MemoryVault';
 import SecurityVault from './components/SecurityVault';
 import LoginModal from './components/LoginModal';
-import GrandLaunchScreen from './components/GrandLaunchScreen';
 import SettingsModal from './components/SettingsModal';
 import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
@@ -45,22 +44,14 @@ export default function App() {
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  // Grand Launch Lock State: Sharply 1:00 PM today
-  const [launchUnlocked, setLaunchUnlocked] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('preview') === 'live' || urlParams.get('dev') === '1') {
-      return true;
-    }
-    const now = new Date();
-    const target1PM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0, 0).getTime();
-    return Date.now() >= target1PM;
-  });
-
-  // Sync theme attribute to HTML root element whenever theme changes
+  // Sync theme attribute to HTML root element and update meta theme-color whenever theme changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('laf_theme', theme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#090d16');
+    }
   }, [theme]);
 
   // Fresh Grand Launch Clean Migration: Wipes all historical sessions & databases for clean launch
@@ -336,17 +327,8 @@ export default function App() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-      {/* 🎆 Grand Launch & Diwali Celebration Gate Screen (Sharply 1:00 PM) */}
-      {!launchUnlocked && (
-        <GrandLaunchScreen
-          user={user}
-          onRegisterSuccess={handleLogin}
-          onLaunchUnlock={() => setLaunchUnlocked(true)}
-        />
-      )}
-
-      {/* Passwordless Login Modal if unauthenticated and launch is unlocked */}
-      {launchUnlocked && !user && <LoginModal onLogin={handleLogin} />}
+      {/* Passwordless Login Modal if unauthenticated */}
+      {!user && <LoginModal onLogin={handleLogin} />}
 
       {/* Floating Top-Left Bar */}
       {user && (
