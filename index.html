@@ -45,6 +45,35 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="LAF AI" />
+  <script>
+    // Early Fullscreen & Build Initialization for Mobile App (Gemini-style edge-to-edge)
+    (function() {
+      try {
+        window.__LAF_BUILD_ID__ = "laf-live-sync-v150-fullscreen-20261111";
+        window.__LAF_BUILD_TIMESTAMP__ = 1794418500000;
+
+        var isApp = (
+          (window.matchMedia && (
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.matchMedia('(display-mode: fullscreen)').matches ||
+            window.matchMedia('(display-mode: minimal-ui)').matches
+          )) ||
+          (window.navigator && window.navigator.standalone === true) ||
+          (document.referrer && (
+            document.referrer.indexOf('android-app://') !== -1 ||
+            document.referrer.indexOf('org.chromium.webapk') !== -1
+          )) ||
+          window.location.search.indexOf('mode=app') !== -1 ||
+          window.location.search.indexOf('app=true') !== -1
+        );
+
+        if (isApp) {
+          document.documentElement.classList.add('laf-app-fullscreen');
+          if (document.body) document.body.classList.add('laf-app-fullscreen');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="icon" type="image/png" href="/logo.png" />
   <link rel="shortcut icon" type="image/png" href="/favicon.png" />

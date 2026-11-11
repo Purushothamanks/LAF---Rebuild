@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, HelpCircle, Smartphone, Share2, Trash2, LogOut } from 'lucide-react';
+import { Settings, HelpCircle, Smartphone, Share2, Trash2, LogOut, Fullscreen } from 'lucide-react';
+import { toggleAppFullscreen } from '../utils/liveSync';
 
 export default function UserMenu({
   user,
@@ -104,6 +105,20 @@ export default function UserMenu({
               <span>Help & Feedback</span>
             </button>
           )}
+
+          {/* Fullscreen Immersion Mode Toggle */}
+          <button
+            type="button"
+            className="user-menu-item"
+            role="menuitem"
+            onClick={async () => {
+              setIsOpen(false);
+              await toggleAppFullscreen();
+            }}
+          >
+            <Fullscreen style={{ width: '16px', height: '16px', color: 'var(--ds-blue)' }} />
+            <span>Fullscreen Mode</span>
+          </button>
 
           {/* Download / Share Application Option */}
           {onOpenDownloadApp && (

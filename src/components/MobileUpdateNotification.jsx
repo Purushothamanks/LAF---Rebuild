@@ -1,68 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, X, RefreshCw, Smartphone } from 'lucide-react';
-
-const CURRENT_APP_VERSION = 'v1.4.0_clean_app_update';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowRight, RefreshCw, Smartphone, X } from 'lucide-react';
+import { 
+  CURRENT_BUILD_ID, 
+  CURRENT_BUILD_TIMESTAMP, 
+  isMobileAppEnvironment, 
+  checkRemoteVersion, 
+  applyLiveAppUpdate 
+} from '../utils/liveSync';
 
 export default function MobileUpdateNotification() {
   const [showNotification, setShowNotification] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [remoteBuildInfo, setRemoteBuildInfo] = useState(null);
+  const pollingRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Detect mobile app environment (PWA, WebAPK, standalone, fullscreen, or mobile viewport)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
-    const isIOSStandalone = window.navigator.standalone === true;
-    const isAndroidReferrer = document.referrer.includes('android-app://');
-    const isAppQuery = new URLSearchParams(window.location.search).get('mode') === 'app';
-    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    // STRICT CHECK: ONLY show for installed Mobile App (PWA, WebAPK, standalone, fullscreen, ?mode=app)
+    // NEVER show on the standard desktop/mobile browser website
+    const isApp = isMobileAppEnvironment();
+    if (!isApp) return;
 
-    const isMobileApp = isStandalone || isFullscreen || isIOSStandalone || isAndroidReferrer || isAppQuery || isMobileDevice;
-
-    if (!isMobileApp) return;
-
-    // Trigger for all mobile app users who haven't applied this clean update yet
-    const savedVersion = localStorage.getItem('laf_applied_app_version');
-    if (savedVersion !== CURRENT_APP_VERSION) {
+    // 1. Initial local build check: has this mobile app instance acknowledged the latest client build?
+    const appliedBuild = localStorage.getItem('laf_applied_mobile_build');
+    if (appliedBuild !== CURRENT_BUILD_ID) {
       const timer = setTimeout(() => {
         setShowNotification(true);
-      }, 500);
+      }, 450);
       return () => clearTimeout(timer);
     }
+
+    // 2. Active Live Sync: verify directly with server version.json
+    const runLiveSyncCheck = async () => {
+      const remote = await checkRemoteVersion();
+      if (!remote) return;
+
+      const hasRemoteUpdate = Boolean(
+        (remote.buildTimestamp && remote.buildTimestamp > CURRENT_BUILD_TIMESTAMP) ||
+        (remote.buildId && remote.buildId !== CURRENT_BUILD_ID)
+      );
+
+      if (hasRemoteUpdate) {
+        setRemoteBuildInfo(remote);
+        setShowNotification(true);
+      }
+    };
+
+    // Run initial live check
+    runLiveSyncCheck();
+
+    // 3. Live Sync Polling (every 8 seconds) & Visibility listener (when user switches back to app)
+    pollingRef.current = setInterval(runLiveSyncCheck, 8000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        runLiveSyncCheck();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
-  const handleApplyUpdate = async () => {
+  const handleUpdateClick = async () => {
     setIsUpdating(true);
-    try {
-      localStorage.setItem('laf_applied_app_version', CURRENT_APP_VERSION);
-
-      // Wipe caches to guarantee 100% fresh assets
-      if (typeof window !== 'undefined' && 'caches' in window) {
-        try {
-          const cacheKeys = await window.caches.keys();
-          await Promise.all(cacheKeys.map(k => window.caches.delete(k)));
-        } catch (e) {}
-      }
-
-      // Unregister any stale Service Workers
-      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-        try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const reg of registrations) {
-            await reg.unregister();
-          }
-        } catch (e) {}
-      }
-
-      // Hard redirect with cache-buster to show fresh changes instantly
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('mode', 'app');
-      currentUrl.searchParams.set('v', Date.now().toString());
-      window.location.replace(currentUrl.toString());
-    } catch (err) {
-      window.location.reload(true);
-    }
+    const targetBuild = remoteBuildInfo?.buildId || CURRENT_BUILD_ID;
+    await applyLiveAppUpdate(targetBuild);
   };
 
   if (!showNotification) return null;
@@ -72,22 +79,22 @@ export default function MobileUpdateNotification() {
       className="mobile-update-notification-banner"
       style={{
         position: 'fixed',
-        top: 'calc(12px + env(safe-area-inset-top, 0px))',
+        top: 'calc(14px + env(safe-area-inset-top, 0px))',
         left: '12px',
         right: '12px',
         zIndex: 99999,
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(59, 130, 246, 0.5)',
+        border: '1px solid rgba(59, 130, 246, 0.55)',
         borderRadius: '16px',
         padding: '10px 14px',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.25)',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.75), 0 0 24px rgba(59, 130, 246, 0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '10px',
-        animation: 'mobileUpdateSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+        animation: 'mobileUpdateSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards'
       }}
       role="alert"
       aria-live="polite"
@@ -98,77 +105,105 @@ export default function MobileUpdateNotification() {
           style={{
             width: '34px',
             height: '34px',
+            minWidth: '34px',
             borderRadius: '10px',
-            background: 'rgba(59, 130, 246, 0.15)',
-            border: '1px solid rgba(59, 130, 246, 0.35)',
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            border: '1px solid rgba(147, 197, 253, 0.4)',
+            boxShadow: '0 0 12px rgba(37, 99, 235, 0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#60a5fa',
-            flexShrink: 0
+            color: '#ffffff'
           }}
+          aria-hidden="true"
         >
-          {isUpdating ? (
-            <RefreshCw style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-          ) : (
-            <Smartphone style={{ width: '16px', height: '16px' }} />
-          )}
+          <Smartphone style={{ width: '18px', height: '18px' }} />
         </div>
-
-        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#fff', letterSpacing: '0.2px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-title, sans-serif)',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              color: '#f8fafc',
+              lineHeight: 1.2,
+              letterSpacing: '0.2px'
+            }}
+          >
             App Update
-          </div>
-          <div style={{ fontSize: '0.74rem', color: '#94a3b8', lineHeight: '1.3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-main, sans-serif)',
+              fontSize: '0.75rem',
+              color: '#94a3b8',
+              lineHeight: 1.25,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
             Tap update to apply latest changes instantly
-          </div>
+          </span>
         </div>
       </div>
 
-      {/* Neat Action Buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         <button
           type="button"
-          onClick={handleApplyUpdate}
+          onClick={handleUpdateClick}
           disabled={isUpdating}
           style={{
-            background: 'var(--ds-blue, #2563eb)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '7px 13px',
-            fontSize: '0.80rem',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '4px',
-            boxShadow: '0 0 12px rgba(37, 99, 235, 0.35)',
-            transition: 'all 0.15s ease'
+            gap: '6px',
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            color: '#ffffff',
+            border: '1px solid rgba(147, 197, 253, 0.5)',
+            boxShadow: '0 0 14px rgba(37, 99, 235, 0.45)',
+            borderRadius: '9999px',
+            padding: '7px 14px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            cursor: isUpdating ? 'wait' : 'pointer',
+            transition: 'all 0.15s ease',
+            outline: 'none'
           }}
+          aria-label="Apply app update instantly"
         >
-          <span>{isUpdating ? 'Updating...' : 'Update'}</span>
-          {!isUpdating && <ArrowRight style={{ width: '13px', height: '13px' }} />}
+          {isUpdating ? (
+            <>
+              <RefreshCw style={{ width: '13px', height: '13px', animation: 'spin 1s linear infinite' }} />
+              <span>Updating...</span>
+            </>
+          ) : (
+            <>
+              <span>Update</span>
+              <ArrowRight style={{ width: '13px', height: '13px' }} />
+            </>
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => setShowNotification(false)}
-          title="Dismiss"
-          aria-label="Dismiss notification"
+          aria-label="Dismiss update notification"
           style={{
-            background: 'transparent',
+            background: 'rgba(255, 255, 255, 0.08)',
             border: 'none',
-            color: '#64748b',
-            cursor: 'pointer',
-            padding: '5px',
-            borderRadius: '8px',
+            borderRadius: '50%',
+            width: '26px',
+            height: '26px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            color: '#94a3b8',
+            cursor: 'pointer',
+            padding: 0
           }}
         >
-          <X style={{ width: '15px', height: '15px' }} />
+          <X style={{ width: '14px', height: '14px' }} />
         </button>
       </div>
     </div>
