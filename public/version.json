@@ -1,9 +1,9 @@
 {
-  "version": "1.5.0",
-  "buildId": "laf-live-sync-v150-fullscreen-20261111",
-  "buildTimestamp": 1794418500000,
+  "version": "1.5.1",
+  "buildId": "laf-live-sync-v151-fullscreen-native-20261113",
+  "buildTimestamp": 1794500000000,
   "title": "App Update",
   "subtext": "Tap update to apply latest changes instantly",
   "fullscreen": true,
-  "updatedAt": "2026-11-11T22:40:00+05:30"
+  "updatedAt": "2026-11-13T08:15:00+05:30"
 }

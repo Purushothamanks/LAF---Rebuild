@@ -14,7 +14,7 @@ import DownloadAppModal from './components/DownloadAppModal';
 import HelpFeedbackModal from './components/HelpFeedbackModal';
 import { apiUrl } from './api';
 import { getLocalUserDb, deleteLocalConversation, loadFullConversationFromVault } from './utils/aiClient';
-import { isMobileAppEnvironment, requestAppFullscreen } from './utils/liveSync';
+import { requestAppFullscreen } from './utils/liveSync';
 
 export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('laf_username') : null;
@@ -55,20 +55,27 @@ export default function App() {
       metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#090d16');
     }
 
-    // Ensure full-screen immersion for installed PWA / mobile app like Gemini
-    if (typeof window !== 'undefined' && isMobileAppEnvironment()) {
+    // Keep LAF native default to full screen across all environments
+    if (typeof window !== 'undefined') {
       document.documentElement.classList.add('laf-app-fullscreen');
-      document.body.classList.add('laf-app-fullscreen');
+      if (document.body) {
+        document.body.classList.add('laf-app-fullscreen');
+      }
 
       const handleFirstInteraction = () => {
         requestAppFullscreen();
       };
       window.addEventListener('touchstart', handleFirstInteraction, { passive: true, once: true });
       window.addEventListener('click', handleFirstInteraction, { passive: true, once: true });
+      window.addEventListener('pointerdown', handleFirstInteraction, { passive: true, once: true });
+
+      // Immediate attempt if runtime allows
+      requestAppFullscreen();
 
       return () => {
         window.removeEventListener('touchstart', handleFirstInteraction);
         window.removeEventListener('click', handleFirstInteraction);
+        window.removeEventListener('pointerdown', handleFirstInteraction);
       };
     }
   }, [theme]);

@@ -4,8 +4,8 @@
  * cache wiping, and Gemini-style edge-to-edge fullscreen execution.
  */
 
-export const CURRENT_BUILD_ID = 'laf-live-sync-v150-fullscreen-20261111';
-export const CURRENT_BUILD_TIMESTAMP = 1794418500000;
+export const CURRENT_BUILD_ID = 'laf-live-sync-v151-fullscreen-native-20261113';
+export const CURRENT_BUILD_TIMESTAMP = 1794500000000;
 
 /**
  * Strictly identifies if the user is running inside the installed Mobile App
